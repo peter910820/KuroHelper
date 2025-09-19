@@ -14,7 +14,7 @@ func GetStats(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	resp, err := http.Get(os.Getenv("VNDB_ENDPOINT") + "/stats")
 	if err != nil {
 		logrus.Error(err)
-		utils.SlashCommandRespond(s, i, "該功能目前異常，請稍後再嘗試")
+		utils.InteractionRespond(s, i, "該功能目前異常，請稍後再嘗試")
 	}
 
 	defer resp.Body.Close()
@@ -22,12 +22,12 @@ func GetStats(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		logrus.Error(err)
-		utils.SlashCommandRespond(s, i, "該功能目前異常，請稍後再嘗試")
+		utils.InteractionRespond(s, i, "該功能目前異常，請稍後再嘗試")
 	}
 
 	if resp.StatusCode != 200 {
 		logrus.Errorf("the server returned an error status code %d", resp.StatusCode)
-		utils.SlashCommandRespond(s, i, "該功能目前異常，請稍後再嘗試")
+		utils.InteractionRespond(s, i, "該功能目前異常，請稍後再嘗試")
 	}
 
 	embed := &discordgo.MessageEmbed{
@@ -41,10 +41,5 @@ func GetStats(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			},
 		},
 	}
-	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseChannelMessageWithSource,
-		Data: &discordgo.InteractionResponseData{
-			Embeds: []*discordgo.MessageEmbed{embed},
-		},
-	})
+	utils.InteractionEmbedRespond(s, i, embed)
 }
