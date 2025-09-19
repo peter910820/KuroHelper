@@ -5,25 +5,18 @@ import (
 	"os/signal"
 
 	"github.com/bwmarrin/discordgo"
-	"github.com/joho/godotenv"
 	"github.com/sirupsen/logrus"
+
+	"kurohelper/bot"
+	"kurohelper/config"
 )
 
-func init() {
-	// logrus settings
-	logrus.SetFormatter(&logrus.TextFormatter{
-		ForceColors:   true,
-		FullTimestamp: true,
-	})
-	logrus.SetLevel(logrus.DebugLevel)
-	// load .env
-	err := godotenv.Load(".env")
-	if err != nil {
+func main() {
+	// 初始化config
+	if err := config.Init(); err != nil {
 		logrus.Fatal(err)
 	}
-}
 
-func main() {
 	token := os.Getenv("BOT_TOKEN")
 	kuroHelper, err := discordgo.New("Bot " + token)
 	if err != nil {
@@ -36,6 +29,9 @@ func main() {
 	}
 
 	logrus.Info("KuroHelper is now running. Press CTRL+C to exit.")
+
+	kuroHelper.AddHandler(bot.Ready)
+	kuroHelper.AddHandler(bot.OnInteraction)
 
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
