@@ -1,14 +1,14 @@
 package handlers
 
 import (
-	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/sirupsen/logrus"
 
-	"kurohelper/models"
+	internalerrors "kurohelper/errors"
 	"kurohelper/utils"
 	"kurohelper/vndb"
 )
@@ -44,19 +44,14 @@ func VndbSearchGameByID(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if err != nil {
 		logrus.Error(err)
 		utils.InteractionRespond(s, i, "該功能目前異常，請稍後再嘗試")
+		return
 	}
 
-	r, err := vndb.GetVnUseID(brandid)
+	res, err := vndb.GetVnUseID(brandid)
 	if err != nil {
 		logrus.Error(err)
 		utils.InteractionRespond(s, i, "該功能目前異常，請稍後再嘗試")
-	}
-
-	var res models.VndbResponse[models.VndbGetVnUseIDResponse]
-	err = json.Unmarshal(r, &res)
-	if err != nil {
-		logrus.Error(err)
-		utils.InteractionRespond(s, i, "該功能目前異常，請稍後再嘗試")
+		return
 	}
 
 	/* 處理回傳結構 */
@@ -134,7 +129,7 @@ func VndbSearchGameByID(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		},
 		Fields: []*discordgo.MessageEmbedField{
 			{
-				Name:   "公司名稱",
+				Name:   "品牌(公司)名稱",
 				Value:  brandTitle,
 				Inline: false,
 			},
@@ -160,7 +155,7 @@ func VndbSearchGameByID(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			},
 			{
 				Name:   "平均遊玩時數/樣本數",
-				Value:  fmt.Sprintf("%d(小時)/%d", res.Results[0].LengthMinutes/60, res.Results[0].LengthVotes),
+				Value:  fmt.Sprintf("%d(H)/%d", res.Results[0].LengthMinutes/60, res.Results[0].LengthVotes),
 				Inline: true,
 			},
 			{
@@ -175,5 +170,84 @@ func VndbSearchGameByID(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			},
 		},
 	}
+	utils.InteractionEmbedRespond(s, i, embed, true)
+}
+
+func VndbFuzzySearchBrand(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	// 長時間查詢
+	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseDeferredChannelMessageWithSource,
+	})
+
+	keyword, err := utils.GetOptions(i, "keyword")
+	if err != nil {
+		logrus.Error(err)
+		utils.InteractionRespond(s, i, "該功能目前異常，請稍後再嘗試")
+		return
+	}
+
+	companyType, err := utils.GetOptions(i, "type")
+	if err != nil && errors.Is(err, internalerrors.ErrOptionTranslateFail) {
+		logrus.Error(err)
+		utils.InteractionRespond(s, i, "該功能目前異常，請稍後再嘗試")
+		return
+	}
+
+	res, err := vndb.ProducerFuzzySearch(keyword, companyType)
+	if err != nil {
+		logrus.Error(err)
+		utils.InteractionRespond(s, i, "該功能目前異常，請稍後再嘗試") // 空搜尋結果處理
+		return
+	}
+
+	/* 處理回傳結構 */
+
+	title := res.Producer.Results[0].Original
+	if len(res.Producer.Results[0].Aliases) != 0 {
+		allAlias := make([]string, 0, len(res.Producer.Results[0].Aliases))
+		allAlias = append(allAlias, res.Producer.Results[0].Aliases...)
+
+		if strings.TrimSpace(title) != "" {
+			title += fmt.Sprintf("%s(%s)", allAlias[0], strings.Join(allAlias[1:], "), ("))
+		} else {
+			if len(allAlias) > 1 {
+				title = fmt.Sprintf("%s(%s)", allAlias[0], strings.Join(allAlias[1:], "), ("))
+			} else {
+				title = allAlias[0]
+			}
+		}
+
+	}
+
+	if strings.TrimSpace(title) == "" {
+		title = res.Producer.Results[0].Name
+	}
+
+	gameData := make([]string, 0, len(res.Vn.Results))
+	for _, game := range res.Vn.Results {
+		if strings.TrimSpace(game.Alttitle) != "" {
+			gameData = append(gameData, fmt.Sprintf("%.1f/%.1f/%03d　%02d(H)/%03d　%s", game.Average, game.Rating, game.Votecount, game.LengthMinutes/60, game.LengthVotes, game.Alttitle))
+		} else {
+			gameData = append(gameData, fmt.Sprintf("%.1f/%.1f/%03d　%02d(H)/%03d　%s", game.Average, game.Rating, game.Votecount, game.LengthMinutes/60, game.LengthVotes, game.Title))
+		}
+	}
+
+	embed := &discordgo.MessageEmbed{
+		Title: title,
+		Color: 0x04108e,
+		Fields: []*discordgo.MessageEmbedField{
+			{
+				Name:   "品牌(公司)名稱",
+				Value:  title,
+				Inline: false,
+			},
+			{
+				Name:   "遊戲列表",
+				Value:  strings.Join(gameData, "\n"),
+				Inline: false,
+			},
+		},
+	}
+
 	utils.InteractionEmbedRespond(s, i, embed, true)
 }

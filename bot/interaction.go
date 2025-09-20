@@ -12,5 +12,7 @@ func OnInteraction(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		go handlers.VndbStats(s, i)
 	case "vndb查詢指定遊戲":
 		go handlers.VndbSearchGameByID(s, i)
+	case "vndb模糊查詢品牌":
+		go handlers.VndbFuzzySearchBrand(s, i)
 	}
 }

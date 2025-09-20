@@ -45,16 +45,32 @@ type VndbGetVnUseIDResponse struct {
 	Image         VndbImageResponse       `json:"image"`
 }
 
-// [VNDB]查詢品牌Response
 type VndbProducerSearchResponse struct {
+	Producer *VndbResponse[VndbProducerSearchProducerResponse]
+	Vn       *VndbResponse[VndbProducerSearchVnResponse]
+}
+
+// [VNDB]查詢品牌API(Producer)
+type VndbProducerSearchProducerResponse struct {
 	ID          string                 `json:"id"`
 	Name        string                 `json:"name"`
-	Original    *string                `json:"original"`
+	Original    string                 `json:"original"` // *string
 	Aliases     []string               `json:"aliases"`
 	Lang        string                 `json:"lang"`
 	Type        string                 `json:"type"`
-	Description *string                `json:"description"`
+	Description string                 `json:"description"` // *string
 	Extlinks    []VndbExtlinksResponse `json:"extlinks"`
+}
+
+// [VNDB]查詢品牌API(vn)
+type VndbProducerSearchVnResponse struct {
+	Title         string  `json:"title"`
+	Alttitle      string  `json:"alttitle"`
+	Average       float64 `json:"average"`
+	Rating        float64 `json:"rating"`
+	Votecount     int     `json:"votecount"`
+	LengthMinutes int     `json:"length_minutes"`
+	LengthVotes   int     `json:"length_votes"`
 }
 
 /* basic type start */

@@ -35,6 +35,38 @@ func vndbCommands() []*discordgo.ApplicationCommand {
 				},
 			},
 		},
+		{
+			Name:        "vndb模糊查詢品牌",
+			Description: "根據關鍵字查詢公司品牌資料",
+			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "keyword",
+					Description: "關鍵字",
+					Required:    true,
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "type",
+					Description: "公司性質",
+					Required:    false,
+					Choices: []*discordgo.ApplicationCommandOptionChoice{
+						{
+							Name:  "公司",
+							Value: "company",
+						},
+						{
+							Name:  "個人",
+							Value: "individual",
+						},
+						{
+							Name:  "同人社團",
+							Value: "amateur",
+						},
+					},
+				},
+			},
+		},
 	}
 }
 
