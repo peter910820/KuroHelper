@@ -1,0 +1,70 @@
+package vndb
+
+import (
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"io"
+	"net/http"
+	"os"
+	"strings"
+
+	"kurohelper/models"
+)
+
+func GetVnUseID(brandid string) ([]byte, error) {
+	req := models.VndbCreate()
+
+	req.Filters = []string{
+		"id", "=", brandid,
+	}
+
+	titleFields := "title, alttitle"
+	developersFields := "developers.name, developers.original, developers.aliases"
+	nameFields := "titles.lang, titles.title, titles.official, titles.main"
+	staffFields := "staff.name, staff.role, staff.aliases.name"
+	characterFields := "va.character.original"
+	lengthFields := "length_minutes, length_votes"
+	scoreFields := "average, rating, votecount"
+	relationsFields := "relations.titles.title"
+
+	allFields := []string{
+		titleFields,
+		developersFields,
+		nameFields,
+		staffFields,
+		characterFields,
+		lengthFields,
+		scoreFields,
+		relationsFields,
+	}
+
+	req.Fields = strings.Join(allFields, ", ")
+
+	jsonData, err := json.Marshal(req)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := http.Post(os.Getenv("VNDB_ENDPOINT")+"/vn", "application/json", bytes.NewBuffer(jsonData))
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	if resp.StatusCode != 200 {
+		return nil, fmt.Errorf("the server returned an error status code %d", resp.StatusCode)
+	}
+
+	return body, nil
+}
+
+func GetVn() {
+
+}

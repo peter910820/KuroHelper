@@ -23,15 +23,17 @@ func main() {
 		logrus.Fatal(err)
 	}
 
-	err = kuroHelper.Open() // websocket connect
-	if err != nil {
-		logrus.Fatal(err)
-	}
+	kuroHelper.Identify.Intents = discordgo.IntentsGuilds | discordgo.IntentsGuildMembers | discordgo.IntentsGuildMessages | discordgo.IntentsMessageContent
 
 	logrus.Info("KuroHelper is now running. Press CTRL+C to exit.")
 
 	kuroHelper.AddHandler(bot.Ready)
 	kuroHelper.AddHandler(bot.OnInteraction)
+
+	err = kuroHelper.Open() // websocket connect
+	if err != nil {
+		logrus.Fatal(err)
+	}
 
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
