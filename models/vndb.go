@@ -1,21 +1,24 @@
 package models
 
-// VNDB request結構
+// [VNDB]Request結構
 //
 // 對VNDB來講沒有必填項目，註解的必填項目是對於該專案來講的必填項目
 // 所以預設值的部分可以完全不傳
+//
+// 這邊結構是根據需要的去對應，不是VNDB的完整結構
 type VndbRequest struct {
-	Filters           []string `json:"filters"` // 必填
-	Fields            string   `json:"fields"`  // 必填
-	Sort              *string  `json:"sort,omitempty"`
-	Reverse           *bool    `json:"reverse,omitempty"`
-	Results           *int     `json:"results,omitempty"`
-	Page              *int     `json:"page,omitempty"`
-	Count             *bool    `json:"count,omitempty"`
-	CompactFilters    *bool    `json:"compact_filters,omitempty"`
-	NormalizedFilters *bool    `json:"normalized_filters,omitempty"`
+	Filters           []interface{} `json:"filters"` // 必填
+	Fields            string        `json:"fields"`  // 必填
+	Sort              *string       `json:"sort,omitempty"`
+	Reverse           *bool         `json:"reverse,omitempty"`
+	Results           *int          `json:"results,omitempty"`
+	Page              *int          `json:"page,omitempty"`
+	Count             *bool         `json:"count,omitempty"`
+	CompactFilters    *bool         `json:"compact_filters,omitempty"`
+	NormalizedFilters *bool         `json:"normalized_filters,omitempty"`
 }
 
+// [VNDB]Response結構
 type VndbResponse[T any] struct {
 	Results           []T           `json:"results"`
 	More              bool          `json:"more"`
@@ -24,6 +27,7 @@ type VndbResponse[T any] struct {
 	NormalizedFilters []interface{} `json:"normalized_filters"`
 }
 
+// [VNDB]使用ID查詢指定遊戲Response
 type VndbGetVnUseIDResponse struct {
 	ID            string                  `json:"id"`
 	Title         string                  `json:"title"`
@@ -41,23 +45,34 @@ type VndbGetVnUseIDResponse struct {
 	Image         VndbImageResponse       `json:"image"`
 }
 
-/* basic type start */
-/* 這邊結構是根據需要的去對應，不是VNDB的完整結構 */
+// [VNDB]查詢品牌Response
+type VndbProducerSearchResponse struct {
+	ID          string                 `json:"id"`
+	Name        string                 `json:"name"`
+	Original    *string                `json:"original"`
+	Aliases     []string               `json:"aliases"`
+	Lang        string                 `json:"lang"`
+	Type        string                 `json:"type"`
+	Description *string                `json:"description"`
+	Extlinks    []VndbExtlinksResponse `json:"extlinks"`
+}
 
-// 品牌(發行單位)Response
+/* basic type start */
+
+// [VNDB]品牌(發行單位)Response
 type VndbDeveloperResponse struct {
 	Aliases  []string `json:"aliases"`
 	Name     string   `json:"name"`
 	Original string   `json:"original"`
 }
 
-// 關聯Response
+// [VNDB]關聯Response
 type VndbRelationResponse struct {
 	ID     string                      `json:"id"`
 	Titles []VndbRelationTitleResponse `json:"titles"`
 }
 
-// 關聯的標題Response
+// [VNDB]關聯的標題Response
 type VndbRelationTitleResponse struct {
 	Title string `json:"title"`
 }
@@ -97,6 +112,14 @@ type VndbVnsResponse struct {
 
 type VndbImageResponse struct {
 	Url string `json:"url"`
+}
+
+// [VNDB]外部連結Response
+type VndbExtlinksResponse struct {
+	Url   string `json:"url"`
+	Label string `json:"label"`
+	Name  string `json:"name"`
+	ID    string `json:"id"`
 }
 
 /* basic type end */
