@@ -20,16 +20,18 @@ func GetVnUseID(brandid string) ([]byte, error) {
 	}
 
 	titleFields := "title, alttitle"
+	imageFields := "image.url"
 	developersFields := "developers.name, developers.original, developers.aliases"
 	nameFields := "titles.lang, titles.title, titles.official, titles.main"
 	staffFields := "staff.name, staff.role, staff.aliases.name"
-	characterFields := "va.character.original"
+	characterFields := "va.character.original, va.character.vns.role"
 	lengthFields := "length_minutes, length_votes"
 	scoreFields := "average, rating, votecount"
 	relationsFields := "relations.titles.title"
 
 	allFields := []string{
 		titleFields,
+		imageFields,
 		developersFields,
 		nameFields,
 		staffFields,
