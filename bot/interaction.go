@@ -8,7 +8,9 @@ import (
 
 func OnInteraction(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	switch i.ApplicationCommandData().Name {
-	case "vndb統計資料":
+	case "VNDB統計資料":
 		go handlers.VndbStats(s, i)
+	case "VNDB查詢遊戲":
+		go handlers.VndbSearchGame(s, i)
 	}
 }

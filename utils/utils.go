@@ -2,6 +2,8 @@ package utils
 
 import (
 	"github.com/bwmarrin/discordgo"
+
+	internalerrors "kurohelper/errors"
 )
 
 // handle interaction command common respond
@@ -22,4 +24,19 @@ func InteractionEmbedRespond(s *discordgo.Session, i *discordgo.InteractionCreat
 			Embeds: []*discordgo.MessageEmbed{embed},
 		},
 	})
+}
+
+// get slash command options
+func GetOptions(i *discordgo.InteractionCreate, name string) (string, error) {
+	for _, v := range i.ApplicationCommandData().Options {
+		if v.Name == name {
+			value, ok := v.Value.(string) // type assertion
+			if !ok {
+				return "", internalerrors.ErrOptionTranslateFail
+			} else {
+				return value, nil
+			}
+		}
+	}
+	return "", internalerrors.ErrOptionNotFound
 }

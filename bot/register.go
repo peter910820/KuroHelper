@@ -20,8 +20,26 @@ func RegisterCommand(s *discordgo.Session) {
 func vndbCommands() []*discordgo.ApplicationCommand {
 	return []*discordgo.ApplicationCommand{
 		{
-			Name:        "vndb統計資料",
+			Name:        "VNDB統計資料",
 			Description: "取得vndb統計資料",
+		},
+		{
+			Name:        "VNDB查詢遊戲",
+			Description: "根據關鍵字取得vndb遊戲資料",
+			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "keyword",
+					Description: "關鍵字",
+					Required:    true,
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "brandid",
+					Description: "指定的品牌ID(VNDB ID)",
+					Required:    false,
+				},
+			},
 		},
 	}
 }
