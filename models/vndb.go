@@ -16,8 +16,8 @@ type VndbRequest struct {
 	NormalizedFilters *bool    `json:"normalized_filters,omitempty"`
 }
 
-type VndbResponse struct {
-	Results           []interface{} `json:"results"`
+type VndbResponse[T any] struct {
+	Results           []T           `json:"results"`
 	More              bool          `json:"more"`
 	Count             int           `json:"count"`
 	CompactFilters    string        `json:"compact_filters"`
@@ -25,16 +25,19 @@ type VndbResponse struct {
 }
 
 type VndbGetVnUseIDResponse struct {
-	ID            int                    `json:"id"`
-	Average       float64                `json:"average"`
-	Rating        float64                `json:"rating"`
-	Votecount     int                    `json:"votecount"`
-	LengthMinutes int                    `json:"length_minutes"`
-	LengthVotes   int                    `json:"length_votes"`
-	Relations     []VndbRelationResponse `json:"relations"`
-	Staff         []VndbStaffResponse    `json:"staff"`
-	Titles        []VndbTitleResponse    `json:"titles"`
-	Va            []VndbVaResponse       `json:"va"`
+	ID            string                  `json:"id"`
+	Title         string                  `json:"title"`
+	Alttitle      string                  `json:"alttitle"`
+	Average       float64                 `json:"average"`
+	Rating        float64                 `json:"rating"`
+	Votecount     int                     `json:"votecount"`
+	LengthMinutes int                     `json:"length_minutes"`
+	LengthVotes   int                     `json:"length_votes"`
+	Developers    []VndbDeveloperResponse `json:"developers"`
+	Relations     []VndbRelationResponse  `json:"relations"`
+	Staff         []VndbStaffResponse     `json:"staff"`
+	Titles        []VndbTitleResponse     `json:"titles"`
+	Va            []VndbVaResponse        `json:"va"`
 }
 
 /* basic type start */
@@ -62,7 +65,7 @@ type VndbStaffResponse struct {
 	ID      string                   `json:"id"`
 	Name    string                   `json:"name"`
 	Role    string                   `json:"role"`
-	Aliases []VndbStaffAliasResponse `json:"title"`
+	Aliases []VndbStaffAliasResponse `json:"aliases"`
 }
 
 type VndbStaffAliasResponse struct {
@@ -77,7 +80,7 @@ type VndbTitleResponse struct {
 }
 
 type VndbVaResponse struct {
-	Character []VndbCharacterResponse `json:"character"`
+	Character VndbCharacterResponse `json:"character"`
 }
 
 type VndbCharacterResponse struct {
