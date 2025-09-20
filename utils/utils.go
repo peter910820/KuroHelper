@@ -2,6 +2,7 @@ package utils
 
 import (
 	"github.com/bwmarrin/discordgo"
+	"github.com/sirupsen/logrus"
 
 	internalerrors "kurohelper/errors"
 )
@@ -17,13 +18,24 @@ func InteractionRespond(s *discordgo.Session, i *discordgo.InteractionCreate, ms
 }
 
 // handle interaction command embed respond
-func InteractionEmbedRespond(s *discordgo.Session, i *discordgo.InteractionCreate, embed *discordgo.MessageEmbed) {
-	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseChannelMessageWithSource,
-		Data: &discordgo.InteractionResponseData{
-			Embeds: []*discordgo.MessageEmbed{embed},
-		},
-	})
+func InteractionEmbedRespond(s *discordgo.Session, i *discordgo.InteractionCreate, embed *discordgo.MessageEmbed, editFlag bool) {
+	if editFlag {
+		_, err := s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
+			Embeds: &[]*discordgo.MessageEmbed{embed},
+		})
+		if err != nil {
+			logrus.Error(err)
+		}
+		InteractionRespond(s, i, "該功能目前異常，請稍後再嘗試")
+	} else {
+		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Embeds: []*discordgo.MessageEmbed{embed},
+			},
+		})
+	}
+
 }
 
 // get slash command options

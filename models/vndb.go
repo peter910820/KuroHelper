@@ -38,6 +38,7 @@ type VndbGetVnUseIDResponse struct {
 	Staff         []VndbStaffResponse     `json:"staff"`
 	Titles        []VndbTitleResponse     `json:"titles"`
 	Va            []VndbVaResponse        `json:"va"`
+	Image         VndbImageResponse       `json:"image"`
 }
 
 /* basic type start */
@@ -84,8 +85,18 @@ type VndbVaResponse struct {
 }
 
 type VndbCharacterResponse struct {
-	ID       string `json:"id"`
-	Original string `json:"original"`
+	ID       string            `json:"id"`
+	Original string            `json:"original"`
+	Vns      []VndbVnsResponse `json:"vns"`
+}
+
+type VndbVnsResponse struct {
+	ID   string `json:"id"`
+	Role string `json:"role"`
+}
+
+type VndbImageResponse struct {
+	Url string `json:"url"`
 }
 
 /* basic type end */
