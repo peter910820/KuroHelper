@@ -6,9 +6,11 @@ import (
 	"strings"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 
 	internalerrors "kurohelper/errors"
+	"kurohelper/models"
 	"kurohelper/utils"
 	"kurohelper/vndb"
 )
@@ -31,7 +33,7 @@ func VndbStats(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			},
 		},
 	}
-	utils.InteractionEmbedRespond(s, i, embed, false)
+	utils.InteractionEmbedRespond(s, i, embed, nil, false)
 }
 
 func VndbSearchGameByID(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -174,43 +176,108 @@ func VndbSearchGameByID(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			},
 		},
 	}
-	utils.InteractionEmbedRespond(s, i, embed, true)
+	utils.InteractionEmbedRespond(s, i, embed, nil, true)
 }
 
-func VndbFuzzySearchBrand(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	// 長時間查詢
-	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseDeferredChannelMessageWithSource,
-	})
+func VndbFuzzySearchBrand(s *discordgo.Session, i *discordgo.InteractionCreate, cid *models.VndbInteractionCustomID) {
+	var res *models.VndbProducerSearchResponse
+	var component discordgo.ActionsRow
+	var hasMore bool
+	// 第一次查詢
+	if cid == nil {
+		// 長時間查詢
+		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseDeferredChannelMessageWithSource,
+		})
 
-	keyword, err := utils.GetOptions(i, "keyword")
-	if err != nil {
-		logrus.Error(err)
-		utils.InteractionEmbedErrorRespond(s, i, "該功能目前異常，請稍後再嘗試", true)
-		return
-	}
-
-	companyType, err := utils.GetOptions(i, "type")
-	if err != nil && errors.Is(err, internalerrors.ErrOptionTranslateFail) {
-		logrus.Error(err)
-		utils.InteractionEmbedErrorRespond(s, i, "該功能目前異常，請稍後再嘗試", true)
-		return
-	}
-
-	res, err := vndb.ProducerFuzzySearch(keyword, companyType)
-	if err != nil {
-		logrus.Error(err)
-		if errors.Is(err, internalerrors.ErrVndbNoResult) {
-			utils.InteractionEmbedErrorRespond(s, i, "找不到任何結果喔", true)
-		} else {
+		keyword, err := utils.GetOptions(i, "keyword")
+		if err != nil {
+			logrus.Error(err)
 			utils.InteractionEmbedErrorRespond(s, i, "該功能目前異常，請稍後再嘗試", true)
+			return
 		}
-		return
-	}
 
-	// 資料分頁
-	if len(res.Vn.Results) > 10 {
-		res.Vn.Results = res.Vn.Results[:10]
+		companyType, err := utils.GetOptions(i, "type")
+		if err != nil && errors.Is(err, internalerrors.ErrOptionTranslateFail) {
+			logrus.Error(err)
+			utils.InteractionEmbedErrorRespond(s, i, "該功能目前異常，請稍後再嘗試", true)
+			return
+		}
+
+		res, err = vndb.ProducerFuzzySearch(keyword, companyType)
+		if err != nil {
+			logrus.Error(err)
+			if errors.Is(err, internalerrors.ErrVndbNoResult) {
+				utils.InteractionEmbedErrorRespond(s, i, "找不到任何結果喔", true)
+			} else {
+				utils.InteractionEmbedErrorRespond(s, i, "該功能目前異常，請稍後再嘗試", true)
+			}
+			return
+		}
+
+		idStr := uuid.New().String()
+		SetCache(idStr, *res)
+		hasMore = pagination(&(res.Vn.Results), 0, false)
+
+		if hasMore {
+			component = discordgo.ActionsRow{
+				Components: []discordgo.MessageComponent{
+					discordgo.Button{
+						Label:    "▶️",
+						Style:    discordgo.PrimaryButton,
+						CustomID: fmt.Sprintf("SearchBrand_1_%s", idStr),
+					},
+				},
+			}
+		}
+	} else {
+		cacheValue, ok := GetCache(cid.Key)
+		if !ok {
+			utils.EmbedErrorRespond(s, i, "快取遺失，請重新查詢")
+			return
+		}
+		resValue := cacheValue.(models.VndbProducerSearchResponse)
+		res = &resValue
+		// 資料分頁
+		hasMore = pagination(&(res.Vn.Results), cid.Page, true)
+		if hasMore {
+			if cid.Page == 0 {
+				component = discordgo.ActionsRow{
+					Components: []discordgo.MessageComponent{
+						&discordgo.Button{
+							Label:    "▶️",
+							Style:    discordgo.PrimaryButton,
+							CustomID: fmt.Sprintf("SearchBrand_1_%s", cid.Key),
+						},
+					},
+				}
+			} else {
+				component = discordgo.ActionsRow{
+					Components: []discordgo.MessageComponent{
+						&discordgo.Button{
+							Label:    "◀️",
+							Style:    discordgo.PrimaryButton,
+							CustomID: fmt.Sprintf("SearchBrand_%d_%s", cid.Page-1, cid.Key),
+						},
+						&discordgo.Button{
+							Label:    "▶️",
+							Style:    discordgo.PrimaryButton,
+							CustomID: fmt.Sprintf("SearchBrand_%d_%s", cid.Page+1, cid.Key),
+						},
+					},
+				}
+			}
+		} else {
+			component = discordgo.ActionsRow{
+				Components: []discordgo.MessageComponent{
+					&discordgo.Button{
+						Label:    "◀️",
+						Style:    discordgo.PrimaryButton,
+						CustomID: fmt.Sprintf("SearchBrand_%d_%s", cid.Page-1, cid.Key),
+					},
+				},
+			}
+		}
 	}
 
 	/* 處理回傳結構 */
@@ -262,5 +329,33 @@ func VndbFuzzySearchBrand(s *discordgo.Session, i *discordgo.InteractionCreate) 
 		},
 	}
 
-	utils.InteractionEmbedRespond(s, i, embed, true)
+	if cid == nil {
+		utils.InteractionEmbedRespond(s, i, embed, &component, true)
+	} else {
+		utils.EditEmbedRespond(s, i, embed, &component)
+	}
+
+}
+
+// 資料分頁
+func pagination(result *[]models.VndbProducerSearchVnResponse, page int, useCache bool) bool {
+	resultLen := len(*result)
+	expectedMin := page * 10
+	expectedMax := page*10 + 9
+
+	if !useCache || page == 0 {
+		if resultLen > 10 {
+			*result = (*result)[:10]
+			return true
+		}
+		return false
+	} else {
+		if resultLen > expectedMax {
+			*result = (*result)[expectedMin:expectedMax]
+			return true
+		} else {
+			*result = (*result)[expectedMin:]
+			return false
+		}
+	}
 }

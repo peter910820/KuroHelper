@@ -17,7 +17,7 @@ func SetCache(key string, value interface{}) {
 	defer vndbCacheMu.Unlock()
 	vndbCache[key] = &models.Cache{
 		Value:    value,
-		ExpireAt: time.Now().Add(3 * time.Minute),
+		ExpireAt: time.Now().Add(3),
 	}
 }
 

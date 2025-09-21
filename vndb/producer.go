@@ -114,7 +114,7 @@ func ProducerFuzzySearch(keyword string, companyType string) (*models.VndbProduc
 	}
 
 	return &models.VndbProducerSearchResponse{
-		Producer: &resProducer,
-		Vn:       &resVn,
+		Producer: resProducer,
+		Vn:       resVn,
 	}, nil
 }

@@ -46,8 +46,8 @@ type VndbGetVnUseIDResponse struct {
 }
 
 type VndbProducerSearchResponse struct {
-	Producer *VndbResponse[VndbProducerSearchProducerResponse]
-	Vn       *VndbResponse[VndbProducerSearchVnResponse]
+	Producer VndbResponse[VndbProducerSearchProducerResponse]
+	Vn       VndbResponse[VndbProducerSearchVnResponse]
 }
 
 // [VNDB]查詢品牌API(Producer)

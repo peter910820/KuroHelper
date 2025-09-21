@@ -8,6 +8,8 @@ import (
 )
 
 // handle interaction command common respond
+//
+// 這邊用來當作如果嵌入式訊息發送失敗的最後發送手段
 func InteractionRespond(s *discordgo.Session, i *discordgo.InteractionCreate, msg string) {
 	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
@@ -18,24 +20,27 @@ func InteractionRespond(s *discordgo.Session, i *discordgo.InteractionCreate, ms
 }
 
 // handle interaction command embed respond
-func InteractionEmbedRespond(s *discordgo.Session, i *discordgo.InteractionCreate, embed *discordgo.MessageEmbed, editFlag bool) {
+//
+// editFlag參數為有無需要修改因為defer而產生的interaction訊息(機器人正在思考...)
+func InteractionEmbedRespond(s *discordgo.Session, i *discordgo.InteractionCreate, embed *discordgo.MessageEmbed, components *discordgo.ActionsRow, editFlag bool) {
 	if editFlag {
 		_, err := s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
-			Embeds: &[]*discordgo.MessageEmbed{embed},
+			Embeds:     &[]*discordgo.MessageEmbed{embed},
+			Components: &[]discordgo.MessageComponent{*components},
 		})
 		if err != nil {
 			logrus.Error(err)
+			InteractionRespond(s, i, "該功能目前異常，請稍後再嘗試")
 		}
-		InteractionRespond(s, i, "該功能目前異常，請稍後再嘗試")
 	} else {
 		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
-				Embeds: []*discordgo.MessageEmbed{embed},
+				Embeds:     []*discordgo.MessageEmbed{embed},
+				Components: []discordgo.MessageComponent{*components},
 			},
 		})
 	}
-
 }
 
 // 傳送嵌入訊息內建包裝錯誤的版本
@@ -51,8 +56,45 @@ func InteractionEmbedErrorRespond(s *discordgo.Session, i *discordgo.Interaction
 			},
 		},
 	}
-	InteractionEmbedRespond(s, i, embed, editFlag)
+	InteractionEmbedRespond(s, i, embed, nil, editFlag)
+}
 
+func EmbedErrorRespond(s *discordgo.Session, i *discordgo.InteractionCreate, errString string) {
+	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseDeferredMessageUpdate,
+	})
+
+	embed := &discordgo.MessageEmbed{
+		Title: "❌錯誤",
+		Color: 0xcc543a,
+		Fields: []*discordgo.MessageEmbedField{
+			{
+				Name:   "說明",
+				Value:  errString,
+				Inline: false,
+			},
+		},
+	}
+
+	s.ChannelMessageEditComplex(&discordgo.MessageEdit{
+		ID:         i.Message.ID,
+		Channel:    i.Message.ChannelID,
+		Embeds:     &[]*discordgo.MessageEmbed{embed},
+		Components: &[]discordgo.MessageComponent{},
+	})
+}
+
+func EditEmbedRespond(s *discordgo.Session, i *discordgo.InteractionCreate, embed *discordgo.MessageEmbed, components *discordgo.ActionsRow) {
+	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseDeferredMessageUpdate,
+	})
+
+	s.ChannelMessageEditComplex(&discordgo.MessageEdit{
+		ID:         i.Message.ID,
+		Channel:    i.Message.ChannelID,
+		Embeds:     &[]*discordgo.MessageEmbed{embed},
+		Components: &[]discordgo.MessageComponent{*components},
+	})
 }
 
 // get slash command options
