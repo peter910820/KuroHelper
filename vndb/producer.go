@@ -9,6 +9,7 @@ import (
 	"os"
 	"strings"
 
+	internalerrors "kurohelper/errors"
 	"kurohelper/models"
 )
 
@@ -74,7 +75,7 @@ func ProducerFuzzySearch(keyword string, companyType string) (*models.VndbProduc
 	reqVn := models.VndbCreate()
 
 	if len(resProducer.Results) == 0 {
-		return nil, fmt.Errorf("找不到任何品牌(公司)")
+		return nil, internalerrors.ErrVndbNoResult
 	}
 	reqVn.Filters = []interface{}{
 		"developer", "=", []interface{}{"id", "=", resProducer.Results[0].ID},
@@ -109,7 +110,7 @@ func ProducerFuzzySearch(keyword string, companyType string) (*models.VndbProduc
 	}
 
 	if len(resVn.Results) == 0 {
-		return nil, fmt.Errorf("找不到任何遊戲資料")
+		return nil, internalerrors.ErrVndbNoResult
 	}
 
 	return &models.VndbProducerSearchResponse{

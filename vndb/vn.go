@@ -9,6 +9,7 @@ import (
 	"os"
 	"strings"
 
+	internalerrors "kurohelper/errors"
 	"kurohelper/models"
 )
 
@@ -68,6 +69,10 @@ func GetVnUseID(brandid string) (*models.VndbResponse[models.VndbGetVnUseIDRespo
 	err = json.Unmarshal(body, &res)
 	if err != nil {
 		return nil, err
+	}
+
+	if len(res.Results) == 0 {
+		return nil, internalerrors.ErrVndbNoResult
 	}
 
 	return &res, nil

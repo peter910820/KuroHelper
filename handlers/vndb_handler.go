@@ -43,14 +43,18 @@ func VndbSearchGameByID(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	brandid, err := utils.GetOptions(i, "brandid")
 	if err != nil {
 		logrus.Error(err)
-		utils.InteractionRespond(s, i, "該功能目前異常，請稍後再嘗試")
+		utils.InteractionEmbedErrorRespond(s, i, "該功能目前異常，請稍後再嘗試", true)
 		return
 	}
 
 	res, err := vndb.GetVnUseID(brandid)
 	if err != nil {
 		logrus.Error(err)
-		utils.InteractionRespond(s, i, "該功能目前異常，請稍後再嘗試")
+		if errors.Is(err, internalerrors.ErrVndbNoResult) {
+			utils.InteractionEmbedErrorRespond(s, i, "找不到任何結果喔", true)
+		} else {
+			utils.InteractionEmbedErrorRespond(s, i, "該功能目前異常，請稍後再嘗試", true)
+		}
 		return
 	}
 
@@ -182,22 +186,31 @@ func VndbFuzzySearchBrand(s *discordgo.Session, i *discordgo.InteractionCreate) 
 	keyword, err := utils.GetOptions(i, "keyword")
 	if err != nil {
 		logrus.Error(err)
-		utils.InteractionRespond(s, i, "該功能目前異常，請稍後再嘗試")
+		utils.InteractionEmbedErrorRespond(s, i, "該功能目前異常，請稍後再嘗試", true)
 		return
 	}
 
 	companyType, err := utils.GetOptions(i, "type")
 	if err != nil && errors.Is(err, internalerrors.ErrOptionTranslateFail) {
 		logrus.Error(err)
-		utils.InteractionRespond(s, i, "該功能目前異常，請稍後再嘗試")
+		utils.InteractionEmbedErrorRespond(s, i, "該功能目前異常，請稍後再嘗試", true)
 		return
 	}
 
 	res, err := vndb.ProducerFuzzySearch(keyword, companyType)
 	if err != nil {
 		logrus.Error(err)
-		utils.InteractionRespond(s, i, "該功能目前異常，請稍後再嘗試") // 空搜尋結果處理
+		if errors.Is(err, internalerrors.ErrVndbNoResult) {
+			utils.InteractionEmbedErrorRespond(s, i, "找不到任何結果喔", true)
+		} else {
+			utils.InteractionEmbedErrorRespond(s, i, "該功能目前異常，請稍後再嘗試", true)
+		}
 		return
+	}
+
+	// 資料分頁
+	if len(res.Vn.Results) > 10 {
+		res.Vn.Results = res.Vn.Results[:10]
 	}
 
 	/* 處理回傳結構 */
@@ -226,9 +239,9 @@ func VndbFuzzySearchBrand(s *discordgo.Session, i *discordgo.InteractionCreate) 
 	gameData := make([]string, 0, len(res.Vn.Results))
 	for _, game := range res.Vn.Results {
 		if strings.TrimSpace(game.Alttitle) != "" {
-			gameData = append(gameData, fmt.Sprintf("%.1f/%.1f/%03d　%02d(H)/%03d　%s", game.Average, game.Rating, game.Votecount, game.LengthMinutes/60, game.LengthVotes, game.Alttitle))
+			gameData = append(gameData, fmt.Sprintf("%.1f/%.1f/%03d　%02d(H)/%03d　**%s**", game.Average, game.Rating, game.Votecount, game.LengthMinutes/60, game.LengthVotes, game.Alttitle))
 		} else {
-			gameData = append(gameData, fmt.Sprintf("%.1f/%.1f/%03d　%02d(H)/%03d　%s", game.Average, game.Rating, game.Votecount, game.LengthMinutes/60, game.LengthVotes, game.Title))
+			gameData = append(gameData, fmt.Sprintf("%.1f/%.1f/%03d　%02d(H)/%03d　**%s**", game.Average, game.Rating, game.Votecount, game.LengthMinutes/60, game.LengthVotes, game.Title))
 		}
 	}
 

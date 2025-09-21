@@ -38,6 +38,23 @@ func InteractionEmbedRespond(s *discordgo.Session, i *discordgo.InteractionCreat
 
 }
 
+// 傳送嵌入訊息內建包裝錯誤的版本
+func InteractionEmbedErrorRespond(s *discordgo.Session, i *discordgo.InteractionCreate, errString string, editFlag bool) {
+	embed := &discordgo.MessageEmbed{
+		Title: "❌錯誤",
+		Color: 0xcc543a,
+		Fields: []*discordgo.MessageEmbedField{
+			{
+				Name:   "說明",
+				Value:  errString,
+				Inline: false,
+			},
+		},
+	}
+	InteractionEmbedRespond(s, i, embed, editFlag)
+
+}
+
 // get slash command options
 func GetOptions(i *discordgo.InteractionCreate, name string) (string, error) {
 	for _, v := range i.ApplicationCommandData().Options {
