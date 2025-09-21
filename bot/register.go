@@ -67,6 +67,46 @@ func vndbCommands() []*discordgo.ApplicationCommand {
 				},
 			},
 		},
+		{
+			Name:        "vndb模糊查詢創作家",
+			Description: "根據關鍵字查詢創作家資料",
+			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "keyword",
+					Description: "關鍵字",
+					Required:    true,
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "role",
+					Description: "角色過濾",
+					Required:    false,
+					Choices: []*discordgo.ApplicationCommandOptionChoice{
+						{
+							Name:  "腳本家",
+							Value: "scenario",
+						},
+						{
+							Name:  "角色設計",
+							Value: "chardesign",
+						},
+						{
+							Name:  "美術",
+							Value: "art",
+						},
+						{
+							Name:  "音樂",
+							Value: "music",
+						},
+						{
+							Name:  "歌曲",
+							Value: "songs",
+						},
+					},
+				},
+			},
+		},
 	}
 }
 
