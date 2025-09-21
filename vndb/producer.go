@@ -10,11 +10,11 @@ import (
 	"strings"
 
 	internalerrors "kurohelper/errors"
-	"kurohelper/models"
+	vndbmodels "kurohelper/models/vndb"
 )
 
-func ProducerFuzzySearch(keyword string, companyType string) (*models.VndbProducerSearchResponse, error) {
-	reqProducer := models.VndbCreate()
+func ProducerFuzzySearch(keyword string, companyType string) (*vndbmodels.ProducerSearchResponse, error) {
+	reqProducer := vndbmodels.VndbCreate()
 
 	filtersProducer := []interface{}{}
 	if companyType != "" {
@@ -65,14 +65,14 @@ func ProducerFuzzySearch(keyword string, companyType string) (*models.VndbProduc
 		return nil, fmt.Errorf("the server returned an error status code %d", respProducer.StatusCode)
 	}
 
-	var resProducer models.VndbResponse[models.VndbProducerSearchProducerResponse]
+	var resProducer vndbmodels.BasicResponse[vndbmodels.ProducerSearchProducerResponse]
 	err = json.Unmarshal(r, &resProducer)
 	if err != nil {
 		return nil, err
 	}
 
 	// 等到查詢解析完後才能去查詢遊戲的資料
-	reqVn := models.VndbCreate()
+	reqVn := vndbmodels.VndbCreate()
 
 	if len(resProducer.Results) == 0 {
 		return nil, internalerrors.ErrVndbNoResult
@@ -103,7 +103,7 @@ func ProducerFuzzySearch(keyword string, companyType string) (*models.VndbProduc
 		return nil, fmt.Errorf("the server returned an error status code %d", respVn.StatusCode)
 	}
 
-	var resVn models.VndbResponse[models.VndbProducerSearchVnResponse]
+	var resVn vndbmodels.BasicResponse[vndbmodels.ProducerSearchVnResponse]
 	err = json.Unmarshal(r, &resVn)
 	if err != nil {
 		return nil, err
@@ -113,7 +113,7 @@ func ProducerFuzzySearch(keyword string, companyType string) (*models.VndbProduc
 		return nil, internalerrors.ErrVndbNoResult
 	}
 
-	return &models.VndbProducerSearchResponse{
+	return &vndbmodels.ProducerSearchResponse{
 		Producer: resProducer,
 		Vn:       resVn,
 	}, nil

@@ -10,11 +10,11 @@ import (
 	"strings"
 
 	internalerrors "kurohelper/errors"
-	"kurohelper/models"
+	vndbmodels "kurohelper/models/vndb"
 )
 
-func GetVnUseID(brandid string) (*models.VndbResponse[models.VndbGetVnUseIDResponse], error) {
-	req := models.VndbCreate()
+func GetVnUseID(brandid string) (*vndbmodels.BasicResponse[vndbmodels.GetVnUseIDResponse], error) {
+	req := vndbmodels.VndbCreate()
 
 	req.Filters = []interface{}{
 		"id", "=", brandid,
@@ -65,7 +65,7 @@ func GetVnUseID(brandid string) (*models.VndbResponse[models.VndbGetVnUseIDRespo
 		return nil, fmt.Errorf("the server returned an error status code %d", resp.StatusCode)
 	}
 
-	var res models.VndbResponse[models.VndbGetVnUseIDResponse]
+	var res vndbmodels.BasicResponse[vndbmodels.GetVnUseIDResponse]
 	err = json.Unmarshal(body, &res)
 	if err != nil {
 		return nil, err

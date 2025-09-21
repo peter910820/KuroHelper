@@ -11,6 +11,7 @@ import (
 
 	internalerrors "kurohelper/errors"
 	"kurohelper/models"
+	vndbmodels "kurohelper/models/vndb"
 	"kurohelper/utils"
 	"kurohelper/vndb"
 )
@@ -180,7 +181,7 @@ func VndbSearchGameByID(s *discordgo.Session, i *discordgo.InteractionCreate) {
 }
 
 func VndbFuzzySearchBrand(s *discordgo.Session, i *discordgo.InteractionCreate, cid *models.VndbInteractionCustomID) {
-	var res *models.VndbProducerSearchResponse
+	var res *vndbmodels.ProducerSearchResponse
 	var component discordgo.ActionsRow
 	var hasMore bool
 	// 第一次查詢
@@ -236,7 +237,7 @@ func VndbFuzzySearchBrand(s *discordgo.Session, i *discordgo.InteractionCreate, 
 			utils.EmbedErrorRespond(s, i, "快取遺失，請重新查詢")
 			return
 		}
-		resValue := cacheValue.(models.VndbProducerSearchResponse)
+		resValue := cacheValue.(vndbmodels.ProducerSearchResponse)
 		res = &resValue
 		// 資料分頁
 		hasMore = pagination(&(res.Vn.Results), cid.Page, true)
@@ -337,8 +338,12 @@ func VndbFuzzySearchBrand(s *discordgo.Session, i *discordgo.InteractionCreate, 
 
 }
 
+func VndbFuzzySearchStaff(s *discordgo.Session, i *discordgo.InteractionCreate, cid *models.VndbInteractionCustomID) {
+
+}
+
 // 資料分頁
-func pagination(result *[]models.VndbProducerSearchVnResponse, page int, useCache bool) bool {
+func pagination(result *[]vndbmodels.ProducerSearchVnResponse, page int, useCache bool) bool {
 	resultLen := len(*result)
 	expectedMin := page * 10
 	expectedMax := page*10 + 9
