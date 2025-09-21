@@ -23,10 +23,17 @@ func InteractionRespond(s *discordgo.Session, i *discordgo.InteractionCreate, ms
 //
 // editFlag參數為有無需要修改因為defer而產生的interaction訊息(機器人正在思考...)
 func InteractionEmbedRespond(s *discordgo.Session, i *discordgo.InteractionCreate, embed *discordgo.MessageEmbed, components *discordgo.ActionsRow, editFlag bool) {
+	var comps []discordgo.MessageComponent
+	if components != nil {
+		comps = []discordgo.MessageComponent{*components}
+	} else {
+		comps = []discordgo.MessageComponent{}
+	}
+
 	if editFlag {
 		_, err := s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
 			Embeds:     &[]*discordgo.MessageEmbed{embed},
-			Components: &[]discordgo.MessageComponent{*components},
+			Components: &comps,
 		})
 		if err != nil {
 			logrus.Error(err)
@@ -37,7 +44,7 @@ func InteractionEmbedRespond(s *discordgo.Session, i *discordgo.InteractionCreat
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
 				Embeds:     []*discordgo.MessageEmbed{embed},
-				Components: []discordgo.MessageComponent{*components},
+				Components: comps,
 			},
 		})
 	}
@@ -89,11 +96,18 @@ func EditEmbedRespond(s *discordgo.Session, i *discordgo.InteractionCreate, embe
 		Type: discordgo.InteractionResponseDeferredMessageUpdate,
 	})
 
+	var comps []discordgo.MessageComponent
+	if components != nil {
+		comps = []discordgo.MessageComponent{*components}
+	} else {
+		comps = []discordgo.MessageComponent{}
+	}
+
 	s.ChannelMessageEditComplex(&discordgo.MessageEdit{
 		ID:         i.Message.ID,
 		Channel:    i.Message.ChannelID,
 		Embeds:     &[]*discordgo.MessageEmbed{embed},
-		Components: &[]discordgo.MessageComponent{*components},
+		Components: &comps,
 	})
 }
 
