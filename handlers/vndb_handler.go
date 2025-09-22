@@ -182,7 +182,7 @@ func VndbSearchGameByID(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 func VndbFuzzySearchBrand(s *discordgo.Session, i *discordgo.InteractionCreate, cid *models.VndbInteractionCustomID) {
 	var res *vndbmodels.ProducerSearchResponse
-	var component discordgo.ActionsRow
+	var component *discordgo.ActionsRow
 	var hasMore bool
 	// 第一次查詢
 	if cid == nil {
@@ -221,7 +221,7 @@ func VndbFuzzySearchBrand(s *discordgo.Session, i *discordgo.InteractionCreate, 
 		hasMore = pagination(&(res.Vn.Results), 0, false)
 
 		if hasMore {
-			component = discordgo.ActionsRow{
+			component = &discordgo.ActionsRow{
 				Components: []discordgo.MessageComponent{
 					discordgo.Button{
 						Label:    "▶️",
@@ -243,7 +243,7 @@ func VndbFuzzySearchBrand(s *discordgo.Session, i *discordgo.InteractionCreate, 
 		hasMore = pagination(&(res.Vn.Results), cid.Page, true)
 		if hasMore {
 			if cid.Page == 0 {
-				component = discordgo.ActionsRow{
+				component = &discordgo.ActionsRow{
 					Components: []discordgo.MessageComponent{
 						&discordgo.Button{
 							Label:    "▶️",
@@ -253,7 +253,7 @@ func VndbFuzzySearchBrand(s *discordgo.Session, i *discordgo.InteractionCreate, 
 					},
 				}
 			} else {
-				component = discordgo.ActionsRow{
+				component = &discordgo.ActionsRow{
 					Components: []discordgo.MessageComponent{
 						&discordgo.Button{
 							Label:    "◀️",
@@ -269,7 +269,7 @@ func VndbFuzzySearchBrand(s *discordgo.Session, i *discordgo.InteractionCreate, 
 				}
 			}
 		} else {
-			component = discordgo.ActionsRow{
+			component = &discordgo.ActionsRow{
 				Components: []discordgo.MessageComponent{
 					&discordgo.Button{
 						Label:    "◀️",
@@ -331,9 +331,9 @@ func VndbFuzzySearchBrand(s *discordgo.Session, i *discordgo.InteractionCreate, 
 	}
 
 	if cid == nil {
-		utils.InteractionEmbedRespond(s, i, embed, &component, true)
+		utils.InteractionEmbedRespond(s, i, embed, component, true)
 	} else {
-		utils.EditEmbedRespond(s, i, embed, &component)
+		utils.EditEmbedRespond(s, i, embed, component)
 	}
 
 }
