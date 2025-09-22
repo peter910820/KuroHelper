@@ -205,7 +205,7 @@ func VndbFuzzySearchBrand(s *discordgo.Session, i *discordgo.InteractionCreate, 
 			return
 		}
 
-		res, err = vndb.ProducerFuzzySearch(keyword, companyType)
+		res, err = vndb.GetProducerByFuzzy(keyword, companyType)
 		if err != nil {
 			logrus.Error(err)
 			if errors.Is(err, internalerrors.ErrVndbNoResult) {
@@ -339,7 +339,6 @@ func VndbFuzzySearchBrand(s *discordgo.Session, i *discordgo.InteractionCreate, 
 }
 
 func VndbFuzzySearchStaff(s *discordgo.Session, i *discordgo.InteractionCreate, cid *models.VndbInteractionCustomID) {
-
 }
 
 // 資料分頁

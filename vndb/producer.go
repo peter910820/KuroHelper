@@ -13,7 +13,7 @@ import (
 	vndbmodels "kurohelper/models/vndb"
 )
 
-func ProducerFuzzySearch(keyword string, companyType string) (*vndbmodels.ProducerSearchResponse, error) {
+func GetProducerByFuzzy(keyword string, companyType string) (*vndbmodels.ProducerSearchResponse, error) {
 	reqProducer := vndbmodels.VndbCreate()
 
 	filtersProducer := []interface{}{}
@@ -71,12 +71,13 @@ func ProducerFuzzySearch(keyword string, companyType string) (*vndbmodels.Produc
 		return nil, err
 	}
 
-	// 等到查詢解析完後才能去查詢遊戲的資料
-	reqVn := vndbmodels.VndbCreate()
-
 	if len(resProducer.Results) == 0 {
 		return nil, internalerrors.ErrVndbNoResult
 	}
+
+	// 等到查詢解析完後才能去查詢遊戲的資料
+	reqVn := vndbmodels.VndbCreate()
+
 	reqVn.Filters = []interface{}{
 		"developer", "=", []interface{}{"id", "=", resProducer.Results[0].ID},
 	}
