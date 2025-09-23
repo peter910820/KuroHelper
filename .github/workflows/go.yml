@@ -5,7 +5,10 @@ name: Go
 
 on:
   push:
-    branches: [ "main" ]
+    branches:
+      - "main"
+      - 'feature/*'
+      - 'feat/*'
   pull_request:
     branches: [ "main" ]
 
