@@ -46,14 +46,18 @@ func GetCreatorByFuzzy(search string) (*erogsmodels.FuzzySearchCreatorResponse, 
 	jsonText := selection.Text()
 	fmt.Println(jsonText)
 
-	var res erogsmodels.FuzzySearchCreatorResponse
-	err = json.Unmarshal([]byte(jsonText), &res)
+	var creators []erogsmodels.Creator
+	err = json.Unmarshal([]byte(jsonText), &creators)
 	if err != nil {
 		return nil, err
 	}
 
-	if len(res.Creator) == 0 {
+	if len(creators) == 0 {
 		return nil, internalerrors.ErrVndbNoResult
+	}
+
+	res := erogsmodels.FuzzySearchCreatorResponse{
+		Creator: creators,
 	}
 
 	return &res, nil
