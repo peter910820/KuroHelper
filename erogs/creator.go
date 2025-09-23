@@ -44,7 +44,10 @@ func GetCreatorByFuzzy(search string) (*erogsmodels.FuzzySearchCreatorResponse, 
 
 	selection := doc.Find("td").First() // 只取第一個符合的
 	jsonText := selection.Text()
-	fmt.Println(jsonText)
+
+	if strings.TrimSpace(jsonText) == "" {
+		return nil, internalerrors.ErrVndbNoResult
+	}
 
 	var creators []erogsmodels.Creator
 	err = json.Unmarshal([]byte(jsonText), &creators)
