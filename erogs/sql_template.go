@@ -2,7 +2,11 @@ package erogs
 
 import "fmt"
 
-func BuildFuzzySearchCreatorSQL(search string) string {
+func buildFuzzySearchCreatorSQL(search string) string {
+	result := "%"
+	for _, r := range search {
+		result += string(r) + "%"
+	}
 	return fmt.Sprintf(`
 SELECT json_agg(row_to_json(c))
 FROM (
@@ -45,5 +49,5 @@ FROM (
     FROM createrlist cr
     WHERE cr.name ILIKE '%s'
     LIMIT 1
-) AS c;`, search)
+) AS c;`, result)
 }
