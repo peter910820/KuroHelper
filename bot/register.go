@@ -8,6 +8,7 @@ import (
 func RegisterCommand(s *discordgo.Session) {
 	var cmds []*discordgo.ApplicationCommand
 	cmds = append(cmds, vndbCommands()...)
+	cmds = append(cmds, erogsCommands()...)
 
 	for _, cmd := range cmds {
 		_, err := s.ApplicationCommandCreate(s.State.User.ID, "", cmd)
@@ -110,6 +111,20 @@ func vndbCommands() []*discordgo.ApplicationCommand {
 	}
 }
 
-func eroscapeCommands() {
-
+// 主要的Galgame搜尋來源，之後會整合指令變成可選搜尋來源，現在先分開
+func erogsCommands() []*discordgo.ApplicationCommand {
+	return []*discordgo.ApplicationCommand{
+		{
+			Name:        "erogs模糊查詢創作者",
+			Description: "根據關鍵字查詢創作者資料",
+			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "keyword",
+					Description: "關鍵字",
+					Required:    true,
+				},
+			},
+		},
+	}
 }
