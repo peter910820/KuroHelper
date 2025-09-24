@@ -29,8 +29,10 @@ func onInteractionApplicationCommand(s *discordgo.Session, i *discordgo.Interact
 		go handlers.VndbSearchGameByID(s, i)
 	case "vndb模糊查詢品牌":
 		go handlers.VndbFuzzySearchBrand(s, i, nil)
-		// case "vndb模糊查詢創作家":
-		// 	go handlers.VndbFuzzySearchStaff(s, i, nil)
+	// case "vndb模糊查詢創作家":
+	// 	go handlers.VndbFuzzySearchStaff(s, i, nil)
+	case "erogs模糊查詢創作者":
+		go handlers.ErogsFuzzySearchCreator(s, i, nil)
 	}
 }
 
@@ -50,6 +52,8 @@ func onInteractionMessageComponent(s *discordgo.Session, i *discordgo.Interactio
 	switch cidStruct.CommandName {
 	case "SearchBrand":
 		go handlers.VndbFuzzySearchBrand(s, i, &cidStruct)
+	case "ErogsFuzzySearchCreator":
+		go handlers.ErogsFuzzySearchCreator(s, i, &cidStruct)
 	}
 
 }
