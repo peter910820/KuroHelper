@@ -7,14 +7,21 @@ import (
 	"strings"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 
 	"kurohelper/erogs"
 	internalerrors "kurohelper/errors"
+	"kurohelper/models"
+	erogsmodels "kurohelper/models/erogs"
 	"kurohelper/utils"
 )
 
-func ErogsFuzzySearchCreator(s *discordgo.Session, i *discordgo.InteractionCreate) {
+func ErogsFuzzySearchCreator(s *discordgo.Session, i *discordgo.InteractionCreate, cid *models.VndbInteractionCustomID) {
+	var res *erogsmodels.FuzzySearchCreatorResponse
+	var component *discordgo.ActionsRow
+	var hasMore bool
+
 	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseDeferredChannelMessageWithSource,
 	})
@@ -26,15 +33,81 @@ func ErogsFuzzySearchCreator(s *discordgo.Session, i *discordgo.InteractionCreat
 		return
 	}
 
-	res, err := erogs.GetCreatorByFuzzy(keyword)
-	if err != nil {
-		logrus.Error(err)
-		if errors.Is(err, internalerrors.ErrVndbNoResult) {
-			utils.InteractionEmbedErrorRespond(s, i, "找不到任何結果喔", true)
-		} else {
-			utils.InteractionEmbedErrorRespond(s, i, "該功能目前異常，請稍後再嘗試", true)
+	if cid == nil {
+		res, err = erogs.GetCreatorByFuzzy(keyword)
+		if err != nil {
+			logrus.Error(err)
+			if errors.Is(err, internalerrors.ErrVndbNoResult) {
+				utils.InteractionEmbedErrorRespond(s, i, "找不到任何結果喔", true)
+			} else {
+				utils.InteractionEmbedErrorRespond(s, i, "該功能目前異常，請稍後再嘗試", true)
+			}
+			return
 		}
-		return
+
+		idStr := uuid.New().String()
+		SetCache(idStr, *res)
+		hasMore = erogsPagination(&(res.Creator[0].Games), 0, false)
+
+		if hasMore {
+			component = &discordgo.ActionsRow{
+				Components: []discordgo.MessageComponent{
+					discordgo.Button{
+						Label:    "▶️",
+						Style:    discordgo.PrimaryButton,
+						CustomID: fmt.Sprintf("ErogsFuzzySearchCreator_1_%s", idStr),
+					},
+				},
+			}
+		}
+	} else {
+		cacheValue, ok := GetCache(cid.Key)
+		if !ok {
+			utils.EmbedErrorRespond(s, i, "快取遺失，請重新查詢")
+			return
+		}
+		resValue := cacheValue.(erogsmodels.FuzzySearchCreatorResponse)
+		res = &resValue
+		// 資料分頁
+		hasMore = erogsPagination(&(res.Creator[0].Games), cid.Page, true)
+		if hasMore {
+			if cid.Page == 0 {
+				component = &discordgo.ActionsRow{
+					Components: []discordgo.MessageComponent{
+						&discordgo.Button{
+							Label:    "▶️",
+							Style:    discordgo.PrimaryButton,
+							CustomID: fmt.Sprintf("ErogsFuzzySearchCreator_1_%s", cid.Key),
+						},
+					},
+				}
+			} else {
+				component = &discordgo.ActionsRow{
+					Components: []discordgo.MessageComponent{
+						&discordgo.Button{
+							Label:    "◀️",
+							Style:    discordgo.PrimaryButton,
+							CustomID: fmt.Sprintf("ErogsFuzzySearchCreator_%d_%s", cid.Page-1, cid.Key),
+						},
+						&discordgo.Button{
+							Label:    "▶️",
+							Style:    discordgo.PrimaryButton,
+							CustomID: fmt.Sprintf("ErogsFuzzySearchCreator_%d_%s", cid.Page+1, cid.Key),
+						},
+					},
+				}
+			}
+		} else {
+			component = &discordgo.ActionsRow{
+				Components: []discordgo.MessageComponent{
+					&discordgo.Button{
+						Label:    "◀️",
+						Style:    discordgo.PrimaryButton,
+						CustomID: fmt.Sprintf("SearchBrand_%d_%s", cid.Page-1, cid.Key),
+					},
+				},
+			}
+		}
 	}
 
 	link := ""
@@ -79,6 +152,33 @@ func ErogsFuzzySearchCreator(s *discordgo.Session, i *discordgo.InteractionCreat
 		},
 	}
 
-	utils.InteractionEmbedRespond(s, i, embed, nil, true)
+	if cid == nil {
+		utils.InteractionEmbedRespond(s, i, embed, component, true)
+	} else {
+		utils.EditEmbedRespond(s, i, embed, component)
+	}
 
+}
+
+// 資料分頁
+func erogsPagination(result *[]erogsmodels.Game, page int, useCache bool) bool {
+	resultLen := len(*result)
+	expectedMin := page * 10
+	expectedMax := page*10 + 9
+
+	if !useCache || page == 0 {
+		if resultLen > 10 {
+			*result = (*result)[:10]
+			return true
+		}
+		return false
+	} else {
+		if resultLen > expectedMax {
+			*result = (*result)[expectedMin:expectedMax]
+			return true
+		} else {
+			*result = (*result)[expectedMin:]
+			return false
+		}
+	}
 }
