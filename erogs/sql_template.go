@@ -2,11 +2,14 @@ package erogs
 
 import (
 	"fmt"
+	"strings"
 
+	internalerrors "kurohelper/errors"
 	"kurohelper/utils"
 )
 
-func buildFuzzySearchCreatorSQL(search string) string {
+func buildFuzzySearchCreatorSQL(search string) (string, error) {
+	search = strings.ReplaceAll(search, "'", "''")
 	result := "%"
 	if utils.IsAllEnglish(search) {
 		result += search + "%"
@@ -14,6 +17,10 @@ func buildFuzzySearchCreatorSQL(search string) string {
 		for _, r := range search {
 			result += string(r) + "%"
 		}
+	}
+
+	if strings.TrimSpace(search) == "" {
+		return "", internalerrors.ErrSearchNoContent
 	}
 
 	return fmt.Sprintf(`
@@ -58,5 +65,5 @@ FROM (
     FROM createrlist cr
     WHERE cr.name ILIKE '%s'
     LIMIT 1
-) AS c;`, result)
+) AS c;`, result), nil
 }

@@ -41,6 +41,8 @@ func ErogsFuzzySearchCreator(s *discordgo.Session, i *discordgo.InteractionCreat
 			logrus.Error(err)
 			if errors.Is(err, internalerrors.ErrVndbNoResult) {
 				utils.InteractionEmbedErrorRespond(s, i, "找不到任何結果喔", true)
+			} else if errors.Is(err, internalerrors.ErrSearchNoContent) {
+				utils.InteractionEmbedErrorRespond(s, i, "搜尋內容有非法字元或為空", true)
 			} else {
 				utils.InteractionEmbedErrorRespond(s, i, "該功能目前異常，請稍後再嘗試", true)
 			}

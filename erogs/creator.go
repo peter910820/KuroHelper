@@ -18,7 +18,11 @@ import (
 
 func GetCreatorByFuzzy(search string) (*erogsmodels.FuzzySearchCreatorResponse, error) {
 	formData := url.Values{}
-	formData.Set("sql", buildFuzzySearchCreatorSQL(search))
+	sql, err := buildFuzzySearchCreatorSQL(search)
+	if err != nil {
+		return nil, err
+	}
+	formData.Set("sql", sql)
 
 	resp, err := http.Post(os.Getenv("EROGS_ENDPOINT"), "application/x-www-form-urlencoded", strings.NewReader(formData.Encode()))
 	if err != nil {
