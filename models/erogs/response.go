@@ -23,3 +23,32 @@ type Shokushu struct {
 	ShubetuDetail     int    `json:"shubetu_detail"`
 	ShubetuDetailName string `json:"shubetu_detail_name"` // *string
 }
+
+type FuzzySearchMusicResponse struct {
+	ID           int           `json:"music_id"`
+	SongName     string        `json:"songname"`
+	PlayTime     string        `json:"playtime"`
+	ReleaseDate  string        `json:"releasedate"`
+	AvgTokuten   float64       `json:"avgtokuten"`
+	TokutenCount int           `json:"tokutencount"`
+	Singers      []Singer      `json:"singers"`
+	Lyrics       []Lyric       `json:"lyrics"`
+	Arrangments  []Arrangment  `json:"arrangments"`
+	Compositions []Composition `json:"compositions"`
+	Album        []Album       `json:"albums"`
+}
+type Singer struct {
+	SingerName string `json:"singer_name"`
+}
+type Lyric struct {
+	LyricName string `json:"lyric_name"`
+}
+type Arrangment struct {
+	ArrangmentName string `json:"arrangment_name"`
+}
+type Composition struct {
+	CompositionName string `json:"composition_name"`
+}
+type Album struct {
+	AlbumName string `json:"album_name"`
+}
