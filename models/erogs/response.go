@@ -1,10 +1,7 @@
 package erogs
 
+// 只抓一筆(LIMIT 1)
 type FuzzySearchCreatorResponse struct {
-	Creator []Creator
-}
-
-type Creator struct {
 	ID              int    `json:"id"`
 	Name            string `json:"name"`
 	TwitterUsername string `json:"twitter_username"`

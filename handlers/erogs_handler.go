@@ -21,19 +21,21 @@ func ErogsFuzzySearchCreator(s *discordgo.Session, i *discordgo.InteractionCreat
 	var res *erogsmodels.FuzzySearchCreatorResponse
 	var component *discordgo.ActionsRow
 	var hasMore bool
-
-	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseDeferredChannelMessageWithSource,
-	})
-
-	keyword, err := utils.GetOptions(i, "keyword")
-	if err != nil {
-		logrus.Error(err)
-		utils.InteractionEmbedErrorRespond(s, i, "該功能目前異常，請稍後再嘗試", true)
-		return
-	}
+	var count int
 
 	if cid == nil {
+		// 長時間查詢
+		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseDeferredChannelMessageWithSource,
+		})
+
+		keyword, err := utils.GetOptions(i, "keyword")
+		if err != nil {
+			logrus.Error(err)
+			utils.InteractionEmbedErrorRespond(s, i, "該功能目前異常，請稍後再嘗試", true)
+			return
+		}
+
 		res, err = erogs.GetCreatorByFuzzy(keyword)
 		if err != nil {
 			logrus.Error(err)
@@ -47,7 +49,17 @@ func ErogsFuzzySearchCreator(s *discordgo.Session, i *discordgo.InteractionCreat
 
 		idStr := uuid.New().String()
 		SetCache(idStr, *res)
-		hasMore = erogsPagination(&(res.Creator[0].Games), 0, false)
+
+		// 根據遊戲評價排序
+		sort.Slice(res.Games, func(i, j int) bool {
+			return res.Games[i].Median > res.Games[j].Median // 大到小排序
+		})
+		// 計算筆數
+		for _, inner := range res.Games {
+			count += len(inner.Shokushu)
+		}
+
+		hasMore = erogsPagination(&(res.Games), 0, false)
 
 		if hasMore {
 			component = &discordgo.ActionsRow{
@@ -68,8 +80,18 @@ func ErogsFuzzySearchCreator(s *discordgo.Session, i *discordgo.InteractionCreat
 		}
 		resValue := cacheValue.(erogsmodels.FuzzySearchCreatorResponse)
 		res = &resValue
+
+		// 根據遊戲評價排序
+		sort.Slice(res.Games, func(i, j int) bool {
+			return res.Games[i].Median > res.Games[j].Median // 大到小排序
+		})
+		// 計算筆數
+		for _, inner := range res.Games {
+			count += len(inner.Shokushu)
+		}
+
 		// 資料分頁
-		hasMore = erogsPagination(&(res.Creator[0].Games), cid.Page, true)
+		hasMore = erogsPagination(&(res.Games), cid.Page, true)
 		if hasMore {
 			if cid.Page == 0 {
 				component = &discordgo.ActionsRow{
@@ -103,7 +125,7 @@ func ErogsFuzzySearchCreator(s *discordgo.Session, i *discordgo.InteractionCreat
 					&discordgo.Button{
 						Label:    "◀️",
 						Style:    discordgo.PrimaryButton,
-						CustomID: fmt.Sprintf("SearchBrand_%d_%s", cid.Page-1, cid.Key),
+						CustomID: fmt.Sprintf("ErogsFuzzySearchCreator_%d_%s", cid.Page-1, cid.Key),
 					},
 				},
 			}
@@ -111,23 +133,18 @@ func ErogsFuzzySearchCreator(s *discordgo.Session, i *discordgo.InteractionCreat
 	}
 
 	link := ""
-	if res.Creator[0].TwitterUsername != "" {
-		link += fmt.Sprintf("[Twitter](https://x.com/%s) ", res.Creator[0].TwitterUsername)
+	if res.TwitterUsername != "" {
+		link += fmt.Sprintf("[Twitter](https://x.com/%s) ", res.TwitterUsername)
 	}
-	if res.Creator[0].Blog != "" {
-		link += fmt.Sprintf("[Blog](%s) ", res.Creator[0].Blog)
+	if res.Blog != "" {
+		link += fmt.Sprintf("[Blog](%s) ", res.Blog)
 	}
-	if res.Creator[0].Pixiv != nil {
-		link += fmt.Sprintf("[Pixiv](https://www.pixiv.net/users/%d) ", *res.Creator[0].Pixiv)
+	if res.Pixiv != nil {
+		link += fmt.Sprintf("[Pixiv](https://www.pixiv.net/users/%d) ", *res.Pixiv)
 	}
 
-	// 根據遊戲評價排序
-	sort.Slice(res.Creator[0].Games, func(i, j int) bool {
-		return res.Creator[0].Games[i].Median > res.Creator[0].Games[j].Median // 大到小排序
-	})
-
-	gameData := make([]string, 0, len(res.Creator[0].Games))
-	for i, g := range res.Creator[0].Games {
+	gameData := make([]string, 0, len(res.Games))
+	for i, g := range res.Games {
 		shokushu := make([]string, 0, len(g.Shokushu))
 		for _, s := range g.Shokushu {
 			if s.Shubetu != 7 {
@@ -136,16 +153,21 @@ func ErogsFuzzySearchCreator(s *discordgo.Session, i *discordgo.InteractionCreat
 				shokushu = append(shokushu, fmt.Sprintf("*%s*", s.ShubetuDetailName))
 			}
 		}
-		gameData = append(gameData, fmt.Sprintf("%d. **%s**  (%s)", i+1, g.Gamename, strings.Join(shokushu, ", ")))
+
+		if cid == nil {
+			gameData = append(gameData, fmt.Sprintf("%d. **%s**  (%s)  %d分", i+1, g.Gamename, strings.Join(shokushu, ", "), g.Median))
+		} else {
+			gameData = append(gameData, fmt.Sprintf("%d. **%s**  (%s)  %d分", cid.Page*15+1, g.Gamename, strings.Join(shokushu, ", "), g.Median))
+		}
 	}
 
 	embed := &discordgo.MessageEmbed{
-		Title:       res.Creator[0].Name,
+		Title:       fmt.Sprintf("%s(%d  筆)", res.Name, count),
 		Color:       0x04108e,
 		Description: link,
 		Fields: []*discordgo.MessageEmbedField{
 			{
-				Name:   "歷代作品(評價排序)",
+				Name:   "歷代作品(遊戲評價排序)",
 				Value:  strings.Join(gameData, "\n"),
 				Inline: false,
 			},
@@ -163,12 +185,12 @@ func ErogsFuzzySearchCreator(s *discordgo.Session, i *discordgo.InteractionCreat
 // 資料分頁
 func erogsPagination(result *[]erogsmodels.Game, page int, useCache bool) bool {
 	resultLen := len(*result)
-	expectedMin := page * 10
-	expectedMax := page*10 + 9
+	expectedMin := page * 15
+	expectedMax := page*15 + 15
 
 	if !useCache || page == 0 {
-		if resultLen > 10 {
-			*result = (*result)[:10]
+		if resultLen > 15 {
+			*result = (*result)[:15]
 			return true
 		}
 		return false
