@@ -42,7 +42,7 @@ func ErogsFuzzySearchCreator(s *discordgo.Session, i *discordgo.InteractionCreat
 		link += fmt.Sprintf("[Twitter](https://x.com/%s) ", res.Creator[0].TwitterUsername)
 	}
 	if res.Creator[0].Blog != "" {
-		link += fmt.Sprintf("[Blog](%s) ", res.Creator[0].TwitterUsername)
+		link += fmt.Sprintf("[Blog](%s) ", res.Creator[0].Blog)
 	}
 	if res.Creator[0].Pixiv != nil {
 		link += fmt.Sprintf("[Pixiv](https://www.pixiv.net/users/%d) ", *res.Creator[0].Pixiv)
