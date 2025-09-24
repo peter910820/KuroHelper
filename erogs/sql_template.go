@@ -1,14 +1,23 @@
 package erogs
 
-import "fmt"
+import (
+	"fmt"
+
+	"kurohelper/utils"
+)
 
 func buildFuzzySearchCreatorSQL(search string) string {
 	result := "%"
-	for _, r := range search {
-		result += string(r) + "%"
+	if utils.IsAllEnglish(search) {
+		result += search + "%"
+	} else {
+		for _, r := range search {
+			result += string(r) + "%"
+		}
 	}
+
 	return fmt.Sprintf(`
-SELECT json_agg(row_to_json(c))
+SELECT row_to_json(c)
 FROM (
     SELECT
         cr.id,
