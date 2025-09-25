@@ -146,12 +146,12 @@ FROM (
            m.releasedate,
            ut.avg_tokuten,
            ut.tokuten_count,
-           s.singer_name,
-           l.lyric_name,
-           a.arrangement_name,
-           comp.composition_name,
+           COALESCE(s.singer_name, '') AS singer_name,
+           COALESCE(l.lyric_name, '') AS lyric_name,
+           COALESCE(a.arrangement_name, '') AS arrangement_name,
+           COALESCE(comp.composition_name, '') AS composition_name,
            g.game_categories,
-           mi.album_name
+           COALESCE(mi.album_name, '') AS album_name
     FROM musiclist m
     LEFT JOIN singer_agg s ON s.music_id = m.id
     LEFT JOIN lyrics_agg l ON l.music_id = m.id
