@@ -29,14 +29,14 @@ type FuzzySearchMusicResponse struct {
 	MusicName      string         `json:"musicname"`
 	PlayTime       string         `json:"playtime"`
 	ReleaseDate    string         `json:"releasedate"`
-	AvgTokuten     float64        `json:"avgtokuten"`
-	TokutenCount   int            `json:"tokutencount"`
-	Singers        []string       `json:"singers"`
-	Lyrics         []string       `json:"lyrics"`
-	Arrangments    []string       `json:"arrangments"`
-	Compositions   []string       `json:"compositions"`
+	AvgTokuten     float64        `json:"avg_tokuten"`
+	TokutenCount   int            `json:"tokuten_count"`
+	Singers        string         `json:"singer_name"`
+	Lyrics         string         `json:"lyric_name"`
+	Arrangments    string         `json:"arrangement_name"`
+	Compositions   string         `json:"composition_name"`
 	GameCategories []GameCategory `json:"game_categories"`
-	Album          []string       `json:"albums"`
+	Album          string         `json:"album_name"`
 }
 type GameCategory struct {
 	GameName string `json:"game_name"`
