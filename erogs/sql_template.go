@@ -135,7 +135,7 @@ gamelist_agg AS (
                    'game_name', g.gamename,
                    'category', gm.category
                )
-           ) AS games
+           ) AS game_categories
     FROM game_music gm
     JOIN gamelist g ON g.id = gm.game
     GROUP BY gm.music
@@ -170,7 +170,7 @@ FROM (
            l.lyrics,
            a.arrangements,
            comp.compositions,
-           g.games,
+           g.game_categories,
            mi.albums
     FROM musiclist m
     LEFT JOIN singer_agg s ON s.music_id = m.id
