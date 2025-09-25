@@ -86,44 +86,28 @@ func buildFuzzySearchMusicSQL(search string) (string, error) {
 	return fmt.Sprintf(`
 WITH singer_agg AS (
     SELECT music AS music_id,
-           json_agg(
-               json_build_object(
-                   'singer_name', c.name
-               )
-           ) AS singers
+           STRING_AGG(c.name, ',') AS singer_name 
     FROM singer
     JOIN createrlist AS c ON c.id = singer.creater
     GROUP BY music
 ),
 lyrics_agg AS (
     SELECT music AS music_id,
-           json_agg(
-               json_build_object(
-                   'lyric_name', c.name
-               )
-           ) AS lyrics
+           STRING_AGG(c.name, ',') AS lyric_name 
     FROM lyrics
     JOIN createrlist AS c ON c.id = lyrics.creater
     GROUP BY music
 ),
 arrangement_agg AS (
     SELECT music AS music_id,
-           json_agg(
-               json_build_object(
-                   'arrangement_name', c.name
-               )
-           ) AS arrangements
+           STRING_AGG(c.name, ',') AS arrangement_name
     FROM arrangement
     JOIN createrlist AS c ON c.id = arrangement.creater
     GROUP BY music
 ),
 composition_agg AS (
     SELECT music AS music_id,
-           json_agg(
-               json_build_object(
-                   'composition_name', c.name
-               )
-           ) AS compositions
+           STRING_AGG(c.name, ',') AS composition_name 
     FROM composition
     JOIN createrlist AS c ON c.id = composition.creater
     GROUP BY music
@@ -142,11 +126,7 @@ gamelist_agg AS (
 ),
 musicitemlist_agg AS (
     SELECT music AS music_id,
-           json_agg(
-               json_build_object(
-                   'album_name', mi.name
-               )
-           ) AS albums
+           STRING_AGG(mi.name, ',') AS album_name 
     FROM musicitem_music mim
     JOIN musicitemlist mi ON mi.id = mim.musicitem
     GROUP BY music
@@ -161,17 +141,17 @@ usermusic_tokuten_agg AS (
 SELECT json_agg(row_to_json(t))
 FROM (
     SELECT m.id AS music_id,
-           m.name AS songname,
+           m.name AS musicname,
            m.playtime,
            m.releasedate,
            ut.avg_tokuten,
            ut.tokuten_count,
-           s.singers,
-           l.lyrics,
-           a.arrangements,
-           comp.compositions,
+           s.singer_name,
+           l.lyric_name,
+           a.arrangement_name,
+           comp.composition_name,
            g.game_categories,
-           mi.albums
+           mi.album_name
     FROM musiclist m
     LEFT JOIN singer_agg s ON s.music_id = m.id
     LEFT JOIN lyrics_agg l ON l.music_id = m.id
@@ -181,7 +161,6 @@ FROM (
     LEFT JOIN musicitemlist_agg mi ON mi.music_id = m.id
     LEFT JOIN usermusic_tokuten_agg ut ON ut.music_id = m.id 
     WHERE m.name ILIKE '%s'
-    LIMIT 1
-) t;
+)t;
 `, result), nil
 }
