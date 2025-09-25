@@ -16,7 +16,7 @@ import (
 	erogsmodels "kurohelper/models/erogs"
 )
 
-func GetMusicsByFuzzy(search string) (*erogsmodels.FuzzySearchMusicResponse, error) {
+func GetMusicByFuzzy(search string) (*erogsmodels.FuzzySearchMusicResponse, error) {
 	formData := url.Values{}
 	sql, err := buildFuzzySearchMusicSQL(search)
 	if err != nil {

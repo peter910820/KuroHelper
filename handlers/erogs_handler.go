@@ -184,6 +184,91 @@ func ErogsFuzzySearchCreator(s *discordgo.Session, i *discordgo.InteractionCreat
 
 }
 
+func ErogsFuzzySearchMusic(s *discordgo.Session, i *discordgo.InteractionCreate, cid *models.VndbInteractionCustomID) {
+	var res *erogsmodels.FuzzySearchMusicResponse
+	keyword, err := utils.GetOptions(i, "keyword")
+	if err != nil {
+		logrus.Error(err)
+		utils.InteractionEmbedErrorRespond(s, i, "該功能目前異常，請稍後再嘗試", true)
+		return
+	}
+
+	res, err = erogs.GetMusicByFuzzy(keyword)
+	if err != nil {
+		logrus.Error(err)
+		if errors.Is(err, internalerrors.ErrVndbNoResult) {
+			utils.InteractionEmbedErrorRespond(s, i, "找不到任何結果喔", true)
+		} else if errors.Is(err, internalerrors.ErrSearchNoContent) {
+			utils.InteractionEmbedErrorRespond(s, i, "搜尋內容有非法字元或為空", true)
+		} else {
+			utils.InteractionEmbedErrorRespond(s, i, "該功能目前異常，請稍後再嘗試", true)
+		}
+		return
+	}
+
+	musicData := make([]string, 0, len(res.GameCategories))
+	for _, m := range res.GameCategories {
+		musicData = append(musicData, m.GameName+" ("+m.Category+")")
+	}
+	embed := &discordgo.MessageEmbed{
+		Title: res.MusicName,
+		Color: 0x04108e,
+		Fields: []*discordgo.MessageEmbedField{
+			{
+				Name:   "音樂名稱",
+				Value:  res.MusicName,
+				Inline: false,
+			},
+			{
+				Name:   "音樂時長",
+				Value:  res.PlayTime,
+				Inline: false,
+			},
+			{
+				Name:   "發行日期",
+				Value:  res.ReleaseDate,
+				Inline: false,
+			},
+			{
+				Name:   "平均分數/樣本數",
+				Value:  fmt.Sprintf("%.2f / %d", res.AvgTokuten, res.TokutenCount),
+				Inline: false,
+			},
+			{
+				Name:   "歌手",
+				Value:  strings.Join(res.Singers, "\n"),
+				Inline: false,
+			},
+			{
+				Name:   "作詞",
+				Value:  strings.Join(res.Lyrics, "\n"),
+				Inline: false,
+			},
+			{
+				Name:   "作曲",
+				Value:  strings.Join(res.Compositions, "\n"),
+				Inline: false,
+			},
+			{
+				Name:   "編曲",
+				Value:  strings.Join(res.Arrangments, "\n"),
+				Inline: false,
+			},
+			{
+				Name:   "歌曲類型",
+				Value:  strings.Join(musicData, "\n"),
+				Inline: false,
+			},
+			{
+				Name:   "專輯",
+				Value:  strings.Join(res.Album, "\n"),
+				Inline: false,
+			},
+		},
+	}
+	utils.InteractionEmbedRespond(s, i, embed, nil, true)
+}
+
 // 資料分頁
 func erogsPagination(result *[]erogsmodels.Game, page int, useCache bool) bool {
 	resultLen := len(*result)
