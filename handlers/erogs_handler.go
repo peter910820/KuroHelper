@@ -270,7 +270,7 @@ func ErogsFuzzySearchMusic(s *discordgo.Session, i *discordgo.InteractionCreate,
 				Inline: false,
 			},
 			{
-				Name:   "歌曲類型",
+				Name:   "遊戲收錄",
 				Value:  strings.Join(musicData, "\n"),
 				Inline: false,
 			},
