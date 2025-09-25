@@ -16,7 +16,7 @@ import (
 	erogsmodels "kurohelper/models/erogs"
 )
 
-func GetMusicByFuzzy(search string) (*erogsmodels.FuzzySearchMusicResponse, error) {
+func GetMusicByFuzzy(search string) (*[]erogsmodels.FuzzySearchMusicResponse, error) {
 	formData := url.Values{}
 	sql, err := buildFuzzySearchMusicSQL(search)
 	if err != nil {
@@ -53,13 +53,14 @@ func GetMusicByFuzzy(search string) (*erogsmodels.FuzzySearchMusicResponse, erro
 		return nil, internalerrors.ErrVndbNoResult
 	}
 
-	var res erogsmodels.FuzzySearchMusicResponse
+	var res []erogsmodels.FuzzySearchMusicResponse
 	err = json.Unmarshal([]byte(jsonText), &res)
 	if err != nil {
+		fmt.Println(jsonText)
 		return nil, err
 	}
 
-	if len(res.GameCategories) == 0 {
+	if len(res) == 0 {
 		return nil, internalerrors.ErrVndbNoResult
 	}
 

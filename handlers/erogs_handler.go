@@ -185,7 +185,11 @@ func ErogsFuzzySearchCreator(s *discordgo.Session, i *discordgo.InteractionCreat
 }
 
 func ErogsFuzzySearchMusic(s *discordgo.Session, i *discordgo.InteractionCreate, cid *models.VndbInteractionCustomID) {
-	var res *erogsmodels.FuzzySearchMusicResponse
+	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseDeferredChannelMessageWithSource,
+	})
+
+	var res *[]erogsmodels.FuzzySearchMusicResponse
 	keyword, err := utils.GetOptions(i, "keyword")
 	if err != nil {
 		logrus.Error(err)
@@ -205,53 +209,64 @@ func ErogsFuzzySearchMusic(s *discordgo.Session, i *discordgo.InteractionCreate,
 		}
 		return
 	}
+	sort.Slice(*res, func(i, j int) bool {
+		return (*res)[i].AvgTokuten > (*res)[j].AvgTokuten // 大到小排序
+	})
+	// 只取第一筆
 
-	musicData := make([]string, 0, len(res.GameCategories))
-	for _, m := range res.GameCategories {
+	resData := (*res)[0]
+	musicData := make([]string, 0, len(resData.GameCategories))
+	for _, m := range resData.GameCategories {
 		musicData = append(musicData, m.GameName+" ("+m.Category+")")
 	}
+
+	singerList := strings.Split(resData.Singers, ",")
+	arrangementList := strings.Split(resData.Arrangments, ",")
+	lyricList := strings.Split(resData.Lyrics, ",")
+	compositionList := strings.Split(resData.Compositions, ",")
+	albumList := strings.Split(resData.Album, ",")
 	embed := &discordgo.MessageEmbed{
-		Title: res.MusicName,
+		Title: resData.MusicName,
 		Color: 0x04108e,
 		Fields: []*discordgo.MessageEmbedField{
 			{
 				Name:   "音樂名稱",
-				Value:  res.MusicName,
+				Value:  resData.MusicName,
 				Inline: false,
 			},
 			{
 				Name:   "音樂時長",
-				Value:  res.PlayTime,
+				Value:  resData.PlayTime,
 				Inline: false,
 			},
 			{
 				Name:   "發行日期",
-				Value:  res.ReleaseDate,
+				Value:  resData.ReleaseDate,
 				Inline: false,
 			},
 			{
 				Name:   "平均分數/樣本數",
-				Value:  fmt.Sprintf("%.2f / %d", res.AvgTokuten, res.TokutenCount),
+				Value:  fmt.Sprintf("%.2f / %d", resData.AvgTokuten, resData.TokutenCount),
 				Inline: false,
 			},
 			{
 				Name:   "歌手",
-				Value:  strings.Join(res.Singers, "\n"),
+				Value:  strings.Join(singerList, "\n"),
 				Inline: false,
 			},
 			{
 				Name:   "作詞",
-				Value:  strings.Join(res.Lyrics, "\n"),
+				Value:  strings.Join(lyricList, "\n"),
 				Inline: false,
 			},
 			{
 				Name:   "作曲",
-				Value:  strings.Join(res.Compositions, "\n"),
+				Value:  strings.Join(compositionList, "\n"),
 				Inline: false,
 			},
 			{
 				Name:   "編曲",
-				Value:  strings.Join(res.Arrangments, "\n"),
+				Value:  strings.Join(arrangementList, "\n"),
 				Inline: false,
 			},
 			{
@@ -261,7 +276,7 @@ func ErogsFuzzySearchMusic(s *discordgo.Session, i *discordgo.InteractionCreate,
 			},
 			{
 				Name:   "專輯",
-				Value:  strings.Join(res.Album, "\n"),
+				Value:  strings.Join(albumList, "\n"),
 				Inline: false,
 			},
 		},
