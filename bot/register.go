@@ -126,5 +126,17 @@ func erogsCommands() []*discordgo.ApplicationCommand {
 				},
 			},
 		},
+		{
+			Name:        "erogs模糊查詢音樂",
+			Description: "根據音樂名稱查詢音樂資料",
+			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "keyword",
+					Description: "關鍵字",
+					Required:    true,
+				},
+			},
+		},
 	}
 }
