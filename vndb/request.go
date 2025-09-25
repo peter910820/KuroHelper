@@ -13,6 +13,7 @@ import (
 type rateLimitStruct struct {
 	Quota     int
 	ResetTime time.Time
+	RWMu      sync.RWMutex
 }
 
 var (
@@ -20,7 +21,6 @@ var (
 		Quota:     40,
 		ResetTime: time.Now().Add(1 * time.Minute),
 	}
-	rateLimitMu sync.RWMutex
 )
 
 func sendRequest(apiRoute string, jsonBytes []byte) ([]byte, error) {
@@ -47,8 +47,8 @@ func sendRequest(apiRoute string, jsonBytes []byte) ([]byte, error) {
 }
 
 func rateLimit(quota int) bool {
-	rateLimitMu.Lock()
-	defer rateLimitMu.Unlock()
+	rateLimitRecord.RWMu.Lock()
+	defer rateLimitRecord.RWMu.Unlock()
 
 	now := time.Now()
 	if now.After(rateLimitRecord.ResetTime) {
