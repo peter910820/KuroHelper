@@ -181,7 +181,7 @@ FROM (
     LEFT JOIN musicitemlist_agg mi ON mi.music_id = m.id
     LEFT JOIN usermusic_tokuten_agg ut ON ut.music_id = m.id 
     WHERE m.name ILIKE '%s'
-    LIMIT 2000
+    LIMIT 1
 ) t;
 `, result), nil
 }
