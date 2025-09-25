@@ -56,15 +56,14 @@ func GetVnUseID(brandid string) (*vndbmodels.BasicResponse[vndbmodels.GetVnUseID
 
 	defer resp.Body.Close()
 
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-
 	if resp.StatusCode != 200 {
 		return nil, fmt.Errorf("the server returned an error status code %d", resp.StatusCode)
 	}
 
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
 	var res vndbmodels.BasicResponse[vndbmodels.GetVnUseIDResponse]
 	err = json.Unmarshal(body, &res)
 	if err != nil {

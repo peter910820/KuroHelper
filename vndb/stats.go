@@ -15,13 +15,13 @@ func GetStats() ([]byte, error) {
 
 	defer resp.Body.Close()
 
+	if resp.StatusCode != 200 {
+		return nil, fmt.Errorf("the server returned an error status code %d", resp.StatusCode)
+	}
+
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
-	}
-
-	if resp.StatusCode != 200 {
-		return nil, fmt.Errorf("the server returned an error status code %d", resp.StatusCode)
 	}
 
 	return body, nil
