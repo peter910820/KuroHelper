@@ -56,13 +56,13 @@ func GetProducerByFuzzy(keyword string, companyType string) (*vndbmodels.Produce
 
 	defer respProducer.Body.Close()
 
+	if respProducer.StatusCode != 200 {
+		return nil, fmt.Errorf("the server returned an error status code %d", respProducer.StatusCode)
+	}
+
 	r, err := io.ReadAll(respProducer.Body)
 	if err != nil {
 		return nil, err
-	}
-
-	if respProducer.StatusCode != 200 {
-		return nil, fmt.Errorf("the server returned an error status code %d", respProducer.StatusCode)
 	}
 
 	var resProducer vndbmodels.BasicResponse[vndbmodels.ProducerSearchProducerResponse]

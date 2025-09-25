@@ -52,15 +52,14 @@ func GetStaffByFuzzy(keyword string, roleType string) (*vndbmodels.BasicResponse
 
 	defer resp.Body.Close()
 
-	r, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-
 	if resp.StatusCode != 200 {
 		return nil, fmt.Errorf("the server returned an error status code %d", resp.StatusCode)
 	}
 
+	r, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
 	var res vndbmodels.BasicResponse[vndbmodels.StaffSearchResponse]
 	err = json.Unmarshal(r, &res)
 	if err != nil {
