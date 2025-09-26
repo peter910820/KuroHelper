@@ -146,10 +146,10 @@ FROM (
            m.releasedate,
            ut.avg_tokuten,
            ut.tokuten_count,
-           COALESCE(s.singer_name, '') AS singer_name,
-           COALESCE(l.lyric_name, '') AS lyric_name,
-           COALESCE(a.arrangement_name, '') AS arrangement_name,
-           COALESCE(comp.composition_name, '') AS composition_name,
+           COALESCE(s.singer_name, '無') AS singer_name,
+           COALESCE(l.lyric_name, '無') AS lyric_name,
+           COALESCE(a.arrangement_name, '無') AS arrangement_name,
+           COALESCE(comp.composition_name, '無') AS composition_name,
            g.game_categories,
            COALESCE(mi.album_name, '') AS album_name
     FROM musiclist m

@@ -231,18 +231,7 @@ func ErogsFuzzySearchMusic(s *discordgo.Session, i *discordgo.InteractionCreate,
 	if resData.ReleaseDate == "0001-01-01" {
 		resData.ReleaseDate = "Unknown"
 	}
-	if singerList[0] == "" {
-		singerList[0] = "無"
-	}
-	if lyricList[0] == "" {
-		lyricList[0] = "無"
-	}
-	if arrangementList[0] == "" {
-		arrangementList[0] = "無"
-	}
-	if compositionList[0] == "" {
-		compositionList[0] = "無"
-	}
+
 	embed := &discordgo.MessageEmbed{
 		Title: resData.MusicName,
 		Color: 0x04108e,
