@@ -225,29 +225,42 @@ func ErogsFuzzySearchMusic(s *discordgo.Session, i *discordgo.InteractionCreate,
 	lyricList := strings.Split(resData.Lyrics, ",")
 	compositionList := strings.Split(resData.Compositions, ",")
 	albumList := strings.Split(resData.Album, ",")
+	if resData.PlayTime == "00:00:00" {
+		resData.PlayTime = "Unknown"
+	}
+	if resData.ReleaseDate == "0001-01-01" {
+		resData.ReleaseDate = "Unknown"
+	}
+	if singerList[0] == "" {
+		singerList[0] = "無"
+	}
+	if lyricList[0] == "" {
+		lyricList[0] = "無"
+	}
+	if arrangementList[0] == "" {
+		arrangementList[0] = "無"
+	}
+	if compositionList[0] == "" {
+		compositionList[0] = "無"
+	}
 	embed := &discordgo.MessageEmbed{
 		Title: resData.MusicName,
 		Color: 0x04108e,
 		Fields: []*discordgo.MessageEmbedField{
 			{
-				Name:   "音樂名稱",
-				Value:  resData.MusicName,
-				Inline: false,
-			},
-			{
 				Name:   "音樂時長",
 				Value:  resData.PlayTime,
-				Inline: false,
+				Inline: true,
 			},
 			{
 				Name:   "發行日期",
 				Value:  resData.ReleaseDate,
-				Inline: false,
+				Inline: true,
 			},
 			{
 				Name:   "平均分數/樣本數",
 				Value:  fmt.Sprintf("%.2f / %d", resData.AvgTokuten, resData.TokutenCount),
-				Inline: false,
+				Inline: true,
 			},
 			{
 				Name:   "歌手",
@@ -257,17 +270,17 @@ func ErogsFuzzySearchMusic(s *discordgo.Session, i *discordgo.InteractionCreate,
 			{
 				Name:   "作詞",
 				Value:  strings.Join(lyricList, "\n"),
-				Inline: false,
+				Inline: true,
 			},
 			{
 				Name:   "作曲",
 				Value:  strings.Join(compositionList, "\n"),
-				Inline: false,
+				Inline: true,
 			},
 			{
 				Name:   "編曲",
 				Value:  strings.Join(arrangementList, "\n"),
-				Inline: false,
+				Inline: true,
 			},
 			{
 				Name:   "遊戲收錄",
