@@ -189,7 +189,7 @@ func ErogsFuzzySearchMusic(s *discordgo.Session, i *discordgo.InteractionCreate,
 		Type: discordgo.InteractionResponseDeferredChannelMessageWithSource,
 	})
 
-	var res *[]erogsmodels.FuzzySearchMusicResponse
+	var res *erogsmodels.FuzzySearchMusicResponse
 	keyword, err := utils.GetOptions(i, "keyword")
 	if err != nil {
 		logrus.Error(err)
@@ -209,46 +209,41 @@ func ErogsFuzzySearchMusic(s *discordgo.Session, i *discordgo.InteractionCreate,
 		}
 		return
 	}
-	sort.Slice(*res, func(i, j int) bool {
-		return (*res)[i].AvgTokuten > (*res)[j].AvgTokuten // 大到小排序
-	})
-	// 只取第一筆
 
-	resData := (*res)[0]
-	musicData := make([]string, 0, len(resData.GameCategories))
-	for _, m := range resData.GameCategories {
+	musicData := make([]string, 0, len(res.GameCategories))
+	for _, m := range res.GameCategories {
 		musicData = append(musicData, m.GameName+" ("+m.Category+")")
 	}
 
-	singerList := strings.Split(resData.Singers, ",")
-	arrangementList := strings.Split(resData.Arrangments, ",")
-	lyricList := strings.Split(resData.Lyrics, ",")
-	compositionList := strings.Split(resData.Compositions, ",")
-	albumList := strings.Split(resData.Album, ",")
-	if resData.PlayTime == "00:00:00" {
-		resData.PlayTime = "Unknown"
+	singerList := strings.Split(res.Singers, ",")
+	arrangementList := strings.Split(res.Arrangments, ",")
+	lyricList := strings.Split(res.Lyrics, ",")
+	compositionList := strings.Split(res.Compositions, ",")
+	albumList := strings.Split(res.Album, ",")
+	if res.PlayTime == "00:00:00" {
+		res.PlayTime = "Unknown"
 	}
-	if resData.ReleaseDate == "0001-01-01" {
-		resData.ReleaseDate = "Unknown"
+	if res.ReleaseDate == "0001-01-01" {
+		res.ReleaseDate = "Unknown"
 	}
 
 	embed := &discordgo.MessageEmbed{
-		Title: resData.MusicName,
+		Title: res.MusicName,
 		Color: 0x04108e,
 		Fields: []*discordgo.MessageEmbedField{
 			{
 				Name:   "音樂時長",
-				Value:  resData.PlayTime,
+				Value:  res.PlayTime,
 				Inline: true,
 			},
 			{
 				Name:   "發行日期",
-				Value:  resData.ReleaseDate,
+				Value:  res.ReleaseDate,
 				Inline: true,
 			},
 			{
 				Name:   "平均分數/樣本數",
-				Value:  fmt.Sprintf("%.2f / %d", resData.AvgTokuten, resData.TokutenCount),
+				Value:  fmt.Sprintf("%.2f / %d", res.AvgTokuten, res.TokutenCount),
 				Inline: true,
 			},
 			{
