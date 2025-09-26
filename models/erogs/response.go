@@ -42,3 +42,29 @@ type GameCategory struct {
 	GameName string `json:"game_name"`
 	Category string `json:"category"`
 }
+
+type FuzzySearchGameResponse struct {
+	ID                               int              `json:"id"`
+	BrandId                          int              `json:"brandname"`
+	Gamename                         string           `json:"gamename"`
+	SellDay                          string           `json:"sellday"`
+	Median                           string           `json:"median"`
+	TokutenCount                     string           `json:"count2"`
+	TotalPlayTimeMedian              string           `json:"total_play_time_median"`
+	TimeBeforeUnderstandingFunMedian string           `json:"time_before_understanding_fun_median"`
+	Okazu                            string           `json:"okazu"`
+	Genre                            string           `json:"genre"`
+	SteamId                          string           `json:"steam"`
+	VndbId                           string           `json:"vndb"`
+	CreatorShubetu                   []Creatorshubetu `json:"shubetu_detail"`
+}
+
+type Creatorshubetu struct {
+	ShubetuType          int                    `json:"shubetu_type"`
+	CreatorShubetuDetail []CreatorShubetuDetail `json:"creater_shubetu_detail"`
+}
+
+type CreatorShubetuDetail struct {
+	CreatorName       string `json:"creater_name"`
+	ShubetuDetailName string `json:"shubetu_detail_name"`
+}
