@@ -138,7 +138,7 @@ usermusic_tokuten_agg AS (
     FROM usermusic_tokuten
     GROUP BY music
 )
-SELECT json_agg(row_to_json(t))
+SELECT row_to_json(t)
 FROM (
     SELECT m.id AS music_id,
            m.name AS musicname,
@@ -161,6 +161,8 @@ FROM (
     LEFT JOIN musicitemlist_agg mi ON mi.music_id = m.id
     LEFT JOIN usermusic_tokuten_agg ut ON ut.music_id = m.id 
     WHERE m.name ILIKE '%s'
+    ORDER BY ut.avg_tokuten DESC NULLS LAST
+    LIMIT 1
 )t;
 `, result), nil
 }
