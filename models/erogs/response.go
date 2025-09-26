@@ -14,7 +14,7 @@ type Game struct {
 	Gamename string     `json:"gamename"`
 	SellDay  string     `json:"sellday"`
 	Median   int        `json:"median"`
-	CountAll int        `json:"count_all"`
+	CountAll int        `json:"count2"`
 	Shokushu []Shokushu `json:"shokushu"` // 有可能一個遊戲有多種身分
 }
 
