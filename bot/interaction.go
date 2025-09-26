@@ -33,6 +33,8 @@ func onInteractionApplicationCommand(s *discordgo.Session, i *discordgo.Interact
 	// 	go handlers.VndbFuzzySearchStaff(s, i, nil)
 	case "erogs模糊查詢創作者":
 		go handlers.ErogsFuzzySearchCreator(s, i, nil)
+	case "erogs模糊查詢音樂":
+		go handlers.ErogsFuzzySearchMusic(s, i, nil)
 	}
 }
 

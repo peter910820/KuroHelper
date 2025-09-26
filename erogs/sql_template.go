@@ -67,3 +67,100 @@ FROM (
     LIMIT 1
 ) AS c;`, result), nil
 }
+
+func buildFuzzySearchMusicSQL(search string) (string, error) {
+	search = strings.ReplaceAll(search, "'", "''")
+	result := "%"
+	if utils.IsAllEnglish(search) {
+		result += search + "%"
+	} else {
+		for _, r := range search {
+			result += string(r) + "%"
+		}
+	}
+
+	if strings.TrimSpace(search) == "" {
+		return "", internalerrors.ErrSearchNoContent
+	}
+
+	return fmt.Sprintf(`
+WITH singer_agg AS (
+    SELECT music AS music_id,
+           STRING_AGG(c.name, ',') AS singer_name 
+    FROM singer
+    JOIN createrlist AS c ON c.id = singer.creater
+    GROUP BY music
+),
+lyrics_agg AS (
+    SELECT music AS music_id,
+           STRING_AGG(c.name, ',') AS lyric_name 
+    FROM lyrics
+    JOIN createrlist AS c ON c.id = lyrics.creater
+    GROUP BY music
+),
+arrangement_agg AS (
+    SELECT music AS music_id,
+           STRING_AGG(c.name, ',') AS arrangement_name
+    FROM arrangement
+    JOIN createrlist AS c ON c.id = arrangement.creater
+    GROUP BY music
+),
+composition_agg AS (
+    SELECT music AS music_id,
+           STRING_AGG(c.name, ',') AS composition_name 
+    FROM composition
+    JOIN createrlist AS c ON c.id = composition.creater
+    GROUP BY music
+),
+gamelist_agg AS (
+    SELECT gm.music AS music_id,
+           json_agg(
+               json_build_object(
+                   'game_name', g.gamename,
+                   'category', gm.category
+               )
+           ) AS game_categories
+    FROM game_music gm
+    JOIN gamelist g ON g.id = gm.game
+    GROUP BY gm.music
+),
+musicitemlist_agg AS (
+    SELECT music AS music_id,
+           STRING_AGG(mi.name, ',') AS album_name 
+    FROM musicitem_music mim
+    JOIN musicitemlist mi ON mi.id = mim.musicitem
+    GROUP BY music
+),
+usermusic_tokuten_agg AS (
+    SELECT music AS music_id,
+           ROUND(AVG(LEAST(tokuten, 100)),2) AS avg_tokuten,
+           COUNT(uid) AS tokuten_count
+    FROM usermusic_tokuten
+    GROUP BY music
+)
+SELECT json_agg(row_to_json(t))
+FROM (
+    SELECT m.id AS music_id,
+           m.name AS musicname,
+           m.playtime,
+           m.releasedate,
+           ut.avg_tokuten,
+           ut.tokuten_count,
+           COALESCE(s.singer_name, '無') AS singer_name,
+           COALESCE(l.lyric_name, '無') AS lyric_name,
+           COALESCE(a.arrangement_name, '無') AS arrangement_name,
+           COALESCE(comp.composition_name, '無') AS composition_name,
+           g.game_categories,
+           COALESCE(mi.album_name, '') AS album_name
+    FROM musiclist m
+    LEFT JOIN singer_agg s ON s.music_id = m.id
+    LEFT JOIN lyrics_agg l ON l.music_id = m.id
+    LEFT JOIN arrangement_agg a ON a.music_id = m.id
+    LEFT JOIN composition_agg comp ON comp.music_id = m.id
+    LEFT JOIN gamelist_agg g ON g.music_id = m.id
+    LEFT JOIN musicitemlist_agg mi ON mi.music_id = m.id
+    LEFT JOIN usermusic_tokuten_agg ut ON ut.music_id = m.id 
+    WHERE m.name ILIKE '%s'
+)t;
+`, result), nil
+}
