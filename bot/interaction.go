@@ -35,6 +35,8 @@ func onInteractionApplicationCommand(s *discordgo.Session, i *discordgo.Interact
 		go handlers.ErogsFuzzySearchCreator(s, i, nil)
 	case "erogs模糊查詢音樂":
 		go handlers.ErogsFuzzySearchMusic(s, i, nil)
+	case "查詢公司品牌":
+		go handlers.SearchBrandHandler(s, i, nil)
 	case "清除快取":
 		go handlers.CleanCache(s, i)
 	}
@@ -56,6 +58,8 @@ func onInteractionMessageComponent(s *discordgo.Session, i *discordgo.Interactio
 	switch cidStruct.CommandName {
 	case "SearchBrand":
 		go handlers.VndbFuzzySearchBrand(s, i, &cidStruct)
+	case "SearchBrandNew":
+		go handlers.SearchBrandHandler(s, i, &cidStruct)
 	case "ErogsFuzzySearchCreator":
 		go handlers.ErogsFuzzySearchCreator(s, i, &cidStruct)
 	}
