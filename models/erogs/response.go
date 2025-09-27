@@ -53,7 +53,9 @@ type FuzzySearchGameResponse struct {
 	TotalPlayTimeMedian              string           `json:"total_play_time_median"`
 	TimeBeforeUnderstandingFunMedian string           `json:"time_before_understanding_fun_median"`
 	Okazu                            string           `json:"okazu"`
+	Erogame                          string           `json:"erogame"`
 	Genre                            string           `json:"genre"`
+	BannerUrl                        string           `json:"banner_url"`
 	SteamId                          string           `json:"steam"`
 	VndbId                           string           `json:"vndb"`
 	CreatorShubetu                   []Creatorshubetu `json:"shubetu_detail"`
@@ -66,5 +68,6 @@ type Creatorshubetu struct {
 
 type CreatorShubetuDetail struct {
 	CreatorName       string `json:"creater_name"`
+	ShubetuDetailType int    `json:"shubetu_detail_type"`
 	ShubetuDetailName string `json:"shubetu_detail_name"`
 }
