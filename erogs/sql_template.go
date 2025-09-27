@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	internalerrors "kurohelper/errors"
+	kurohelpererrors "kurohelper/errors"
 	"kurohelper/utils"
 )
 
@@ -20,7 +20,7 @@ func buildFuzzySearchCreatorSQL(search string) (string, error) {
 	}
 
 	if strings.TrimSpace(search) == "" {
-		return "", internalerrors.ErrSearchNoContent
+		return "", kurohelpererrors.ErrSearchNoContent
 	}
 
 	return fmt.Sprintf(`
@@ -80,7 +80,7 @@ func buildFuzzySearchMusicSQL(search string) (string, error) {
 	}
 
 	if strings.TrimSpace(search) == "" {
-		return "", internalerrors.ErrSearchNoContent
+		return "", kurohelpererrors.ErrSearchNoContent
 	}
 
 	return fmt.Sprintf(`

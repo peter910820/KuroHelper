@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"strings"
 
-	internalerrors "kurohelper/errors"
+	kurohelpererrors "kurohelper/errors"
 	vndbmodels "kurohelper/models/vndb"
 )
 
@@ -56,7 +56,7 @@ func GetVnUseID(brandid string) (*vndbmodels.BasicResponse[vndbmodels.GetVnUseID
 	}
 
 	if len(res.Results) == 0 {
-		return nil, internalerrors.ErrVndbNoResult
+		return nil, kurohelpererrors.ErrVndbNoResult
 	}
 
 	return &res, nil
