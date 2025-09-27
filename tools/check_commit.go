@@ -10,13 +10,12 @@ import (
 )
 
 func main() {
-	head := os.Getenv("GITHUB_SHA")
 	eventName := os.Getenv("GITHUB_EVENT_NAME")
-	base := os.Getenv("GITHUB_BASE_REF")
+	headBranch := os.Getenv("GITHUB_HEAD_REF")
 
 	var cmd *exec.Cmd
 	if eventName == "pull_request" {
-		cmd = exec.Command("git", "log", "--pretty=format:%s", fmt.Sprintf("%s..%s", base, head))
+		cmd = exec.Command("git", "log", "--pretty=format:%s", "origin/"+headBranch)
 	} else {
 		cmd = exec.Command("git", "log", "--pretty=format:%s", "-1", "HEAD")
 	}
