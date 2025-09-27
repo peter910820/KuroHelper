@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"errors"
 	"fmt"
 	"sort"
 	"strings"
@@ -11,10 +10,10 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"kurohelper/erogs"
-	kurohelpererrors "kurohelper/errors"
 	"kurohelper/models"
 	erogsmodels "kurohelper/models/erogs"
 	"kurohelper/utils"
+	"kurohelper/vndb"
 )
 
 func ErogsFuzzySearchCreator(s *discordgo.Session, i *discordgo.InteractionCreate, cid *models.VndbInteractionCustomID) {
@@ -303,16 +302,16 @@ func ErogsFuzzySearchGame(s *discordgo.Session, i *discordgo.InteractionCreate, 
 
 	res, err = erogs.GetGameByFuzzy(keyword)
 	if err != nil {
-		logrus.Error(err)
-		if errors.Is(err, kurohelpererrors.ErrSearchNoContent) {
-			utils.InteractionEmbedErrorRespond(s, i, "找不到任何結果喔", true)
-		} else if errors.Is(err, kurohelpererrors.ErrSearchNoContent) {
-			utils.InteractionEmbedErrorRespond(s, i, "搜尋內容有非法字元或為空", true)
-		} else {
-			utils.InteractionEmbedErrorRespond(s, i, "該功能目前異常，請稍後再嘗試", true)
-		}
+		utils.HandleError(err, s, i)
 		return
 	}
+
+	resVndb, err := vndb.GetVnUseID(res.VndbId)
+	if err != nil {
+		utils.HandleError(err, s, i)
+		return
+	}
+
 	shubetuData := make(map[int]map[int][]string) // map[shubetu_type]map[shubetu_detail]][]creator name + shube1tu_detail_name
 
 	for typeIdx := 1; typeIdx <= 6; typeIdx++ {
@@ -413,7 +412,7 @@ func ErogsFuzzySearchGame(s *discordgo.Session, i *discordgo.InteractionCreate, 
 			},
 			{
 				Name:   "vndb分數/樣本數",
-				Value:  "",
+				Value:  fmt.Sprintf("%.1f/%d", resVndb.Results[0].Rating, resVndb.Results[0].Votecount),
 				Inline: true,
 			},
 			{
