@@ -19,8 +19,26 @@ on:
 
 jobs:
 
+  lint_commits:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.24'
+
+      - name: Lint commits
+        run: go run ./tools/check_commit.go
+        env:
+          GITHUB_SHA: ${{ github.sha }}
+          GITHUB_BASE_REF: ${{ github.event.pull_request.base.ref }}
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
+
   build:
     runs-on: ubuntu-latest
+    needs: lint_commits
     steps:
     - uses: actions/checkout@v4
 
