@@ -1,17 +1,14 @@
 package handlers
 
 import (
-	"errors"
 	"fmt"
 	"sort"
 	"strings"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/google/uuid"
-	"github.com/sirupsen/logrus"
 
 	"kurohelper/erogs"
-	internalerrors "kurohelper/errors"
 	"kurohelper/models"
 	erogsmodels "kurohelper/models/erogs"
 	"kurohelper/utils"
@@ -31,21 +28,13 @@ func ErogsFuzzySearchCreator(s *discordgo.Session, i *discordgo.InteractionCreat
 
 		keyword, err := utils.GetOptions(i, "keyword")
 		if err != nil {
-			logrus.Error(err)
-			utils.InteractionEmbedErrorRespond(s, i, "該功能目前異常，請稍後再嘗試", true)
+			utils.HandleError(err, s, i)
 			return
 		}
 
 		res, err = erogs.GetCreatorByFuzzy(keyword)
 		if err != nil {
-			logrus.Error(err)
-			if errors.Is(err, internalerrors.ErrVndbNoResult) {
-				utils.InteractionEmbedErrorRespond(s, i, "找不到任何結果喔", true)
-			} else if errors.Is(err, internalerrors.ErrSearchNoContent) {
-				utils.InteractionEmbedErrorRespond(s, i, "搜尋內容有非法字元或為空", true)
-			} else {
-				utils.InteractionEmbedErrorRespond(s, i, "該功能目前異常，請稍後再嘗試", true)
-			}
+			utils.HandleError(err, s, i)
 			return
 		}
 
@@ -192,21 +181,13 @@ func ErogsFuzzySearchMusic(s *discordgo.Session, i *discordgo.InteractionCreate,
 	var res *erogsmodels.FuzzySearchMusicResponse
 	keyword, err := utils.GetOptions(i, "keyword")
 	if err != nil {
-		logrus.Error(err)
-		utils.InteractionEmbedErrorRespond(s, i, "該功能目前異常，請稍後再嘗試", true)
+		utils.HandleError(err, s, i)
 		return
 	}
 
 	res, err = erogs.GetMusicByFuzzy(keyword)
 	if err != nil {
-		logrus.Error(err)
-		if errors.Is(err, internalerrors.ErrVndbNoResult) {
-			utils.InteractionEmbedErrorRespond(s, i, "找不到任何結果喔", true)
-		} else if errors.Is(err, internalerrors.ErrSearchNoContent) {
-			utils.InteractionEmbedErrorRespond(s, i, "搜尋內容有非法字元或為空", true)
-		} else {
-			utils.InteractionEmbedErrorRespond(s, i, "該功能目前異常，請稍後再嘗試", true)
-		}
+		utils.HandleError(err, s, i)
 		return
 	}
 

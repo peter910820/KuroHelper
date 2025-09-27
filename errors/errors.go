@@ -1,4 +1,4 @@
-package errors
+package kurohelpererrors
 
 import "errors"
 
@@ -9,4 +9,9 @@ var (
 	ErrVndbNoResult = errors.New("vndb: no result for response")
 
 	ErrSearchNoContent = errors.New("search: no content for search")
+
+	// The remote server returns a non-200 response status code
+	ErrStatusCodeAbnormal = errors.New("server returned an error status code")
+	// rate limit
+	ErrRateLimit = errors.New("rate limit, quota exhausted")
 )

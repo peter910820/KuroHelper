@@ -1,12 +1,7 @@
 package vndb
 
 import (
-	"bytes"
 	"encoding/json"
-	"fmt"
-	"io"
-	"net/http"
-	"os"
 	"strings"
 
 	internalerrors "kurohelper/errors"
@@ -49,21 +44,11 @@ func GetVnUseID(brandid string) (*vndbmodels.BasicResponse[vndbmodels.GetVnUseID
 		return nil, err
 	}
 
-	resp, err := http.Post(os.Getenv("VNDB_ENDPOINT")+"/vn", "application/json", bytes.NewBuffer(jsonData))
+	body, err := sendPostRequest("/vn", jsonData)
 	if err != nil {
 		return nil, err
 	}
 
-	defer resp.Body.Close()
-
-	if resp.StatusCode != 200 {
-		return nil, fmt.Errorf("the server returned an error status code %d", resp.StatusCode)
-	}
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
 	var res vndbmodels.BasicResponse[vndbmodels.GetVnUseIDResponse]
 	err = json.Unmarshal(body, &res)
 	if err != nil {
@@ -75,8 +60,4 @@ func GetVnUseID(brandid string) (*vndbmodels.BasicResponse[vndbmodels.GetVnUseID
 	}
 
 	return &res, nil
-}
-
-func GetVn() {
-
 }

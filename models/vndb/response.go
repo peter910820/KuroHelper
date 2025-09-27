@@ -62,3 +62,13 @@ type StaffSearchResponse struct {
 	ExtLinks    []ExtlinksResponse   `json:"extlinks"`    // 外部連結
 	Aliases     []StaffAliasResponse `json:"aliases"`     // 別名清單
 }
+
+type Stats struct {
+	Chars     int `json:"chars"`
+	Producers int `json:"producers"`
+	Releases  int `json:"releases"`
+	Staff     int `json:"staff"`
+	Tags      int `json:"tags"`
+	Traits    int `json:"traits"`
+	VN        int `json:"vn"`
+}
