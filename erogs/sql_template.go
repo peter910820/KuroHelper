@@ -161,7 +161,7 @@ FROM (
     LEFT JOIN musicitemlist_agg mi ON mi.music_id = m.id
     LEFT JOIN usermusic_tokuten_agg ut ON ut.music_id = m.id 
     WHERE m.name ILIKE '%s'
-    ORDER BY ut.avg_tokuten DESC NULLS LAST
+    ORDER BY ut.tokuten_count DESC NULLS LAST, ut.avg_tokuten DESC NULLS LAST
     LIMIT 1
 )t;
 `, result), nil
