@@ -221,10 +221,10 @@ func ErogsFuzzySearchMusic(s *discordgo.Session, i *discordgo.InteractionCreate,
 	compositionList := strings.Split(res.Compositions, ",")
 	albumList := strings.Split(res.Album, ",")
 	if res.PlayTime == "00:00:00" {
-		res.PlayTime = "Unknown"
+		res.PlayTime = "未收錄"
 	}
 	if res.ReleaseDate == "0001-01-01" {
-		res.ReleaseDate = "Unknown"
+		res.ReleaseDate = "未收錄"
 	}
 
 	embed := &discordgo.MessageEmbed{
@@ -302,4 +302,141 @@ func erogsPagination(result *[]erogsmodels.Game, page int, useCache bool) bool {
 			return false
 		}
 	}
+}
+
+func ErogsFuzzySearchGame(s *discordgo.Session, i *discordgo.InteractionCreate, cid *models.VndbInteractionCustomID) {
+	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseDeferredChannelMessageWithSource,
+	})
+
+	var res *erogsmodels.FuzzySearchGameResponse
+	keyword, err := utils.GetOptions(i, "keyword")
+	if err != nil {
+		logrus.Error(err)
+		utils.InteractionEmbedErrorRespond(s, i, "該功能目前異常，請稍後再嘗試", true)
+		return
+	}
+
+	res, err = erogs.GetGameByFuzzy(keyword)
+	if err != nil {
+		logrus.Error(err)
+		if errors.Is(err, internalerrors.ErrVndbNoResult) {
+			utils.InteractionEmbedErrorRespond(s, i, "找不到任何結果喔", true)
+		} else if errors.Is(err, internalerrors.ErrSearchNoContent) {
+			utils.InteractionEmbedErrorRespond(s, i, "搜尋內容有非法字元或為空", true)
+		} else {
+			utils.InteractionEmbedErrorRespond(s, i, "該功能目前異常，請稍後再嘗試", true)
+		}
+		return
+	}
+	shubetuData := make(map[int]map[int][]string) // map[shubetu_type]map[shubetu_detail]][]creator name + shube1tu_detail_name
+
+	for typeIdx := 1; typeIdx <= 6; typeIdx++ {
+		shubetuData[typeIdx] = make(map[int][]string)
+		for detailIdx := 1; detailIdx <= 3; detailIdx++ {
+			shubetuData[typeIdx][detailIdx] = make([]string, 0)
+		}
+	}
+	for _, shubetu := range res.CreatorShubetu { // 遍歷shubetu_detail
+		for _, detail := range shubetu.CreatorShubetuDetail {
+			creatorData := detail.CreatorName + " (" + detail.ShubetuDetailName + ")"
+			shubetuData[shubetu.ShubetuType][detail.ShubetuDetailType] = append(shubetuData[shubetu.ShubetuType][detail.ShubetuDetailType], creatorData)
+		}
+	}
+
+	switch res.Okazu {
+	case "t":
+		res.Okazu = "拔作"
+	case "f":
+		res.Okazu = "非拔作"
+	}
+
+	switch res.Erogame {
+	case "t":
+		res.Erogame = "全年齡"
+	case "f":
+		res.Erogame = "18禁"
+	}
+
+	otherInfo := ""
+	if res.Erogame == "未收錄" && res.Okazu == "未收錄" {
+		otherInfo = "無"
+	} else if res.Erogame == "未收錄" || res.Okazu == "未收錄" {
+		otherInfo = res.Okazu + res.Erogame
+	} else {
+		otherInfo = res.Okazu + " / " + res.Erogame
+	}
+
+	embed := &discordgo.MessageEmbed{
+		Title: res.Gamename + " (" + res.SellDay + ")",
+		Color: 0x04108e,
+		Fields: []*discordgo.MessageEmbedField{
+			{
+				Name:   "劇本",
+				Value:  strings.Join(shubetuData[2][1], "/") + strings.Join(shubetuData[2][2], "/") + strings.Join(shubetuData[2][3], "/"),
+				Inline: false,
+			},
+			{
+				Name:   "原畫",
+				Value:  strings.Join(shubetuData[1][1], "/") + strings.Join(shubetuData[1][2], "/") + strings.Join(shubetuData[1][3], "/"),
+				Inline: false,
+			},
+			{
+				Name:   "主角群CV",
+				Value:  strings.Join(shubetuData[5][1], "/"),
+				Inline: false,
+			},
+			{
+				Name:   "配角群CV",
+				Value:  strings.Join(shubetuData[5][2], "/") + strings.Join(shubetuData[5][3], "/"),
+				Inline: false,
+			},
+			{
+				Name:   "歌手",
+				Value:  strings.Join(shubetuData[6][1], "/") + strings.Join(shubetuData[6][2], "/") + strings.Join(shubetuData[6][3], "/"),
+				Inline: false,
+			},
+			{
+				Name:   "音樂",
+				Value:  strings.Join(shubetuData[3][1], "/") + strings.Join(shubetuData[3][2], "/") + strings.Join(shubetuData[3][3], "/"),
+				Inline: false,
+			},
+			{
+				Name:   "批評空間分數/樣本數",
+				Value:  res.Median + " / " + res.TokutenCount,
+				Inline: true,
+			},
+			{
+				Name:   "vndb分數/樣本數",
+				Value:  "",
+				Inline: true,
+			},
+			{
+				Name:   "遊玩時數",
+				Value:  res.TotalPlayTimeMedian,
+				Inline: true,
+			},
+			{
+				Name:   "理解遊戲樂趣時數",
+				Value:  res.TimeBeforeUnderstandingFunMedian,
+				Inline: false,
+			},
+			{
+				Name:   "類型",
+				Value:  res.Genre,
+				Inline: true,
+			},
+			{
+				Name:   "其他資訊",
+				Value:  otherInfo,
+				Inline: true,
+			},
+			{
+				Name:   "其他資訊",
+				Value:  otherInfo,
+				Inline: true,
+			},
+		},
+	}
+	utils.InteractionEmbedRespond(s, i, embed, nil, true)
 }
