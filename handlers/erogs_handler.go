@@ -338,67 +338,88 @@ func ErogsFuzzySearchGame(s *discordgo.Session, i *discordgo.InteractionCreate, 
 		}
 	}
 	for _, shubetu := range res.CreatorShubetu { // 遍歷shubetu_detail
-		for _, detail := range shubetu.CreatorShubetuDetail {
-			creatorData := detail.CreatorName + " (" + detail.ShubetuDetailName + ")"
-			shubetuData[shubetu.ShubetuType][detail.ShubetuDetailType] = append(shubetuData[shubetu.ShubetuType][detail.ShubetuDetailType], creatorData)
+		shubetuType := shubetu.ShubetuType
+		detailType := shubetu.ShubetuDetailType
+		creatorData := ""
+		if shubetu.ShubetuDetailName == "" {
+			creatorData = shubetu.CreatorName
+		} else {
+			creatorData = shubetu.CreatorName + " (" + shubetu.ShubetuDetailName + ")"
+		}
+		if shubetu.ShubetuType != 5 {
+			shubetuData[shubetuType][1] = append(shubetuData[shubetuType][1], creatorData)
+		} else {
+			if detailType == 2 || detailType == 3 {
+				shubetuData[shubetuType][2] = append(shubetuData[shubetuType][2], creatorData)
+			} else {
+				shubetuData[shubetuType][1] = append(shubetuData[shubetuType][1], creatorData)
+			}
 		}
 	}
 
 	switch res.Okazu {
-	case "t":
+	case "true":
 		res.Okazu = "拔作"
-	case "f":
+	case "false":
 		res.Okazu = "非拔作"
+	default:
+		res.Okazu = ""
 	}
 
 	switch res.Erogame {
-	case "t":
+	case "true":
 		res.Erogame = "全年齡"
-	case "f":
+	case "false":
 		res.Erogame = "18禁"
+	default:
+		res.Erogame = ""
 	}
 
 	otherInfo := ""
-	if res.Erogame == "未收錄" && res.Okazu == "未收錄" {
+	if res.Erogame == "" && res.Okazu == "" {
 		otherInfo = "無"
-	} else if res.Erogame == "未收錄" || res.Okazu == "未收錄" {
-		otherInfo = res.Okazu + res.Erogame
+	} else if res.Erogame == "" || res.Okazu == "" {
+		otherInfo = res.Erogame + res.Okazu
 	} else {
 		otherInfo = res.Okazu + " / " + res.Erogame
 	}
 
 	embed := &discordgo.MessageEmbed{
-		Title: res.Gamename + " (" + res.SellDay + ")",
+		Author: &discordgo.MessageEmbedAuthor{
+			Name: res.BrandName,
+		},
+		Title: fmt.Sprintf("**%s(%s)**", res.Gamename, res.SellDay),
+		URL:   res.Shoukai,
 		Color: 0x04108e,
 		Fields: []*discordgo.MessageEmbedField{
 			{
 				Name:   "劇本",
-				Value:  strings.Join(shubetuData[2][1], "/") + strings.Join(shubetuData[2][2], "/") + strings.Join(shubetuData[2][3], "/"),
+				Value:  strings.Join(shubetuData[2][1], " / "),
 				Inline: false,
 			},
 			{
 				Name:   "原畫",
-				Value:  strings.Join(shubetuData[1][1], "/") + strings.Join(shubetuData[1][2], "/") + strings.Join(shubetuData[1][3], "/"),
+				Value:  strings.Join(shubetuData[1][1], " / "),
 				Inline: false,
 			},
 			{
 				Name:   "主角群CV",
-				Value:  strings.Join(shubetuData[5][1], "/"),
+				Value:  strings.Join(shubetuData[5][1], " / "),
 				Inline: false,
 			},
 			{
 				Name:   "配角群CV",
-				Value:  strings.Join(shubetuData[5][2], "/") + strings.Join(shubetuData[5][3], "/"),
+				Value:  strings.Join(shubetuData[5][2], " / "),
 				Inline: false,
 			},
 			{
 				Name:   "歌手",
-				Value:  strings.Join(shubetuData[6][1], "/") + strings.Join(shubetuData[6][2], "/") + strings.Join(shubetuData[6][3], "/"),
+				Value:  strings.Join(shubetuData[6][1], " / "),
 				Inline: false,
 			},
 			{
 				Name:   "音樂",
-				Value:  strings.Join(shubetuData[3][1], "/") + strings.Join(shubetuData[3][2], "/") + strings.Join(shubetuData[3][3], "/"),
+				Value:  strings.Join(shubetuData[3][1], " / "),
 				Inline: false,
 			},
 			{
@@ -431,11 +452,9 @@ func ErogsFuzzySearchGame(s *discordgo.Session, i *discordgo.InteractionCreate, 
 				Value:  otherInfo,
 				Inline: true,
 			},
-			{
-				Name:   "其他資訊",
-				Value:  otherInfo,
-				Inline: true,
-			},
+		},
+		Image: &discordgo.MessageEmbedImage{
+			URL: res.BannerUrl,
 		},
 	}
 	utils.InteractionEmbedRespond(s, i, embed, nil, true)

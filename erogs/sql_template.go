@@ -187,49 +187,42 @@ WITH shokushu_agg AS (
     SELECT s.game AS game_id,
            json_agg(
                json_build_object(
-                   'creater_name', c.name ,
-                   'shubetu_detail_name', s.shubetu_detail_name
+                   'shubetu_type', s.shubetu,
+                    'creater_name', c.name,
+                    'shubetu_detail_type', s.shubetu_detail,
+                    'shubetu_detail_name', s.shubetu_detail_name
+                       
                )
-           ) AS shubetu_detail,
-           s.shubetu AS shubetu_type
+           ) AS shubetu_detail
     FROM shokushu s
-    LEFT JOIN createrlist c ON c.id = s.creater 
+    LEFT JOIN createrlist c ON c.id = s.creater
     WHERE s.shubetu != 7
-    GROUP BY s.game, s.shubetu
-),
-shokushu_agg_agg AS(
-    SELECT game_id,
-    json_agg(
-               json_build_object(
-                   'shubetu_type', s.shubetu_type ,
-                   'creater_shubetu_detail', s.shubetu_detail
-               )
-            ) AS shubetu_detail
-    FROM shokushu_agg s
-    GROUP BY game_id
+    GROUP BY s.game
 )
-SELECT json_agg(row_to_json(t))
+SELECT row_to_json(t)
 FROM (
-SELECT g.id,
-       g.gamename,
-       g.sellday,
-       g.brandname,
-       COALESCE(g.median::text, '無') AS median,
-       COALESCE(g.count2::text, '無') AS count2,
-       COALESCE(g.total_play_time_median::text, '無') AS total_play_time_median,
-       COALESCE(g.time_before_understanding_fun_median::text, '無') AS time_before_understanding_fun_median,
-       COALESCE(g.okazu::text, '未收錄') AS okazu,
-       COALESCE(g.erogame::text, '未收錄') AS erogame,
-       COALESCE(g.banner_url, '') AS banner_url,
-       COALESCE(g.genre, '無') AS genre,
-       COALESCE(g.steam::text, '') AS steam,
-       COALESCE(g.vndb, '') AS vndb,
-       s.shubetu_detail
-FROM gamelist g
-LEFT JOIN shokushu_agg_agg s ON s.game_id = g.id
-WHERE g.gamename ILIKE '%s'
-ORDER BY g.median DESC
-LIMIT 1
-)t;
+    SELECT g.id,
+           b.brandname,
+           g.gamename,
+           g.sellday,
+           COALESCE(g.median::text, '無') AS median,
+           COALESCE(g.count2::text, '無') AS count2,
+           COALESCE(g.total_play_time_median::text, '無') AS total_play_time_median,
+           COALESCE(g.time_before_understanding_fun_median::text, '無') AS time_before_understanding_fun_median,
+           COALESCE(g.okazu::text, '未收錄') AS okazu,
+           COALESCE(g.erogame::text, '未收錄') AS erogame,
+           COALESCE(g.banner_url, '') AS banner_url,
+           COALESCE(g.genre, '無') AS genre,
+           COALESCE(g.steam::text, '') AS steam,
+           COALESCE(g.vndb, '') AS vndb,
+           g.shoukai,
+           s.shubetu_detail
+    FROM gamelist g
+    LEFT JOIN shokushu_agg s ON s.game_id = g.id
+    LEFT JOIN brandlist b ON b.id = g.brandname
+    WHERE g.gamename ILIKE '%s'
+    ORDER BY g.count2 DESC NULLS LAST, g.median DESC NULLS LAST
+    LIMIT 1
+) t;
 `, result), nil
 }

@@ -45,7 +45,7 @@ type GameCategory struct {
 
 type FuzzySearchGameResponse struct {
 	ID                               int              `json:"id"`
-	BrandId                          int              `json:"brandname"`
+	BrandName                        string           `json:"brandname"`
 	Gamename                         string           `json:"gamename"`
 	SellDay                          string           `json:"sellday"`
 	Median                           string           `json:"median"`
@@ -58,15 +58,12 @@ type FuzzySearchGameResponse struct {
 	BannerUrl                        string           `json:"banner_url"`
 	SteamId                          string           `json:"steam"`
 	VndbId                           string           `json:"vndb"`
+	Shoukai                          string           `json:"shoukai"`
 	CreatorShubetu                   []Creatorshubetu `json:"shubetu_detail"`
 }
 
 type Creatorshubetu struct {
-	ShubetuType          int                    `json:"shubetu_type"`
-	CreatorShubetuDetail []CreatorShubetuDetail `json:"creater_shubetu_detail"`
-}
-
-type CreatorShubetuDetail struct {
+	ShubetuType       int    `json:"shubetu_type"`
 	CreatorName       string `json:"creater_name"`
 	ShubetuDetailType int    `json:"shubetu_detail_type"`
 	ShubetuDetailName string `json:"shubetu_detail_name"`
