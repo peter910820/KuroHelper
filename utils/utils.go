@@ -150,6 +150,22 @@ func GetOptions(i *discordgo.InteractionCreate, name string) (string, error) {
 	return "", kurohelpererrors.ErrOptionNotFound
 }
 
+// get slash command options optional
+func GetOptionOptional[T any](i *discordgo.InteractionCreate, name string) (T, error) {
+	var zero T
+	for _, v := range i.ApplicationCommandData().Options {
+		if v.Name == name {
+			value, ok := v.Value.(T) // type assertion
+			if ok {
+				return value, nil
+			} else {
+				return zero, kurohelpererrors.ErrOptionTranslateFail
+			}
+		}
+	}
+	return zero, nil // return nil if option not found
+}
+
 func IsAllEnglish(s string) bool {
 	for _, r := range s {
 		if (r < 'A' || r > 'Z') && (r < 'a' || r > 'z') {

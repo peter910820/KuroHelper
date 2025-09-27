@@ -13,6 +13,7 @@ func RegisterCommand(s *discordgo.Session) {
 	guildCmds = append(guildCmds, managementCommands()...)
 	globalCmds = append(globalCmds, vndbCommands()...)
 	globalCmds = append(globalCmds, erogsCommands()...)
+	globalCmds = append(globalCmds, GalgameSearchCommands()...)
 
 	// guild commands
 	// main mangement group ID
@@ -172,6 +173,59 @@ func erogsCommands() []*discordgo.ApplicationCommand {
 					Name:        "keyword",
 					Description: "關鍵字",
 					Required:    true,
+				},
+			},
+		},
+	}
+}
+
+func GalgameSearchCommands() []*discordgo.ApplicationCommand {
+	return []*discordgo.ApplicationCommand{
+		{
+			Name:        "查詢公司品牌",
+			Description: "根據關鍵字查詢公司品牌資料(預設資料來源VNDB)",
+			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "keyword",
+					Description: "關鍵字",
+					Required:    true,
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "type",
+					Description: "公司性質",
+					Required:    false,
+					Choices: []*discordgo.ApplicationCommandOptionChoice{
+						{
+							Name:  "公司",
+							Value: "company",
+						},
+						{
+							Name:  "個人",
+							Value: "individual",
+						},
+						{
+							Name:  "同人社團",
+							Value: "amateur",
+						},
+					},
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "source",
+					Description: "資料來源",
+					Required:    false,
+					Choices: []*discordgo.ApplicationCommandOptionChoice{
+						{
+							Name:  "VNDB(VNDB.org)",
+							Value: "vndb",
+						},
+						{
+							Name:  "批評空間",
+							Value: "erogs",
+						},
+					},
 				},
 			},
 		},
