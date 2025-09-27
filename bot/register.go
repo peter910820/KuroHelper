@@ -9,10 +9,10 @@ import (
 
 func RegisterCommand(s *discordgo.Session) {
 	var guildCmds []*discordgo.ApplicationCommand
-	var golabalCmds []*discordgo.ApplicationCommand
+	var globalCmds []*discordgo.ApplicationCommand
 	guildCmds = append(guildCmds, managementCommands()...)
-	golabalCmds = append(golabalCmds, vndbCommands()...)
-	golabalCmds = append(golabalCmds, erogsCommands()...)
+	globalCmds = append(globalCmds, vndbCommands()...)
+	globalCmds = append(globalCmds, erogsCommands()...)
 
 	// guild commands
 	// main mangement group ID
@@ -24,10 +24,10 @@ func RegisterCommand(s *discordgo.Session) {
 		}
 	}
 	// global commands
-	for _, cmd := range golabalCmds {
+	for _, cmd := range globalCmds {
 		_, err := s.ApplicationCommandCreate(s.State.User.ID, "", cmd)
 		if err != nil {
-			logrus.Errorf("register golabal slash command failed: %s", err)
+			logrus.Errorf("register global slash command failed: %s", err)
 		}
 	}
 
