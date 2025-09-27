@@ -1,14 +1,17 @@
 package handlers
 
 import (
+	"errors"
 	"fmt"
 	"sort"
 	"strings"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/google/uuid"
+	"github.com/sirupsen/logrus"
 
 	"kurohelper/erogs"
+	kurohelpererrors "kurohelper/errors"
 	"kurohelper/models"
 	erogsmodels "kurohelper/models/erogs"
 	"kurohelper/utils"
@@ -202,10 +205,10 @@ func ErogsFuzzySearchMusic(s *discordgo.Session, i *discordgo.InteractionCreate,
 	compositionList := strings.Split(res.Compositions, ",")
 	albumList := strings.Split(res.Album, ",")
 	if res.PlayTime == "00:00:00" {
-		res.PlayTime = "Unknown"
+		res.PlayTime = "未收錄"
 	}
 	if res.ReleaseDate == "0001-01-01" {
-		res.ReleaseDate = "Unknown"
+		res.ReleaseDate = "未收錄"
 	}
 
 	embed := &discordgo.MessageEmbed{
@@ -283,4 +286,160 @@ func erogsPagination(result *[]erogsmodels.Game, page int, useCache bool) bool {
 			return false
 		}
 	}
+}
+
+func ErogsFuzzySearchGame(s *discordgo.Session, i *discordgo.InteractionCreate, cid *models.VndbInteractionCustomID) {
+	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseDeferredChannelMessageWithSource,
+	})
+
+	var res *erogsmodels.FuzzySearchGameResponse
+	keyword, err := utils.GetOptions(i, "keyword")
+	if err != nil {
+		logrus.Error(err)
+		utils.InteractionEmbedErrorRespond(s, i, "該功能目前異常，請稍後再嘗試", true)
+		return
+	}
+
+	res, err = erogs.GetGameByFuzzy(keyword)
+	if err != nil {
+		logrus.Error(err)
+		if errors.Is(err, kurohelpererrors.ErrSearchNoContent) {
+			utils.InteractionEmbedErrorRespond(s, i, "找不到任何結果喔", true)
+		} else if errors.Is(err, kurohelpererrors.ErrSearchNoContent) {
+			utils.InteractionEmbedErrorRespond(s, i, "搜尋內容有非法字元或為空", true)
+		} else {
+			utils.InteractionEmbedErrorRespond(s, i, "該功能目前異常，請稍後再嘗試", true)
+		}
+		return
+	}
+	shubetuData := make(map[int]map[int][]string) // map[shubetu_type]map[shubetu_detail]][]creator name + shube1tu_detail_name
+
+	for typeIdx := 1; typeIdx <= 6; typeIdx++ {
+		shubetuData[typeIdx] = make(map[int][]string)
+		for detailIdx := 1; detailIdx <= 3; detailIdx++ {
+			shubetuData[typeIdx][detailIdx] = make([]string, 0)
+		}
+	}
+	for _, shubetu := range res.CreatorShubetu { // 遍歷shubetu_detail
+		shubetuType := shubetu.ShubetuType
+		detailType := shubetu.ShubetuDetailType
+		creatorData := ""
+		if shubetu.ShubetuDetailName == "" {
+			creatorData = shubetu.CreatorName
+		} else {
+			creatorData = shubetu.CreatorName + " (" + shubetu.ShubetuDetailName + ")"
+		}
+		if shubetu.ShubetuType != 5 {
+			shubetuData[shubetuType][1] = append(shubetuData[shubetuType][1], creatorData)
+		} else {
+			if detailType == 2 || detailType == 3 {
+				shubetuData[shubetuType][2] = append(shubetuData[shubetuType][2], creatorData)
+			} else {
+				shubetuData[shubetuType][1] = append(shubetuData[shubetuType][1], creatorData)
+			}
+		}
+	}
+
+	switch res.Okazu {
+	case "true":
+		res.Okazu = "拔作"
+	case "false":
+		res.Okazu = "非拔作"
+	default:
+		res.Okazu = ""
+	}
+
+	switch res.Erogame {
+	case "true":
+		res.Erogame = "全年齡"
+	case "false":
+		res.Erogame = "18禁"
+	default:
+		res.Erogame = ""
+	}
+
+	otherInfo := ""
+	if res.Erogame == "" && res.Okazu == "" {
+		otherInfo = "無"
+	} else if res.Erogame == "" || res.Okazu == "" {
+		otherInfo = res.Erogame + res.Okazu
+	} else {
+		otherInfo = res.Okazu + " / " + res.Erogame
+	}
+
+	embed := &discordgo.MessageEmbed{
+		Author: &discordgo.MessageEmbedAuthor{
+			Name: res.BrandName,
+		},
+		Title: fmt.Sprintf("**%s(%s)**", res.Gamename, res.SellDay),
+		URL:   res.Shoukai,
+		Color: 0x04108e,
+		Fields: []*discordgo.MessageEmbedField{
+			{
+				Name:   "劇本",
+				Value:  strings.Join(shubetuData[2][1], " / "),
+				Inline: false,
+			},
+			{
+				Name:   "原畫",
+				Value:  strings.Join(shubetuData[1][1], " / "),
+				Inline: false,
+			},
+			{
+				Name:   "主角群CV",
+				Value:  strings.Join(shubetuData[5][1], " / "),
+				Inline: false,
+			},
+			{
+				Name:   "配角群CV",
+				Value:  strings.Join(shubetuData[5][2], " / "),
+				Inline: false,
+			},
+			{
+				Name:   "歌手",
+				Value:  strings.Join(shubetuData[6][1], " / "),
+				Inline: false,
+			},
+			{
+				Name:   "音樂",
+				Value:  strings.Join(shubetuData[3][1], " / "),
+				Inline: false,
+			},
+			{
+				Name:   "批評空間分數/樣本數",
+				Value:  res.Median + " / " + res.TokutenCount,
+				Inline: true,
+			},
+			{
+				Name:   "vndb分數/樣本數",
+				Value:  "",
+				Inline: true,
+			},
+			{
+				Name:   "遊玩時數",
+				Value:  res.TotalPlayTimeMedian,
+				Inline: true,
+			},
+			{
+				Name:   "理解遊戲樂趣時數",
+				Value:  res.TimeBeforeUnderstandingFunMedian,
+				Inline: false,
+			},
+			{
+				Name:   "類型",
+				Value:  res.Genre,
+				Inline: true,
+			},
+			{
+				Name:   "其他資訊",
+				Value:  otherInfo,
+				Inline: true,
+			},
+		},
+		Image: &discordgo.MessageEmbedImage{
+			URL: res.BannerUrl,
+		},
+	}
+	utils.InteractionEmbedRespond(s, i, embed, nil, true)
 }

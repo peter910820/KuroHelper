@@ -163,5 +163,17 @@ func erogsCommands() []*discordgo.ApplicationCommand {
 				},
 			},
 		},
+		{
+			Name:        "erogs模糊查詢遊戲",
+			Description: "根據音樂名稱查詢遊戲資料",
+			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "keyword",
+					Description: "關鍵字",
+					Required:    true,
+				},
+			},
+		},
 	}
 }
