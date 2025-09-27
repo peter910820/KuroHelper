@@ -8,7 +8,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"github.com/google/uuid"
 
-	internalerrors "kurohelper/errors"
+	kurohelpererrors "kurohelper/errors"
 	"kurohelper/models"
 	vndbmodels "kurohelper/models/vndb"
 	"kurohelper/utils"
@@ -216,7 +216,7 @@ func VndbFuzzySearchBrand(s *discordgo.Session, i *discordgo.InteractionCreate, 
 		}
 
 		companyType, err := utils.GetOptions(i, "type")
-		if err != nil && errors.Is(err, internalerrors.ErrOptionTranslateFail) {
+		if err != nil && errors.Is(err, kurohelpererrors.ErrOptionTranslateFail) {
 			utils.HandleError(err, s, i)
 			return
 		}

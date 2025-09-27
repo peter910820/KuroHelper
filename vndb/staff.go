@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"strings"
 
-	internalerrors "kurohelper/errors"
+	kurohelpererrors "kurohelper/errors"
 	vndbmodels "kurohelper/models/vndb"
 )
 
@@ -52,7 +52,7 @@ func GetStaffByFuzzy(keyword string, roleType string) (*vndbmodels.BasicResponse
 	}
 
 	if len(res.Results) == 0 {
-		return nil, internalerrors.ErrVndbNoResult
+		return nil, kurohelpererrors.ErrVndbNoResult
 	}
 
 	return &res, nil

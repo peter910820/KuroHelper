@@ -4,7 +4,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"github.com/sirupsen/logrus"
 
-	internalerrors "kurohelper/errors"
+	kurohelpererrors "kurohelper/errors"
 )
 
 // handle interaction command common respond
@@ -117,13 +117,13 @@ func GetOptions(i *discordgo.InteractionCreate, name string) (string, error) {
 		if v.Name == name {
 			value, ok := v.Value.(string) // type assertion
 			if !ok {
-				return "", internalerrors.ErrOptionTranslateFail
+				return "", kurohelpererrors.ErrOptionTranslateFail
 			} else {
 				return value, nil
 			}
 		}
 	}
-	return "", internalerrors.ErrOptionNotFound
+	return "", kurohelpererrors.ErrOptionNotFound
 }
 
 func IsAllEnglish(s string) bool {
