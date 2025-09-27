@@ -1,15 +1,10 @@
 package vndb
 
 import (
-	"bytes"
 	"encoding/json"
-	"fmt"
-	"io"
-	"net/http"
-	"os"
 	"strings"
 
-	internalerrors "kurohelper/errors"
+	kurohelpererrors "kurohelper/errors"
 	vndbmodels "kurohelper/models/vndb"
 )
 
@@ -49,18 +44,7 @@ func GetProducerByFuzzy(keyword string, companyType string) (*vndbmodels.Produce
 		return nil, err
 	}
 
-	respProducer, err := http.Post(os.Getenv("VNDB_ENDPOINT")+"/producer", "application/json", bytes.NewBuffer(jsonProducer))
-	if err != nil {
-		return nil, err
-	}
-
-	defer respProducer.Body.Close()
-
-	if respProducer.StatusCode != 200 {
-		return nil, fmt.Errorf("the server returned an error status code %d", respProducer.StatusCode)
-	}
-
-	r, err := io.ReadAll(respProducer.Body)
+	r, err := sendPostRequest("/producer", jsonProducer)
 	if err != nil {
 		return nil, err
 	}
@@ -72,7 +56,7 @@ func GetProducerByFuzzy(keyword string, companyType string) (*vndbmodels.Produce
 	}
 
 	if len(resProducer.Results) == 0 {
-		return nil, internalerrors.ErrVndbNoResult
+		return nil, kurohelpererrors.ErrVndbNoResult
 	}
 
 	// 等到查詢解析完後才能去查詢遊戲的資料
@@ -88,20 +72,10 @@ func GetProducerByFuzzy(keyword string, companyType string) (*vndbmodels.Produce
 	if err != nil {
 		return nil, err
 	}
-	respVn, err := http.Post(os.Getenv("VNDB_ENDPOINT")+"/vn", "application/json", bytes.NewBuffer(jsonVn))
+
+	r, err = sendPostRequest("/vn", jsonVn)
 	if err != nil {
 		return nil, err
-	}
-
-	defer respVn.Body.Close()
-
-	r, err = io.ReadAll(respVn.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	if respVn.StatusCode != 200 {
-		return nil, fmt.Errorf("the server returned an error status code %d", respVn.StatusCode)
 	}
 
 	var resVn vndbmodels.BasicResponse[vndbmodels.ProducerSearchVnResponse]
@@ -111,7 +85,7 @@ func GetProducerByFuzzy(keyword string, companyType string) (*vndbmodels.Produce
 	}
 
 	if len(resVn.Results) == 0 {
-		return nil, internalerrors.ErrVndbNoResult
+		return nil, kurohelpererrors.ErrVndbNoResult
 	}
 
 	return &vndbmodels.ProducerSearchResponse{

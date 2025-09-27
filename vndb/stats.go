@@ -1,28 +1,22 @@
 package vndb
 
 import (
-	"fmt"
-	"io"
-	"net/http"
-	"os"
+	"encoding/json"
+
+	vndbmodels "kurohelper/models/vndb"
 )
 
-func GetStats() ([]byte, error) {
-	resp, err := http.Get(os.Getenv("VNDB_ENDPOINT") + "/stats")
+func GetStats() (*vndbmodels.Stats, error) {
+	r, err := sendGetRequest("/stats")
 	if err != nil {
 		return nil, err
 	}
 
-	defer resp.Body.Close()
-
-	if resp.StatusCode != 200 {
-		return nil, fmt.Errorf("the server returned an error status code %d", resp.StatusCode)
-	}
-
-	body, err := io.ReadAll(resp.Body)
+	var res vndbmodels.Stats
+	err = json.Unmarshal(r, &res)
 	if err != nil {
 		return nil, err
 	}
 
-	return body, nil
+	return &res, nil
 }

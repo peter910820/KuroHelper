@@ -8,6 +8,8 @@ import (
 	"os"
 	"sync"
 	"time"
+
+	kurohelpererrors "kurohelper/errors"
 )
 
 type rateLimitStruct struct {
@@ -23,10 +25,35 @@ var (
 	}
 )
 
-func sendRequest(apiRoute string, jsonBytes []byte) ([]byte, error) {
+func sendGetRequest(apiRoute string) ([]byte, error) {
 	if !rateLimit(1) {
-		return nil, fmt.Errorf("Quota exhausted")
+		return nil, kurohelpererrors.ErrRateLimit
 	}
+
+	resp, err := http.Get(os.Getenv("VNDB_ENDPOINT") + apiRoute)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		return nil, fmt.Errorf("%w %d", kurohelpererrors.ErrStatusCodeAbnormal, resp.StatusCode)
+	}
+
+	r, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	return r, nil
+}
+
+func sendPostRequest(apiRoute string, jsonBytes []byte) ([]byte, error) {
+	if !rateLimit(1) {
+		return nil, kurohelpererrors.ErrRateLimit
+	}
+
 	resp, err := http.Post(os.Getenv("VNDB_ENDPOINT")+apiRoute, "application/json", bytes.NewBuffer(jsonBytes))
 	if err != nil {
 		return nil, err
@@ -35,7 +62,7 @@ func sendRequest(apiRoute string, jsonBytes []byte) ([]byte, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		return nil, fmt.Errorf("the server returned an error status code %d", resp.StatusCode)
+		return nil, fmt.Errorf("%w %d", kurohelpererrors.ErrStatusCodeAbnormal, resp.StatusCode)
 	}
 
 	r, err := io.ReadAll(resp.Body)
