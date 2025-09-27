@@ -7,7 +7,6 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/google/uuid"
-	"github.com/sirupsen/logrus"
 
 	"kurohelper/erogs"
 	"kurohelper/models"
@@ -295,8 +294,7 @@ func ErogsFuzzySearchGame(s *discordgo.Session, i *discordgo.InteractionCreate, 
 	var res *erogsmodels.FuzzySearchGameResponse
 	keyword, err := utils.GetOptions(i, "keyword")
 	if err != nil {
-		logrus.Error(err)
-		utils.InteractionEmbedErrorRespond(s, i, "該功能目前異常，請稍後再嘗試", true)
+		utils.HandleError(err, s, i)
 		return
 	}
 
