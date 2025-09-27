@@ -37,6 +37,8 @@ func onInteractionApplicationCommand(s *discordgo.Session, i *discordgo.Interact
 		go handlers.ErogsFuzzySearchMusic(s, i, nil)
 	case "erogs模糊查詢遊戲":
 		go handlers.ErogsFuzzySearchGame(s, i, nil)
+	case "清除快取":
+		go handlers.CleanCache(s, i)
 	}
 }
 
@@ -44,7 +46,7 @@ func onInteractionMessageComponent(s *discordgo.Session, i *discordgo.Interactio
 	cid := strings.SplitN(i.MessageComponentData().CustomID, "_", 3)
 	page, err := strconv.Atoi(cid[1])
 	if err != nil {
-		utils.InteractionRespond(s, i, "該功能目前異常，請稍後再嘗試")
+		utils.HandleError(err, s, i)
 		return
 	}
 	cidStruct := models.VndbInteractionCustomID{

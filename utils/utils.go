@@ -4,7 +4,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"github.com/sirupsen/logrus"
 
-	internalerrors "kurohelper/errors"
+	kurohelpererrors "kurohelper/errors"
 )
 
 // handle interaction command common respond
@@ -45,6 +45,30 @@ func InteractionEmbedRespond(s *discordgo.Session, i *discordgo.InteractionCreat
 			Data: &discordgo.InteractionResponseData{
 				Embeds:     []*discordgo.MessageEmbed{embed},
 				Components: comps,
+			},
+		})
+	}
+}
+
+// handle interaction command embed respond
+// 管理員專用版本
+//
+// editFlag參數為有無需要修改因為defer而產生的interaction訊息(機器人正在思考...)
+func InteractionEmbedRespondForSelf(s *discordgo.Session, i *discordgo.InteractionCreate, embed *discordgo.MessageEmbed, editFlag bool) {
+	if editFlag {
+		_, err := s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
+			Embeds: &[]*discordgo.MessageEmbed{embed},
+		})
+		if err != nil {
+			logrus.Error(err)
+			InteractionRespond(s, i, "該功能目前異常，請稍後再嘗試")
+		}
+	} else {
+		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Embeds: []*discordgo.MessageEmbed{embed},
+				Flags:  discordgo.MessageFlagsEphemeral,
 			},
 		})
 	}
@@ -117,13 +141,13 @@ func GetOptions(i *discordgo.InteractionCreate, name string) (string, error) {
 		if v.Name == name {
 			value, ok := v.Value.(string) // type assertion
 			if !ok {
-				return "", internalerrors.ErrOptionTranslateFail
+				return "", kurohelpererrors.ErrOptionTranslateFail
 			} else {
 				return value, nil
 			}
 		}
 	}
-	return "", internalerrors.ErrOptionNotFound
+	return "", kurohelpererrors.ErrOptionNotFound
 }
 
 func IsAllEnglish(s string) bool {

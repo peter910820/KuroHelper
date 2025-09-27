@@ -1,15 +1,10 @@
 package vndb
 
 import (
-	"bytes"
 	"encoding/json"
-	"fmt"
-	"io"
-	"net/http"
-	"os"
 	"strings"
 
-	internalerrors "kurohelper/errors"
+	kurohelpererrors "kurohelper/errors"
 	vndbmodels "kurohelper/models/vndb"
 )
 
@@ -40,26 +35,16 @@ func GetStaffByFuzzy(keyword string, roleType string) (*vndbmodels.BasicResponse
 
 	req.Fields = strings.Join(allFields, ", ")
 
-	jsonProducer, err := json.Marshal(req)
+	jsonStaff, err := json.Marshal(req)
 	if err != nil {
 		return nil, err
 	}
 
-	resp, err := http.Post(os.Getenv("VNDB_ENDPOINT")+"/staff", "application/json", bytes.NewBuffer(jsonProducer))
+	r, err := sendPostRequest("/staff", jsonStaff)
 	if err != nil {
 		return nil, err
 	}
 
-	defer resp.Body.Close()
-
-	if resp.StatusCode != 200 {
-		return nil, fmt.Errorf("the server returned an error status code %d", resp.StatusCode)
-	}
-
-	r, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
 	var res vndbmodels.BasicResponse[vndbmodels.StaffSearchResponse]
 	err = json.Unmarshal(r, &res)
 	if err != nil {
@@ -67,7 +52,7 @@ func GetStaffByFuzzy(keyword string, roleType string) (*vndbmodels.BasicResponse
 	}
 
 	if len(res.Results) == 0 {
-		return nil, internalerrors.ErrVndbNoResult
+		return nil, kurohelpererrors.ErrSearchNoContent
 	}
 
 	return &res, nil

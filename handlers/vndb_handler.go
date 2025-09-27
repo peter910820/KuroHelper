@@ -7,9 +7,8 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/google/uuid"
-	"github.com/sirupsen/logrus"
 
-	internalerrors "kurohelper/errors"
+	kurohelpererrors "kurohelper/errors"
 	"kurohelper/models"
 	vndbmodels "kurohelper/models/vndb"
 	"kurohelper/utils"
@@ -19,8 +18,8 @@ import (
 func VndbStats(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	r, err := vndb.GetStats()
 	if err != nil {
-		logrus.Error(err)
-		utils.InteractionRespond(s, i, "該功能目前異常，請稍後再嘗試")
+		utils.HandleError(err, s, i)
+		return
 	}
 
 	embed := &discordgo.MessageEmbed{
@@ -28,9 +27,34 @@ func VndbStats(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		Color: 0x04108e,
 		Fields: []*discordgo.MessageEmbedField{
 			{
-				Name:   "JSON內容",
-				Value:  string(r),
-				Inline: false,
+				Name:   "角色收錄數量",
+				Value:  fmt.Sprintf("%d筆", r.Chars),
+				Inline: true,
+			},
+			{
+				Name:   "公司/品牌收錄數量",
+				Value:  fmt.Sprintf("%d筆", r.Producers),
+				Inline: true,
+			},
+			{
+				Name:   "發行版本收錄數量",
+				Value:  fmt.Sprintf("%d筆", r.Releases),
+				Inline: true,
+			},
+			{
+				Name:   "標籤收錄數量",
+				Value:  fmt.Sprintf("%d筆", r.Tags),
+				Inline: true,
+			},
+			{
+				Name:   "角色特徵收錄數量",
+				Value:  fmt.Sprintf("%d筆", r.Traits),
+				Inline: true,
+			},
+			{
+				Name:   "視覺小說收錄數量",
+				Value:  fmt.Sprintf("%d筆", r.VN),
+				Inline: true,
 			},
 		},
 	}
@@ -45,19 +69,13 @@ func VndbSearchGameByID(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	brandid, err := utils.GetOptions(i, "brandid")
 	if err != nil {
-		logrus.Error(err)
-		utils.InteractionEmbedErrorRespond(s, i, "該功能目前異常，請稍後再嘗試", true)
+		utils.HandleError(err, s, i)
 		return
 	}
 
 	res, err := vndb.GetVnUseID(brandid)
 	if err != nil {
-		logrus.Error(err)
-		if errors.Is(err, internalerrors.ErrVndbNoResult) {
-			utils.InteractionEmbedErrorRespond(s, i, "找不到任何結果喔", true)
-		} else {
-			utils.InteractionEmbedErrorRespond(s, i, "該功能目前異常，請稍後再嘗試", true)
-		}
+		utils.HandleError(err, s, i)
 		return
 	}
 
@@ -193,26 +211,19 @@ func VndbFuzzySearchBrand(s *discordgo.Session, i *discordgo.InteractionCreate, 
 
 		keyword, err := utils.GetOptions(i, "keyword")
 		if err != nil {
-			logrus.Error(err)
-			utils.InteractionEmbedErrorRespond(s, i, "該功能目前異常，請稍後再嘗試", true)
+			utils.HandleError(err, s, i)
 			return
 		}
 
 		companyType, err := utils.GetOptions(i, "type")
-		if err != nil && errors.Is(err, internalerrors.ErrOptionTranslateFail) {
-			logrus.Error(err)
-			utils.InteractionEmbedErrorRespond(s, i, "該功能目前異常，請稍後再嘗試", true)
+		if err != nil && errors.Is(err, kurohelpererrors.ErrOptionTranslateFail) {
+			utils.HandleError(err, s, i)
 			return
 		}
 
 		res, err = vndb.GetProducerByFuzzy(keyword, companyType)
 		if err != nil {
-			logrus.Error(err)
-			if errors.Is(err, internalerrors.ErrVndbNoResult) {
-				utils.InteractionEmbedErrorRespond(s, i, "找不到任何結果喔", true)
-			} else {
-				utils.InteractionEmbedErrorRespond(s, i, "該功能目前異常，請稍後再嘗試", true)
-			}
+			utils.HandleError(err, s, i)
 			return
 		}
 
