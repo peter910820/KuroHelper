@@ -1,14 +1,17 @@
 package handlers
 
 import (
+	"errors"
 	"fmt"
 	"sort"
 	"strings"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/google/uuid"
+	"github.com/sirupsen/logrus"
 
 	"kurohelper/erogs"
+	kurohelpererrors "kurohelper/errors"
 	"kurohelper/models"
 	erogsmodels "kurohelper/models/erogs"
 	"kurohelper/utils"
@@ -301,9 +304,9 @@ func ErogsFuzzySearchGame(s *discordgo.Session, i *discordgo.InteractionCreate, 
 	res, err = erogs.GetGameByFuzzy(keyword)
 	if err != nil {
 		logrus.Error(err)
-		if errors.Is(err, internalerrors.ErrVndbNoResult) {
+		if errors.Is(err, kurohelpererrors.ErrSearchNoContent) {
 			utils.InteractionEmbedErrorRespond(s, i, "找不到任何結果喔", true)
-		} else if errors.Is(err, internalerrors.ErrSearchNoContent) {
+		} else if errors.Is(err, kurohelpererrors.ErrSearchNoContent) {
 			utils.InteractionEmbedErrorRespond(s, i, "搜尋內容有非法字元或為空", true)
 		} else {
 			utils.InteractionEmbedErrorRespond(s, i, "該功能目前異常，請稍後再嘗試", true)

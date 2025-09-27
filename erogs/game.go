@@ -12,7 +12,7 @@ import (
 
 	"github.com/PuerkitoBio/goquery"
 
-	internalerrors "kurohelper/errors"
+	kurohelpererrors "kurohelper/errors"
 	erogsmodels "kurohelper/models/erogs"
 )
 
@@ -50,7 +50,7 @@ func GetGameByFuzzy(search string) (*erogsmodels.FuzzySearchGameResponse, error)
 	jsonText := selection.Text()
 
 	if strings.TrimSpace(jsonText) == "" {
-		return nil, internalerrors.ErrVndbNoResult
+		return nil, kurohelpererrors.ErrSearchNoContent
 	}
 
 	var res erogsmodels.FuzzySearchGameResponse
@@ -61,7 +61,7 @@ func GetGameByFuzzy(search string) (*erogsmodels.FuzzySearchGameResponse, error)
 	}
 
 	if len(res.CreatorShubetu) == 0 {
-		return nil, internalerrors.ErrVndbNoResult
+		return nil, kurohelpererrors.ErrSearchNoContent
 	}
 
 	return &res, nil

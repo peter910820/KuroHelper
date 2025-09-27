@@ -179,7 +179,7 @@ func buildFuzzySearchGameSQL(search string) (string, error) {
 	}
 
 	if strings.TrimSpace(search) == "" {
-		return "", internalerrors.ErrSearchNoContent
+		return "", kurohelpererrors.ErrSearchNoContent
 	}
 
 	return fmt.Sprintf(`
