@@ -50,6 +50,30 @@ func InteractionEmbedRespond(s *discordgo.Session, i *discordgo.InteractionCreat
 	}
 }
 
+// handle interaction command embed respond
+// 管理員專用版本
+//
+// editFlag參數為有無需要修改因為defer而產生的interaction訊息(機器人正在思考...)
+func InteractionEmbedRespondForSelf(s *discordgo.Session, i *discordgo.InteractionCreate, embed *discordgo.MessageEmbed, editFlag bool) {
+	if editFlag {
+		_, err := s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
+			Embeds: &[]*discordgo.MessageEmbed{embed},
+		})
+		if err != nil {
+			logrus.Error(err)
+			InteractionRespond(s, i, "該功能目前異常，請稍後再嘗試")
+		}
+	} else {
+		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Embeds: []*discordgo.MessageEmbed{embed},
+				Flags:  discordgo.MessageFlagsEphemeral,
+			},
+		})
+	}
+}
+
 // 傳送嵌入訊息內建包裝錯誤的版本
 func InteractionEmbedErrorRespond(s *discordgo.Session, i *discordgo.InteractionCreate, errString string, editFlag bool) {
 	embed := &discordgo.MessageEmbed{

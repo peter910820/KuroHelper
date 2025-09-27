@@ -52,7 +52,7 @@ func GetStaffByFuzzy(keyword string, roleType string) (*vndbmodels.BasicResponse
 	}
 
 	if len(res.Results) == 0 {
-		return nil, kurohelpererrors.ErrVndbNoResult
+		return nil, kurohelpererrors.ErrSearchNoContent
 	}
 
 	return &res, nil

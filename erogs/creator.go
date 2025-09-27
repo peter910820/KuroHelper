@@ -25,7 +25,7 @@ func GetCreatorByFuzzy(search string) (*erogsmodels.FuzzySearchCreatorResponse, 
 	}
 
 	if len(res.Games) == 0 {
-		return nil, kurohelpererrors.ErrVndbNoResult
+		return nil, kurohelpererrors.ErrSearchNoContent
 	}
 
 	return &res, nil

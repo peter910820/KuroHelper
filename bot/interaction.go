@@ -35,6 +35,8 @@ func onInteractionApplicationCommand(s *discordgo.Session, i *discordgo.Interact
 		go handlers.ErogsFuzzySearchCreator(s, i, nil)
 	case "erogs模糊查詢音樂":
 		go handlers.ErogsFuzzySearchMusic(s, i, nil)
+	case "清除快取":
+		go handlers.CleanCache(s, i)
 	}
 }
 

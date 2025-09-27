@@ -1,20 +1,45 @@
 package bot
 
 import (
+	"os"
+
 	"github.com/bwmarrin/discordgo"
 	"github.com/sirupsen/logrus"
 )
 
 func RegisterCommand(s *discordgo.Session) {
-	var cmds []*discordgo.ApplicationCommand
-	cmds = append(cmds, vndbCommands()...)
-	cmds = append(cmds, erogsCommands()...)
+	var guildCmds []*discordgo.ApplicationCommand
+	var golabalCmds []*discordgo.ApplicationCommand
+	guildCmds = append(guildCmds, managementCommands()...)
+	golabalCmds = append(golabalCmds, vndbCommands()...)
+	golabalCmds = append(golabalCmds, erogsCommands()...)
 
-	for _, cmd := range cmds {
+	// guild commands
+	// main mangement group ID
+	guildID := os.Getenv("SELF_GROUP_ID")
+	for _, cmd := range guildCmds {
+		_, err := s.ApplicationCommandCreate(s.State.User.ID, guildID, cmd)
+		if err != nil {
+			logrus.Errorf("register guild slash command failed: %s", err)
+		}
+	}
+	// global commands
+	for _, cmd := range golabalCmds {
 		_, err := s.ApplicationCommandCreate(s.State.User.ID, "", cmd)
 		if err != nil {
-			logrus.Errorf("register slash command failed: %s", err)
+			logrus.Errorf("register golabal slash command failed: %s", err)
 		}
+	}
+
+}
+
+// 群組專用管理指令，要使用群組內部整合管理複寫權限，預設是全部可見
+func managementCommands() []*discordgo.ApplicationCommand {
+	return []*discordgo.ApplicationCommand{
+		{
+			Name:        "清除快取",
+			Description: "清除搜尋資料快取(管理員專用)",
+		},
 	}
 }
 

@@ -56,7 +56,7 @@ func GetVnUseID(brandid string) (*vndbmodels.BasicResponse[vndbmodels.GetVnUseID
 	}
 
 	if len(res.Results) == 0 {
-		return nil, kurohelpererrors.ErrVndbNoResult
+		return nil, kurohelpererrors.ErrSearchNoContent
 	}
 
 	return &res, nil
