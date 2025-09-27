@@ -56,7 +56,7 @@ func GetProducerByFuzzy(keyword string, companyType string) (*vndbmodels.Produce
 	}
 
 	if len(resProducer.Results) == 0 {
-		return nil, kurohelpererrors.ErrVndbNoResult
+		return nil, kurohelpererrors.ErrSearchNoContent
 	}
 
 	// 等到查詢解析完後才能去查詢遊戲的資料
@@ -85,7 +85,7 @@ func GetProducerByFuzzy(keyword string, companyType string) (*vndbmodels.Produce
 	}
 
 	if len(resVn.Results) == 0 {
-		return nil, kurohelpererrors.ErrVndbNoResult
+		return nil, kurohelpererrors.ErrSearchNoContent
 	}
 
 	return &vndbmodels.ProducerSearchResponse{
