@@ -37,7 +37,7 @@ func main() {
 		if c == "" {
 			continue
 		}
-		if strings.HasPrefix(c, "Merge pull request") {
+		if strings.HasPrefix(c, "Merge pull request") || strings.HasPrefix(c, "Merge branch") {
 			break // 不檢查 merge commit
 		}
 		if !pattern.MatchString(c) {
