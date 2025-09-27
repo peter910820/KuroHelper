@@ -38,6 +38,9 @@ func main() {
 		if c == "" {
 			continue
 		}
+		if strings.HasPrefix(c, "Merge pull request") {
+			break // 不檢查 merge commit
+		}
 		if !pattern.MatchString(c) {
 			fmt.Printf("❌ Invalid commit: %s\n", c)
 			failed = true
