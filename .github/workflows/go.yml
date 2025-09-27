@@ -6,9 +6,14 @@ name: Go
 on:
   push:
     branches:
-      - "main"
-      - "feature/*"
-      - "feat/*"
+      - main
+      - release/*
+      - feature/*
+      - enhancement/*
+      - fix/*
+      - refactor/*
+      - chore/*
+      - ci/*
   pull_request:
     branches: [ "main" ]
 
