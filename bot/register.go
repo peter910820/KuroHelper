@@ -47,11 +47,11 @@ func vndbCommands() []*discordgo.ApplicationCommand {
 	return []*discordgo.ApplicationCommand{
 		{
 			Name:        "vndb統計資料",
-			Description: "取得VNDB統計資料",
+			Description: "取得VNDB統計資料(VNDB)",
 		},
 		{
-			Name:        "vndb查詢指定遊戲",
-			Description: "根據VNDB ID查詢指定遊戲資料",
+			Name:        "查詢指定遊戲",
+			Description: "根據VNDB ID查詢指定遊戲資料(VNDB)",
 			Options: []*discordgo.ApplicationCommandOption{
 				{
 					Type:        discordgo.ApplicationCommandOptionString,
@@ -62,8 +62,8 @@ func vndbCommands() []*discordgo.ApplicationCommand {
 			},
 		},
 		{
-			Name:        "vndb模糊查詢品牌",
-			Description: "根據關鍵字查詢公司品牌資料",
+			Name:        "查詢公司品牌",
+			Description: "根據關鍵字查詢公司品牌資料(VNDB)",
 			Options: []*discordgo.ApplicationCommandOption{
 				{
 					Type:        discordgo.ApplicationCommandOptionString,
@@ -140,8 +140,8 @@ func vndbCommands() []*discordgo.ApplicationCommand {
 func erogsCommands() []*discordgo.ApplicationCommand {
 	return []*discordgo.ApplicationCommand{
 		{
-			Name:        "erogs模糊查詢創作者",
-			Description: "根據關鍵字查詢創作者資料",
+			Name:        "查詢創作者",
+			Description: "根據關鍵字查詢創作者資料(ErogameScape)",
 			Options: []*discordgo.ApplicationCommandOption{
 				{
 					Type:        discordgo.ApplicationCommandOptionString,
@@ -152,8 +152,8 @@ func erogsCommands() []*discordgo.ApplicationCommand {
 			},
 		},
 		{
-			Name:        "erogs模糊查詢音樂",
-			Description: "根據音樂名稱查詢音樂資料",
+			Name:        "查詢音樂",
+			Description: "根據關鍵字查詢音樂資料(ErogameScape)",
 			Options: []*discordgo.ApplicationCommandOption{
 				{
 					Type:        discordgo.ApplicationCommandOptionString,
@@ -164,8 +164,8 @@ func erogsCommands() []*discordgo.ApplicationCommand {
 			},
 		},
 		{
-			Name:        "erogs模糊查詢遊戲",
-			Description: "根據遊戲名稱查詢遊戲資料",
+			Name:        "查詢遊戲",
+			Description: "根據關鍵字查詢遊戲資料(ErogameScape)",
 			Options: []*discordgo.ApplicationCommandOption{
 				{
 					Type:        discordgo.ApplicationCommandOptionString,
