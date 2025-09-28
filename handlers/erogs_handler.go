@@ -20,6 +20,7 @@ func ErogsFuzzySearchCreator(s *discordgo.Session, i *discordgo.InteractionCreat
 	var component *discordgo.ActionsRow
 	var hasMore bool
 	var count int
+	var countInner int
 
 	if cid == nil {
 		// 長時間查詢
@@ -48,8 +49,9 @@ func ErogsFuzzySearchCreator(s *discordgo.Session, i *discordgo.InteractionCreat
 		})
 		// 計算筆數
 		for _, inner := range res.Games {
-			count += len(inner.Shokushu)
+			countInner += len(inner.Shokushu)
 		}
+		count = len(res.Games)
 
 		hasMore = erogsPagination(&(res.Games), 0, false)
 
@@ -65,9 +67,9 @@ func ErogsFuzzySearchCreator(s *discordgo.Session, i *discordgo.InteractionCreat
 			}
 		}
 	} else {
-		cacheValue, ok := GetCache(cid.Key)
-		if !ok {
-			utils.EmbedErrorRespond(s, i, "快取遺失，請重新查詢")
+		cacheValue, err := GetCache(cid.Key)
+		if err != nil {
+			utils.HandleError(err, s, i)
 			return
 		}
 		resValue := cacheValue.(erogsmodels.FuzzySearchCreatorResponse)
@@ -79,8 +81,9 @@ func ErogsFuzzySearchCreator(s *discordgo.Session, i *discordgo.InteractionCreat
 		})
 		// 計算筆數
 		for _, inner := range res.Games {
-			count += len(inner.Shokushu)
+			countInner += len(inner.Shokushu)
 		}
+		count = len(res.Games)
 
 		// 資料分頁
 		hasMore = erogsPagination(&(res.Games), cid.Page, true)
@@ -154,7 +157,7 @@ func ErogsFuzzySearchCreator(s *discordgo.Session, i *discordgo.InteractionCreat
 	}
 
 	embed := &discordgo.MessageEmbed{
-		Title:       fmt.Sprintf("%s(%d  筆)", res.Name, count),
+		Title:       fmt.Sprintf("%s(%d/%d  筆)", res.Name, count, countInner),
 		Color:       0x04108e,
 		Description: link,
 		Fields: []*discordgo.MessageEmbedField{

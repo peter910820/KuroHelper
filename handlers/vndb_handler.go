@@ -243,9 +243,9 @@ func VndbFuzzySearchBrand(s *discordgo.Session, i *discordgo.InteractionCreate, 
 			}
 		}
 	} else {
-		cacheValue, ok := GetCache(cid.Key)
-		if !ok {
-			utils.EmbedErrorRespond(s, i, "快取遺失，請重新查詢")
+		cacheValue, err := GetCache(cid.Key)
+		if err != nil {
+			utils.HandleError(err, s, i)
 			return
 		}
 		resValue := cacheValue.(vndbmodels.ProducerSearchResponse)

@@ -4,6 +4,7 @@ import (
 	"sync"
 	"time"
 
+	kurohelpererrors "kurohelper/errors"
 	"kurohelper/models"
 )
 
@@ -17,11 +18,11 @@ func SetCache(key string, value interface{}) {
 	defer vndbCacheMu.Unlock()
 	vndbCache[key] = &models.Cache{
 		Value:    value,
-		ExpireAt: time.Now().Add(3 * time.Minute),
+		ExpireAt: time.Now().Add(10 * time.Minute),
 	}
 }
 
-func GetCache(key string) (interface{}, bool) {
+func GetCache(key string) (interface{}, error) {
 	vndbCacheMu.RLock()
 	item, ok := vndbCache[key]
 	vndbCacheMu.RUnlock()
@@ -30,7 +31,7 @@ func GetCache(key string) (interface{}, bool) {
 		vndbCacheMu.Lock()
 		delete(vndbCache, key)
 		vndbCacheMu.Unlock()
-		return nil, false
+		return nil, kurohelpererrors.ErrCacheLost
 	}
-	return item.Value, true
+	return item.Value, nil
 }
