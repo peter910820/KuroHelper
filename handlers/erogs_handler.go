@@ -349,9 +349,9 @@ func ErogsFuzzySearchGame(s *discordgo.Session, i *discordgo.InteractionCreate, 
 
 	switch res.Erogame {
 	case "true":
-		res.Erogame = "全年齡"
-	case "false":
 		res.Erogame = "18禁"
+	case "false":
+		res.Erogame = "全年齡"
 	default:
 		res.Erogame = ""
 	}
@@ -365,13 +365,28 @@ func ErogsFuzzySearchGame(s *discordgo.Session, i *discordgo.InteractionCreate, 
 		otherInfo = res.Okazu + " / " + res.Erogame
 	}
 
+	junni := 0x04108e
+	rank := ""
+	if res.Junni <= 50 {
+		junni = 0xFFD700 // Gold
+		rank = "批評空間 TOP 50"
+	} else if res.Junni <= 100 {
+		junni = 0xC0C0C0 // Silver
+		rank = "批評空間 TOP 100"
+	} else if res.Junni <= 500 {
+		junni = 0xCD7F32 // Bronze
+		rank = "批評空間 TOP 500"
+	} else {
+		junni = 0x04108e // Default
+	}
 	embed := &discordgo.MessageEmbed{
 		Author: &discordgo.MessageEmbedAuthor{
 			Name: res.BrandName,
 		},
-		Title: fmt.Sprintf("**%s(%s)**", res.Gamename, res.SellDay),
-		URL:   res.Shoukai,
-		Color: 0x04108e,
+		Title:       fmt.Sprintf("**%s(%s)**", res.Gamename, res.SellDay),
+		URL:         res.Shoukai,
+		Color:       junni,
+		Description: rank,
 		Fields: []*discordgo.MessageEmbedField{
 			{
 				Name:   "劇本",
@@ -419,7 +434,7 @@ func ErogsFuzzySearchGame(s *discordgo.Session, i *discordgo.InteractionCreate, 
 				Inline: true,
 			},
 			{
-				Name:   "理解遊戲樂趣時數",
+				Name:   "開始理解遊戲樂趣時數",
 				Value:  res.TimeBeforeUnderstandingFunMedian,
 				Inline: false,
 			},

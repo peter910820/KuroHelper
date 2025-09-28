@@ -183,21 +183,12 @@ func buildFuzzySearchGameSQL(search string) (string, error) {
 	}
 
 	return fmt.Sprintf(`
-WITH shokushu_agg AS (
-    SELECT s.game AS game_id,
-           json_agg(
-               json_build_object(
-                   'shubetu_type', s.shubetu,
-                    'creater_name', c.name,
-                    'shubetu_detail_type', s.shubetu_detail,
-                    'shubetu_detail_name', s.shubetu_detail_name
-                       
-               )
-           ) AS shubetu_detail
-    FROM shokushu s
-    LEFT JOIN createrlist c ON c.id = s.creater
-    WHERE s.shubetu != 7
-    GROUP BY s.game
+WITH filtered_games AS (
+    SELECT *
+    FROM gamelist
+    WHERE gamename ILIKE '%s'
+    ORDER BY count2 DESC NULLS LAST, median DESC NULLS LAST
+    LIMIT 1
 )
 SELECT row_to_json(t)
 FROM (
@@ -215,14 +206,31 @@ FROM (
            COALESCE(g.genre, '無') AS genre,
            COALESCE(g.steam::text, '') AS steam,
            COALESCE(g.vndb, '') AS vndb,
+           j.junni,
            g.shoukai,
            s.shubetu_detail
-    FROM gamelist g
-    LEFT JOIN shokushu_agg s ON s.game_id = g.id
+    FROM filtered_games g
+    LEFT JOIN LATERAL (
+        SELECT json_agg(
+                   json_build_object(
+                       'shubetu_type', s.shubetu,
+                       'creater_name', c.name,
+                       'shubetu_detail_type', s.shubetu_detail,
+                       'shubetu_detail_name', s.shubetu_detail_name
+                   )
+               ) AS shubetu_detail
+        FROM shokushu s
+        LEFT JOIN createrlist c ON c.id = s.creater
+        WHERE s.game = g.id AND s.shubetu != 7
+    ) s ON TRUE
     LEFT JOIN brandlist b ON b.id = g.brandname
-    WHERE g.gamename ILIKE '%s'
-    ORDER BY g.count2 DESC NULLS LAST, g.median DESC NULLS LAST
-    LIMIT 1
+    LEFT JOIN LATERAL (
+        SELECT j.junni
+        FROM junirirekimedian j
+        WHERE j.game = g.id
+        ORDER BY j.date DESC NULLS LAST
+        LIMIT 1
+    ) j ON TRUE
 ) t;
 `, result), nil
 }

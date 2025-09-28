@@ -59,6 +59,7 @@ type FuzzySearchGameResponse struct {
 	SteamId                          string           `json:"steam"`
 	VndbId                           string           `json:"vndb"`
 	Shoukai                          string           `json:"shoukai"`
+	Junni                            int              `json:"junni"`
 	CreatorShubetu                   []Creatorshubetu `json:"shubetu_detail"`
 }
 
