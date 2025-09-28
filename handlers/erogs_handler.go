@@ -11,6 +11,7 @@ import (
 	"kurohelper/erogs"
 	"kurohelper/models"
 	erogsmodels "kurohelper/models/erogs"
+	vndbmodels "kurohelper/models/vndb"
 	"kurohelper/utils"
 	"kurohelper/vndb"
 )
@@ -295,6 +296,8 @@ func ErogsFuzzySearchGame(s *discordgo.Session, i *discordgo.InteractionCreate, 
 	})
 
 	var res *erogsmodels.FuzzySearchGameResponse
+	var resVndb *vndbmodels.BasicResponse[vndbmodels.GetVnUseIDResponse]
+
 	keyword, err := utils.GetOptions(i, "keyword")
 	if err != nil {
 		utils.HandleError(err, s, i)
@@ -307,10 +310,16 @@ func ErogsFuzzySearchGame(s *discordgo.Session, i *discordgo.InteractionCreate, 
 		return
 	}
 
-	resVndb, err := vndb.GetVnUseID(res.VndbId)
-	if err != nil {
-		utils.HandleError(err, s, i)
-		return
+	vndbRating := 0.0
+	vndbVotecount := 0
+	if strings.TrimSpace(res.VndbId) != "" {
+		resVndb, err = vndb.GetVnUseID(res.VndbId)
+		if err != nil {
+			utils.HandleError(err, s, i)
+			return
+		}
+		vndbRating = resVndb.Results[0].Rating
+		vndbVotecount = resVndb.Results[0].Votecount
 	}
 
 	shubetuData := make(map[int]map[int][]string) // map[shubetu_type]map[shubetu_detail]][]creator name + shube1tu_detail_name
@@ -428,7 +437,7 @@ func ErogsFuzzySearchGame(s *discordgo.Session, i *discordgo.InteractionCreate, 
 			},
 			{
 				Name:   "vndb分數/樣本數",
-				Value:  fmt.Sprintf("%.1f/%d", resVndb.Results[0].Rating, resVndb.Results[0].Votecount),
+				Value:  fmt.Sprintf("%.1f/%d", vndbRating, vndbVotecount),
 				Inline: true,
 			},
 			{
