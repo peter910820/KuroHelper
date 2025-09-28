@@ -25,6 +25,6 @@ func HandleError(err error, s *discordgo.Session, i *discordgo.InteractionCreate
 	case errors.Is(err, kurohelpererrors.ErrOptionNotFound):
 		fallthrough
 	default:
-		InteractionRespond(s, i, "該功能目前異常，請稍後再嘗試")
+		InteractionEmbedErrorRespond(s, i, "該功能目前異常，請稍後再嘗試", true)
 	}
 }
