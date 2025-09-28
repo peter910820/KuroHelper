@@ -29,7 +29,7 @@ func main() {
 	}
 
 	commits := strings.Split(out.String(), "\n")
-	pattern := regexp.MustCompile(`^(feat|fix|docs|style|refactor|test|chore|ci)(\([a-z0-9_-]+\))?: [a-z].+`)
+	pattern := regexp.MustCompile(`^(feat|fix|docs|style|refactor|test|chore|ci|release)(\([a-z0-9_-]+\))?: [a-z].+`)
 
 	failed := false
 	for _, c := range commits {
