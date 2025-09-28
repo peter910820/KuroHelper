@@ -16,6 +16,8 @@ func HandleError(err error, s *discordgo.Session, i *discordgo.InteractionCreate
 		InteractionRespond(s, i, "速率限制，請過約1分鐘後再試")
 	case errors.Is(err, kurohelpererrors.ErrSearchNoContent):
 		InteractionEmbedErrorRespond(s, i, "找不到任何結果喔", true)
+	case errors.Is(err, kurohelpererrors.ErrCacheLost):
+		EmbedErrorRespond(s, i, "快取過期，請重新查詢")
 	case errors.Is(err, kurohelpererrors.ErrStatusCodeAbnormal):
 		fallthrough
 	case errors.Is(err, kurohelpererrors.ErrOptionTranslateFail):

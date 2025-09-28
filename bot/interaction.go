@@ -25,17 +25,17 @@ func onInteractionApplicationCommand(s *discordgo.Session, i *discordgo.Interact
 	switch i.ApplicationCommandData().Name {
 	case "vndb統計資料":
 		go handlers.VndbStats(s, i)
-	case "vndb查詢指定遊戲":
+	case "查詢指定遊戲":
 		go handlers.VndbSearchGameByID(s, i)
-	case "vndb模糊查詢品牌":
+	case "查詢公司品牌":
 		go handlers.VndbFuzzySearchBrand(s, i, nil)
 	// case "vndb模糊查詢創作家":
 	// 	go handlers.VndbFuzzySearchStaff(s, i, nil)
-	case "erogs模糊查詢創作者":
+	case "查詢創作者":
 		go handlers.ErogsFuzzySearchCreator(s, i, nil)
-	case "erogs模糊查詢音樂":
+	case "查詢音樂":
 		go handlers.ErogsFuzzySearchMusic(s, i, nil)
-	case "erogs模糊查詢遊戲":
+	case "查詢遊戲":
 		go handlers.ErogsFuzzySearchGame(s, i, nil)
 	case "清除快取":
 		go handlers.CleanCache(s, i)

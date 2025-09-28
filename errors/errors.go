@@ -3,13 +3,16 @@ package kurohelpererrors
 import "errors"
 
 var (
-	ErrOptionNotFound      = errors.New("option: option not found")
+	// option not found error
+	ErrOptionNotFound = errors.New("option: option not found")
+	// option translate fail error
 	ErrOptionTranslateFail = errors.New("option: value translate fail")
-
-	ErrSearchNoContent = errors.New("search: no content for search")
-
+	// search no content for response
+	ErrSearchNoContent = errors.New("search: no content for response")
 	// The remote server returns a non-200 response status code
-	ErrStatusCodeAbnormal = errors.New("server returned an error status code")
+	ErrStatusCodeAbnormal = errors.New("response: server returned an error status code")
 	// rate limit
-	ErrRateLimit = errors.New("rate limit, quota exhausted")
+	ErrRateLimit = errors.New("rate limit: rate limit, quota exhausted")
+	// cache lost or expired
+	ErrCacheLost = errors.New("cache: cache lost or expired")
 )
