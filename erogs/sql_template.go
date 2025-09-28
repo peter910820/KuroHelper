@@ -226,3 +226,56 @@ FROM (
 ) t;
 `, result), nil
 }
+
+func buildSearchBrandSQL(search string) (string, error) {
+	search = strings.ReplaceAll(search, "'", "''")
+	result := "%"
+	if utils.IsAllEnglish(search) {
+		result += search + "%"
+	} else {
+		for _, r := range search {
+			result += string(r) + "%"
+		}
+	}
+
+	if strings.TrimSpace(search) == "" {
+		return "", kurohelpererrors.ErrSearchNoContent
+	}
+
+	return fmt.Sprintf(`
+WITH
+    single_brand AS (
+        SELECT
+            id,
+            brandname,
+            brandfurigana,
+            url,
+            kind,
+            lost,
+            directlink,
+            median,
+            twitter,
+            count2,
+            count_all,
+            average2,
+            stdev
+        FROM brandlist
+        WHERE
+            brandname ILIKE '%s'
+        LIMIT 1
+    )
+SELECT row_to_json (r)
+FROM (
+        SELECT A.id, A.gamename, A.furigana, A.sellday, A.median, A.stdev, A.count2, A.vndb, (
+                SELECT json_agg (
+                        g
+                        ORDER BY g.sellday DESC
+                    )
+                FROM gamelist g
+                WHERE
+                    g.brandname = A.id
+            ) AS gamelist
+        FROM single_brand A
+    ) r;
+`, result), nil
+}
