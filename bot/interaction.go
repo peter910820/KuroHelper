@@ -50,22 +50,23 @@ func onInteractionApplicationCommand(s *discordgo.Session, i *discordgo.Interact
 }
 
 func onInteractionMessageComponent(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	cid := strings.SplitN(i.MessageComponentData().CustomID, "_", 3)
-	page, err := strconv.Atoi(cid[1])
+	cid := strings.SplitN(i.MessageComponentData().CustomID, "::", 4)
+	value, err := strconv.Atoi(cid[3])
 	if err != nil {
 		utils.HandleError(err, s, i)
 		return
 	}
-	cidStruct := models.VndbInteractionCustomID{
+	cidStruct := models.CustomID{
+		ID:          cid[1],
 		CommandName: cid[0],
-		Page:        page,
-		Key:         cid[2],
+		Type:        cid[2],
+		Value:       value,
 	}
 
 	switch cidStruct.CommandName {
-	case "SearchBrand":
+	case "查詢公司品牌":
 		go handlers.VndbFuzzySearchBrand(s, i, &cidStruct)
-	case "ErogsFuzzySearchCreator":
+	case "查詢創作者":
 		go handlers.ErogsFuzzySearchCreator(s, i, &cidStruct)
 	}
 
