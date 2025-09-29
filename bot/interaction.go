@@ -11,6 +11,13 @@ import (
 	"kurohelper/utils"
 )
 
+// CustomID struct
+type CustomID struct {
+	ID    string `json:"id"`
+	Key   string `json:"key"`
+	Value string `json:"value"`
+}
+
 func OnInteraction(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	switch i.Type {
 	case discordgo.InteractionApplicationCommand:

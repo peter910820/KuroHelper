@@ -8,6 +8,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"github.com/google/uuid"
 
+	"kurohelper/cache"
 	kurohelpererrors "kurohelper/errors"
 	"kurohelper/models"
 	vndbmodels "kurohelper/models/vndb"
@@ -228,7 +229,7 @@ func VndbFuzzySearchBrand(s *discordgo.Session, i *discordgo.InteractionCreate, 
 		}
 
 		idStr := uuid.New().String()
-		SetCache(idStr, *res)
+		cache.Set(idStr, *res)
 		hasMore = pagination(&(res.Vn.Results), 0, false)
 
 		if hasMore {
@@ -243,7 +244,7 @@ func VndbFuzzySearchBrand(s *discordgo.Session, i *discordgo.InteractionCreate, 
 			}
 		}
 	} else {
-		cacheValue, err := GetCache(cid.Key)
+		cacheValue, err := cache.Get(cid.Key)
 		if err != nil {
 			utils.HandleError(err, s, i)
 			return

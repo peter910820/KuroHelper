@@ -3,15 +3,12 @@ package handlers
 import (
 	"github.com/bwmarrin/discordgo"
 
+	"kurohelper/cache"
 	"kurohelper/utils"
 )
 
 func CleanCache(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	vndbCacheMu.Lock()
-	defer vndbCacheMu.Unlock()
-	for k := range vndbCache {
-		delete(vndbCache, k)
-	}
+	cache.Clean()
 
 	embed := &discordgo.MessageEmbed{
 		Title:       "🔐管理員訊息",

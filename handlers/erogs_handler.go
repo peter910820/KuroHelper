@@ -8,6 +8,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"github.com/google/uuid"
 
+	"kurohelper/cache"
 	"kurohelper/erogs"
 	"kurohelper/models"
 	erogsmodels "kurohelper/models/erogs"
@@ -42,7 +43,7 @@ func ErogsFuzzySearchCreator(s *discordgo.Session, i *discordgo.InteractionCreat
 		}
 
 		idStr := uuid.New().String()
-		SetCache(idStr, *res)
+		cache.Set(idStr, *res)
 
 		// 根據遊戲評價排序
 		sort.Slice(res.Games, func(i, j int) bool {
@@ -68,7 +69,7 @@ func ErogsFuzzySearchCreator(s *discordgo.Session, i *discordgo.InteractionCreat
 			}
 		}
 	} else {
-		cacheValue, err := GetCache(cid.Key)
+		cacheValue, err := cache.Get(cid.Key)
 		if err != nil {
 			utils.HandleError(err, s, i)
 			return
