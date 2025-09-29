@@ -1,4 +1,4 @@
-package vndb
+package vndbmodels
 
 // [VNDB]Request結構
 //

@@ -8,6 +8,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"github.com/google/uuid"
 
+	"kurohelper/cache"
 	"kurohelper/erogs"
 	"kurohelper/models"
 	erogsmodels "kurohelper/models/erogs"
@@ -16,9 +17,9 @@ import (
 	"kurohelper/vndb"
 )
 
-func ErogsFuzzySearchCreator(s *discordgo.Session, i *discordgo.InteractionCreate, cid *models.VndbInteractionCustomID) {
+func ErogsFuzzySearchCreator(s *discordgo.Session, i *discordgo.InteractionCreate, cid *models.CustomID) {
 	var res *erogsmodels.FuzzySearchCreatorResponse
-	var component *discordgo.ActionsRow
+	var messageComponent []discordgo.MessageComponent
 	var hasMore bool
 	var count int
 	var countInner int
@@ -42,7 +43,7 @@ func ErogsFuzzySearchCreator(s *discordgo.Session, i *discordgo.InteractionCreat
 		}
 
 		idStr := uuid.New().String()
-		SetCache(idStr, *res)
+		cache.Set(idStr, *res)
 
 		// 根據遊戲評價排序
 		sort.Slice(res.Games, func(i, j int) bool {
@@ -54,21 +55,13 @@ func ErogsFuzzySearchCreator(s *discordgo.Session, i *discordgo.InteractionCreat
 		}
 		count = len(res.Games)
 
-		hasMore = erogsPagination(&(res.Games), 0, false)
+		hasMore = pagination(&(res.Games), 0, false)
 
 		if hasMore {
-			component = &discordgo.ActionsRow{
-				Components: []discordgo.MessageComponent{
-					discordgo.Button{
-						Label:    "▶️",
-						Style:    discordgo.PrimaryButton,
-						CustomID: fmt.Sprintf("ErogsFuzzySearchCreator_1_%s", idStr),
-					},
-				},
-			}
+			messageComponent = []discordgo.MessageComponent{utils.MakePageComponent("▶️", i.ApplicationCommandData().Name, idStr, 1)}
 		}
 	} else {
-		cacheValue, err := GetCache(cid.Key)
+		cacheValue, err := cache.Get(cid.ID)
 		if err != nil {
 			utils.HandleError(err, s, i)
 			return
@@ -87,46 +80,20 @@ func ErogsFuzzySearchCreator(s *discordgo.Session, i *discordgo.InteractionCreat
 		count = len(res.Games)
 
 		// 資料分頁
-		hasMore = erogsPagination(&(res.Games), cid.Page, true)
+		hasMore = pagination(&(res.Games), cid.Value, true)
 		if hasMore {
-			if cid.Page == 0 {
-				component = &discordgo.ActionsRow{
-					Components: []discordgo.MessageComponent{
-						&discordgo.Button{
-							Label:    "▶️",
-							Style:    discordgo.PrimaryButton,
-							CustomID: fmt.Sprintf("ErogsFuzzySearchCreator_1_%s", cid.Key),
-						},
-					},
-				}
+			if cid.Value == 0 {
+				messageComponent = []discordgo.MessageComponent{utils.MakePageComponent("▶️", cid.CommandName, cid.ID, 1)}
 			} else {
-				component = &discordgo.ActionsRow{
-					Components: []discordgo.MessageComponent{
-						&discordgo.Button{
-							Label:    "◀️",
-							Style:    discordgo.PrimaryButton,
-							CustomID: fmt.Sprintf("ErogsFuzzySearchCreator_%d_%s", cid.Page-1, cid.Key),
-						},
-						&discordgo.Button{
-							Label:    "▶️",
-							Style:    discordgo.PrimaryButton,
-							CustomID: fmt.Sprintf("ErogsFuzzySearchCreator_%d_%s", cid.Page+1, cid.Key),
-						},
-					},
-				}
+				messageComponent = []discordgo.MessageComponent{utils.MakePageComponent("◀️", cid.CommandName, cid.ID, cid.Value-1)}
+				messageComponent = append(messageComponent, utils.MakePageComponent("▶️", cid.CommandName, cid.ID, cid.Value+1))
 			}
 		} else {
-			component = &discordgo.ActionsRow{
-				Components: []discordgo.MessageComponent{
-					&discordgo.Button{
-						Label:    "◀️",
-						Style:    discordgo.PrimaryButton,
-						CustomID: fmt.Sprintf("ErogsFuzzySearchCreator_%d_%s", cid.Page-1, cid.Key),
-					},
-				},
-			}
+			messageComponent = []discordgo.MessageComponent{utils.MakePageComponent("◀️", cid.CommandName, cid.ID, cid.Value-1)}
 		}
 	}
+
+	actionsRow := utils.MakeActionsRow(messageComponent)
 
 	link := ""
 	if res.TwitterUsername != "" {
@@ -153,7 +120,7 @@ func ErogsFuzzySearchCreator(s *discordgo.Session, i *discordgo.InteractionCreat
 		if cid == nil {
 			gameData = append(gameData, fmt.Sprintf("%d. **%s**  (%s) / %d分 / %s", i+1, g.Gamename, strings.Join(shokushu, ", "), g.Median, g.SellDay))
 		} else {
-			gameData = append(gameData, fmt.Sprintf("%d. **%s**  (%s) / %d分 / %s", cid.Page*15+1, g.Gamename, strings.Join(shokushu, ", "), g.Median, g.SellDay))
+			gameData = append(gameData, fmt.Sprintf("%d. **%s**  (%s) / %d分 / %s", cid.Value*15+1, g.Gamename, strings.Join(shokushu, ", "), g.Median, g.SellDay))
 		}
 	}
 
@@ -171,14 +138,14 @@ func ErogsFuzzySearchCreator(s *discordgo.Session, i *discordgo.InteractionCreat
 	}
 
 	if cid == nil {
-		utils.InteractionEmbedRespond(s, i, embed, component, true)
+		utils.InteractionEmbedRespond(s, i, embed, actionsRow, true)
 	} else {
-		utils.EditEmbedRespond(s, i, embed, component)
+		utils.EditEmbedRespond(s, i, embed, actionsRow)
 	}
 
 }
 
-func ErogsFuzzySearchMusic(s *discordgo.Session, i *discordgo.InteractionCreate, cid *models.VndbInteractionCustomID) {
+func ErogsFuzzySearchMusic(s *discordgo.Session, i *discordgo.InteractionCreate, cid *models.CustomID) {
 	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseDeferredChannelMessageWithSource,
 	})
@@ -267,30 +234,7 @@ func ErogsFuzzySearchMusic(s *discordgo.Session, i *discordgo.InteractionCreate,
 	utils.InteractionEmbedRespond(s, i, embed, nil, true)
 }
 
-// 資料分頁
-func erogsPagination(result *[]erogsmodels.Game, page int, useCache bool) bool {
-	resultLen := len(*result)
-	expectedMin := page * 15
-	expectedMax := page*15 + 15
-
-	if !useCache || page == 0 {
-		if resultLen > 15 {
-			*result = (*result)[:15]
-			return true
-		}
-		return false
-	} else {
-		if resultLen > expectedMax {
-			*result = (*result)[expectedMin:expectedMax]
-			return true
-		} else {
-			*result = (*result)[expectedMin:]
-			return false
-		}
-	}
-}
-
-func ErogsFuzzySearchGame(s *discordgo.Session, i *discordgo.InteractionCreate, cid *models.VndbInteractionCustomID) {
+func ErogsFuzzySearchGame(s *discordgo.Session, i *discordgo.InteractionCreate, cid *models.CustomID) {
 	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseDeferredChannelMessageWithSource,
 	})

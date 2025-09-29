@@ -8,6 +8,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"github.com/google/uuid"
 
+	"kurohelper/cache"
 	kurohelpererrors "kurohelper/errors"
 	"kurohelper/models"
 	vndbmodels "kurohelper/models/vndb"
@@ -198,10 +199,11 @@ func VndbSearchGameByID(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	utils.InteractionEmbedRespond(s, i, embed, nil, true)
 }
 
-func VndbFuzzySearchBrand(s *discordgo.Session, i *discordgo.InteractionCreate, cid *models.VndbInteractionCustomID) {
+func VndbFuzzySearchBrand(s *discordgo.Session, i *discordgo.InteractionCreate, cid *models.CustomID) {
 	var res *vndbmodels.ProducerSearchResponse
-	var component *discordgo.ActionsRow
+	var messageComponent []discordgo.MessageComponent
 	var hasMore bool
+
 	// 第一次查詢
 	if cid == nil {
 		// 長時間查詢
@@ -228,22 +230,14 @@ func VndbFuzzySearchBrand(s *discordgo.Session, i *discordgo.InteractionCreate, 
 		}
 
 		idStr := uuid.New().String()
-		SetCache(idStr, *res)
+		cache.Set(idStr, *res)
 		hasMore = pagination(&(res.Vn.Results), 0, false)
 
 		if hasMore {
-			component = &discordgo.ActionsRow{
-				Components: []discordgo.MessageComponent{
-					discordgo.Button{
-						Label:    "▶️",
-						Style:    discordgo.PrimaryButton,
-						CustomID: fmt.Sprintf("SearchBrand_1_%s", idStr),
-					},
-				},
-			}
+			messageComponent = []discordgo.MessageComponent{utils.MakePageComponent("▶️", i.ApplicationCommandData().Name, idStr, 1)}
 		}
 	} else {
-		cacheValue, err := GetCache(cid.Key)
+		cacheValue, err := cache.Get(cid.ID)
 		if err != nil {
 			utils.HandleError(err, s, i)
 			return
@@ -251,46 +245,20 @@ func VndbFuzzySearchBrand(s *discordgo.Session, i *discordgo.InteractionCreate, 
 		resValue := cacheValue.(vndbmodels.ProducerSearchResponse)
 		res = &resValue
 		// 資料分頁
-		hasMore = pagination(&(res.Vn.Results), cid.Page, true)
+		hasMore = pagination(&(res.Vn.Results), cid.Value, true)
 		if hasMore {
-			if cid.Page == 0 {
-				component = &discordgo.ActionsRow{
-					Components: []discordgo.MessageComponent{
-						&discordgo.Button{
-							Label:    "▶️",
-							Style:    discordgo.PrimaryButton,
-							CustomID: fmt.Sprintf("SearchBrand_1_%s", cid.Key),
-						},
-					},
-				}
+			if cid.Value == 0 {
+				messageComponent = []discordgo.MessageComponent{utils.MakePageComponent("▶️", cid.CommandName, cid.ID, 1)}
 			} else {
-				component = &discordgo.ActionsRow{
-					Components: []discordgo.MessageComponent{
-						&discordgo.Button{
-							Label:    "◀️",
-							Style:    discordgo.PrimaryButton,
-							CustomID: fmt.Sprintf("SearchBrand_%d_%s", cid.Page-1, cid.Key),
-						},
-						&discordgo.Button{
-							Label:    "▶️",
-							Style:    discordgo.PrimaryButton,
-							CustomID: fmt.Sprintf("SearchBrand_%d_%s", cid.Page+1, cid.Key),
-						},
-					},
-				}
+				messageComponent = []discordgo.MessageComponent{utils.MakePageComponent("◀️", cid.CommandName, cid.ID, cid.Value-1)}
+				messageComponent = append(messageComponent, utils.MakePageComponent("▶️", cid.CommandName, cid.ID, cid.Value+1))
 			}
 		} else {
-			component = &discordgo.ActionsRow{
-				Components: []discordgo.MessageComponent{
-					&discordgo.Button{
-						Label:    "◀️",
-						Style:    discordgo.PrimaryButton,
-						CustomID: fmt.Sprintf("SearchBrand_%d_%s", cid.Page-1, cid.Key),
-					},
-				},
-			}
+			messageComponent = []discordgo.MessageComponent{utils.MakePageComponent("◀️", cid.CommandName, cid.ID, cid.Value-1)}
 		}
 	}
+
+	actionsRow := utils.MakeActionsRow(messageComponent)
 
 	/* 處理回傳結構 */
 
@@ -342,35 +310,9 @@ func VndbFuzzySearchBrand(s *discordgo.Session, i *discordgo.InteractionCreate, 
 	}
 
 	if cid == nil {
-		utils.InteractionEmbedRespond(s, i, embed, component, true)
+		utils.InteractionEmbedRespond(s, i, embed, actionsRow, true)
 	} else {
-		utils.EditEmbedRespond(s, i, embed, component)
+		utils.EditEmbedRespond(s, i, embed, actionsRow)
 	}
 
-}
-
-func VndbFuzzySearchStaff(s *discordgo.Session, i *discordgo.InteractionCreate, cid *models.VndbInteractionCustomID) {
-}
-
-// 資料分頁
-func pagination(result *[]vndbmodels.ProducerSearchVnResponse, page int, useCache bool) bool {
-	resultLen := len(*result)
-	expectedMin := page * 10
-	expectedMax := page*10 + 9
-
-	if !useCache || page == 0 {
-		if resultLen > 10 {
-			*result = (*result)[:10]
-			return true
-		}
-		return false
-	} else {
-		if resultLen > expectedMax {
-			*result = (*result)[expectedMin:expectedMax]
-			return true
-		} else {
-			*result = (*result)[expectedMin:]
-			return false
-		}
-	}
 }

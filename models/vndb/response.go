@@ -1,4 +1,4 @@
-package vndb
+package vndbmodels
 
 // 使用ID查詢指定遊戲Response
 type GetVnUseIDResponse struct {

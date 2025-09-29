@@ -38,6 +38,6 @@ func main() {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 	interruptSignal := <-c
-	kuroHelper.Close() // websocket disconnect
 	logrus.Debug(interruptSignal)
+	kuroHelper.Close() // websocket disconnect
 }
