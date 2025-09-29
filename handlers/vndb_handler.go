@@ -316,29 +316,3 @@ func VndbFuzzySearchBrand(s *discordgo.Session, i *discordgo.InteractionCreate, 
 	}
 
 }
-
-func VndbFuzzySearchStaff(s *discordgo.Session, i *discordgo.InteractionCreate, cid *models.CustomID) {
-}
-
-// 資料分頁
-func pagination(result *[]vndbmodels.ProducerSearchVnResponse, page int, useCache bool) bool {
-	resultLen := len(*result)
-	expectedMin := page * 10
-	expectedMax := page*10 + 9
-
-	if !useCache || page == 0 {
-		if resultLen > 10 {
-			*result = (*result)[:10]
-			return true
-		}
-		return false
-	} else {
-		if resultLen > expectedMax {
-			*result = (*result)[expectedMin:expectedMax]
-			return true
-		} else {
-			*result = (*result)[expectedMin:]
-			return false
-		}
-	}
-}

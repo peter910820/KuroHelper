@@ -55,7 +55,7 @@ func ErogsFuzzySearchCreator(s *discordgo.Session, i *discordgo.InteractionCreat
 		}
 		count = len(res.Games)
 
-		hasMore = erogsPagination(&(res.Games), 0, false)
+		hasMore = pagination(&(res.Games), 0, false)
 
 		if hasMore {
 			messageComponent = []discordgo.MessageComponent{utils.MakePageComponent("▶️", i.ApplicationCommandData().Name, idStr, 1)}
@@ -80,7 +80,7 @@ func ErogsFuzzySearchCreator(s *discordgo.Session, i *discordgo.InteractionCreat
 		count = len(res.Games)
 
 		// 資料分頁
-		hasMore = erogsPagination(&(res.Games), cid.Value, true)
+		hasMore = pagination(&(res.Games), cid.Value, true)
 		if hasMore {
 			if cid.Value == 0 {
 				messageComponent = []discordgo.MessageComponent{utils.MakePageComponent("▶️", cid.CommandName, cid.ID, 1)}
@@ -232,29 +232,6 @@ func ErogsFuzzySearchMusic(s *discordgo.Session, i *discordgo.InteractionCreate,
 		},
 	}
 	utils.InteractionEmbedRespond(s, i, embed, nil, true)
-}
-
-// 資料分頁
-func erogsPagination(result *[]erogsmodels.Game, page int, useCache bool) bool {
-	resultLen := len(*result)
-	expectedMin := page * 15
-	expectedMax := page*15 + 15
-
-	if !useCache || page == 0 {
-		if resultLen > 15 {
-			*result = (*result)[:15]
-			return true
-		}
-		return false
-	} else {
-		if resultLen > expectedMax {
-			*result = (*result)[expectedMin:expectedMax]
-			return true
-		} else {
-			*result = (*result)[expectedMin:]
-			return false
-		}
-	}
 }
 
 func ErogsFuzzySearchGame(s *discordgo.Session, i *discordgo.InteractionCreate, cid *models.CustomID) {
