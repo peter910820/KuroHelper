@@ -379,17 +379,17 @@ func ErogsFuzzySearchGame(s *discordgo.Session, i *discordgo.InteractionCreate, 
 
 	junni := 0x04108e
 	rank := ""
-	if res.Junni <= 50 {
+	if res.Junni == 0 || res.Junni > 500 {
+		junni = 0x04108e // Default
+	} else if res.Junni <= 50 {
 		junni = 0xFFD700 // Gold
 		rank = "批評空間 TOP 50"
 	} else if res.Junni <= 100 {
 		junni = 0xC0C0C0 // Silver
 		rank = "批評空間 TOP 100"
-	} else if res.Junni <= 500 {
+	} else {
 		junni = 0xCD7F32 // Bronze
 		rank = "批評空間 TOP 500"
-	} else {
-		junni = 0x04108e // Default
 	}
 	embed := &discordgo.MessageEmbed{
 		Author: &discordgo.MessageEmbedAuthor{
