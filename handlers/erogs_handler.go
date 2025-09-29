@@ -151,15 +151,15 @@ func ErogsFuzzySearchCreator(s *discordgo.Session, i *discordgo.InteractionCreat
 		}
 
 		if cid == nil {
-			gameData = append(gameData, fmt.Sprintf("%d. **%s**  (%s)  %d分", i+1, g.Gamename, strings.Join(shokushu, ", "), g.Median))
+			gameData = append(gameData, fmt.Sprintf("%d. **%s**  (%s) / %d分 / %s", i+1, g.Gamename, strings.Join(shokushu, ", "), g.Median, g.SellDay))
 		} else {
-			gameData = append(gameData, fmt.Sprintf("%d. **%s**  (%s)  %d分", cid.Page*15+1, g.Gamename, strings.Join(shokushu, ", "), g.Median))
+			gameData = append(gameData, fmt.Sprintf("%d. **%s**  (%s) / %d分 / %s", cid.Page*15+1, g.Gamename, strings.Join(shokushu, ", "), g.Median, g.SellDay))
 		}
 	}
 
 	embed := &discordgo.MessageEmbed{
 		Title:       fmt.Sprintf("%s(%d/%d  筆)", res.Name, count, countInner),
-		Color:       0x04108e,
+		Color:       0xF8F8DF,
 		Description: link,
 		Fields: []*discordgo.MessageEmbedField{
 			{
@@ -215,7 +215,7 @@ func ErogsFuzzySearchMusic(s *discordgo.Session, i *discordgo.InteractionCreate,
 
 	embed := &discordgo.MessageEmbed{
 		Title: res.MusicName,
-		Color: 0x04108e,
+		Color: 0xF8F8DF,
 		Fields: []*discordgo.MessageEmbedField{
 			{
 				Name:   "音樂時長",
