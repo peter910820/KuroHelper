@@ -379,7 +379,7 @@ func ErogsFuzzySearchGame(s *discordgo.Session, i *discordgo.InteractionCreate, 
 
 	junni := 0x04108e
 	rank := ""
-	if res.Junni <= 50 {
+	if res.Junni > 0 && res.Junni <= 50 {
 		junni = 0xFFD700 // Gold
 		rank = "批評空間 TOP 50"
 	} else if res.Junni <= 100 {
