@@ -25,7 +25,7 @@ type(scope): subject
     - vndb: VNDB相關模組  
     ...
 
-- subject: 原則上全英文，遇到指令名稱可使用中文  
+- subject: 原則上全小寫英文，遇到指令名稱可使用中文  
 Ex. `feat: show game release date in '查詢創作者' command`
 
 ## Branch
@@ -49,6 +49,10 @@ type/subject
     - ci: CI/CD, 流水線相關 **允許Bypass**
     - style: 代碼格式化、調整UI畫面或新增註解
     - docs: 純粹修改文檔(如果是更新紀錄允許同release一起發布)
+
+## PR
+
+- 目前無特別規定，只要注意審閱者、指派者以及Label要加就好
 
 ## Merge & Rebase
 
