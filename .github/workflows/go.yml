@@ -7,13 +7,16 @@ on:
   push:
     branches:
       - main
-      - release/*
       - feature/*
       - enhancement/*
-      - fix/*
+      - bugfix/*
+      - hotfix/*
+      - release/*
+      # - test/*
       - refactor/*
-      - chore/*
       - ci/*
+      - style/*
+      - docs/*
   pull_request:
     branches: [ "main" ]
 
