@@ -60,7 +60,7 @@ func main() {
 	fiberDone := make(chan struct{})
 
 	go func() {
-		if err := app.Listen(":3000"); err != nil {
+		if err := app.Listen(fmt.Sprintf("127.0.0.1:%s", os.Getenv("PRODUCTION_PORT"))); err != nil {
 			logrus.Println("Fiber shutdown:", err)
 		}
 		close(fiberDone)
