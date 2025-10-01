@@ -3,12 +3,15 @@ package erogs
 import (
 	"encoding/json"
 	"fmt"
-  
+
 	kurohelpererrors "kurohelper/errors"
 	erogsmodels "kurohelper/models/erogs"
 )
 
-func GetMusicByFuzzy(search string) (*erogsmodels.FuzzySearchMusicResponse, error) {
+func GetMusicByFuzzy(search string, opt string) (*erogsmodels.FuzzySearchMusicResponse, error) {
+	if opt == "" {
+		search = zhtwToJp(search)
+	}
 	sql, err := buildFuzzySearchMusicSQL(search)
 	if err != nil {
 		return nil, err
@@ -18,7 +21,7 @@ func GetMusicByFuzzy(search string) (*erogsmodels.FuzzySearchMusicResponse, erro
 	if err != nil {
 		return nil, err
 	}
-  
+
 	var res erogsmodels.FuzzySearchMusicResponse
 	err = json.Unmarshal([]byte(jsonText), &res)
 	if err != nil {

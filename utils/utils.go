@@ -3,6 +3,7 @@ package utils
 import (
 	"os"
 	"strconv"
+	"unicode"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/sirupsen/logrus"
@@ -155,6 +156,9 @@ func GetOptions(i *discordgo.InteractionCreate, name string) (string, error) {
 
 func IsAllEnglish(s string) bool {
 	for _, r := range s {
+		if unicode.IsSpace(r) {
+			continue
+		}
 		if (r < 'A' || r > 'Z') && (r < 'a' || r > 'z') {
 			return false
 		}

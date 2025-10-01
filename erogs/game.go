@@ -8,7 +8,10 @@ import (
 	erogsmodels "kurohelper/models/erogs"
 )
 
-func GetGameByFuzzy(search string) (*erogsmodels.FuzzySearchGameResponse, error) {
+func GetGameByFuzzy(search string, opt string) (*erogsmodels.FuzzySearchGameResponse, error) {
+	if opt == "" {
+		search = zhtwToJp(search)
+	}
 	sql, err := buildFuzzySearchGameSQL(search)
 	if err != nil {
 		return nil, err
