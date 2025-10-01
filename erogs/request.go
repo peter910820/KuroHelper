@@ -8,13 +8,34 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"sync"
+	"time"
 
 	"github.com/PuerkitoBio/goquery"
 
 	kurohelpererrors "kurohelper/errors"
+	"kurohelper/utils"
+)
+
+type rateLimitStruct struct {
+	Quota     int
+	ResetTime time.Time
+	RWMu      sync.RWMutex
+}
+
+var (
+	resetTime       = time.Duration(utils.GetEnvInt(os.Getenv("EROGS_RATE_LIMIT_RESET_TIME"), 10)) * time.Second
+	rateLimitRecord = rateLimitStruct{
+		Quota:     5,
+		ResetTime: time.Now().Add(resetTime),
+	}
 )
 
 func sendPostRequest(sql string) (string, error) {
+	if !rateLimit(1) {
+		return "", kurohelpererrors.ErrRateLimit
+	}
+
 	formData := url.Values{}
 	formData.Set("sql", sql)
 
@@ -56,4 +77,21 @@ func sendPostRequest(sql string) (string, error) {
 	}
 
 	return jsonText, nil
+}
+
+func rateLimit(quota int) bool {
+	rateLimitRecord.RWMu.Lock()
+	defer rateLimitRecord.RWMu.Unlock()
+
+	now := time.Now()
+	if now.After(rateLimitRecord.ResetTime) {
+		rateLimitRecord.Quota = 5
+		rateLimitRecord.ResetTime = now.Add(resetTime)
+	}
+
+	if rateLimitRecord.Quota > 0 {
+		rateLimitRecord.Quota -= quota
+		return true
+	}
+	return false
 }
