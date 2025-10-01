@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"errors"
 	"fmt"
 	"sort"
 	"strings"
@@ -10,6 +11,7 @@ import (
 
 	"kurohelper/cache"
 	"kurohelper/erogs"
+	kurohelpererrors "kurohelper/errors"
 	"kurohelper/models"
 	erogsmodels "kurohelper/models/erogs"
 	vndbmodels "kurohelper/models/vndb"
@@ -36,7 +38,13 @@ func ErogsFuzzySearchCreator(s *discordgo.Session, i *discordgo.InteractionCreat
 			return
 		}
 
-		res, err = erogs.GetCreatorByFuzzy(keyword)
+		opt, err := utils.GetOptions(i, "查詢優化選項")
+		if err != nil && errors.Is(err, kurohelpererrors.ErrOptionTranslateFail) {
+			utils.HandleError(err, s, i)
+			return
+		}
+
+		res, err = erogs.GetCreatorByFuzzy(keyword, opt)
 		if err != nil {
 			utils.HandleError(err, s, i)
 			return
@@ -157,7 +165,13 @@ func ErogsFuzzySearchMusic(s *discordgo.Session, i *discordgo.InteractionCreate,
 		return
 	}
 
-	res, err = erogs.GetMusicByFuzzy(keyword)
+	opt, err := utils.GetOptions(i, "查詢優化選項")
+	if err != nil && errors.Is(err, kurohelpererrors.ErrOptionTranslateFail) {
+		utils.HandleError(err, s, i)
+		return
+	}
+
+	res, err = erogs.GetMusicByFuzzy(keyword, opt)
 	if err != nil {
 		utils.HandleError(err, s, i)
 		return
@@ -248,7 +262,13 @@ func ErogsFuzzySearchGame(s *discordgo.Session, i *discordgo.InteractionCreate, 
 		return
 	}
 
-	res, err = erogs.GetGameByFuzzy(keyword)
+	opt, err := utils.GetOptions(i, "查詢優化選項")
+	if err != nil && errors.Is(err, kurohelpererrors.ErrOptionTranslateFail) {
+		utils.HandleError(err, s, i)
+		return
+	}
+
+	res, err = erogs.GetGameByFuzzy(keyword, opt)
 	if err != nil {
 		utils.HandleError(err, s, i)
 		return

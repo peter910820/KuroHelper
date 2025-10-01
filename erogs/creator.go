@@ -7,7 +7,10 @@ import (
 	erogsmodels "kurohelper/models/erogs"
 )
 
-func GetCreatorByFuzzy(search string) (*erogsmodels.FuzzySearchCreatorResponse, error) {
+func GetCreatorByFuzzy(search string, opt string) (*erogsmodels.FuzzySearchCreatorResponse, error) {
+	if opt == "" {
+		search = zhtwToJp(search)
+	}
 	sql, err := buildFuzzySearchCreatorSQL(search)
 	if err != nil {
 		return nil, err
