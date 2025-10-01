@@ -1,6 +1,9 @@
 package utils
 
 import (
+	"os"
+	"strconv"
+
 	"github.com/bwmarrin/discordgo"
 	"github.com/sirupsen/logrus"
 
@@ -157,4 +160,13 @@ func IsAllEnglish(s string) bool {
 		}
 	}
 	return true
+}
+
+func GetEnvInt(key string, def int) int {
+	if val := os.Getenv(key); val != "" {
+		if v, err := strconv.Atoi(val); err == nil {
+			return v
+		}
+	}
+	return def
 }
