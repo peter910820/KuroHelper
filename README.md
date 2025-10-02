@@ -15,7 +15,7 @@ $ git clone https://github.com/peter910820/KuroHelper.git
 ```  
 2. install package  
 ```bash
-$ go install
+$ go mod download 
 ```  
 3. into repo and make .env, fill in required parameters(you must has a discord bot)
 ```bash
@@ -25,7 +25,7 @@ $ vim .env
 ```  
 4. run bot
 ```bash
-$ go run ./main.go
+$ go run ./cmd/core/main.go
 ``` 
 
 # 💻Commands:
