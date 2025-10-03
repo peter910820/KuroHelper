@@ -10,6 +10,10 @@ import (
 	"gorm.io/gorm"
 )
 
+var (
+	Dbs = make(map[string]*gorm.DB)
+)
+
 func InitDsn(choiceDb int) (string, *gorm.DB) {
 	var dbname string
 	switch choiceDb {

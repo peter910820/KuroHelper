@@ -25,7 +25,7 @@ $ vim .env
 ```  
 4. run bot
 ```bash
-$ go run ./main.go
+$ go run ./cmd/core/main.go
 ``` 
 
 # 💻Commands:

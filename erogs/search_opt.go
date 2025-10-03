@@ -1,11 +1,13 @@
 package erogs
 
-import "kurohelper/config"
+import (
+	"kurohelper/cache"
+)
 
 func zhtwToJp(search string) string {
 	runes := []rune(search)
 	for i, r := range runes {
-		if jp, ok := config.ZhtwToJp[r]; ok {
+		if jp, ok := cache.ZhtwToJp[r]; ok {
 			runes[i] = jp
 		}
 	}
