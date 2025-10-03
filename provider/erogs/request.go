@@ -45,7 +45,7 @@ func sendPostRequest(sql string) (string, error) {
 	formData := url.Values{}
 	formData.Set("sql", sql)
 
-	req, err := http.NewRequest("POST", os.Getenv("EROGS_ENDPOINT"), strings.NewReader(formData.Encode()))
+	req, err := http.NewRequest(http.MethodPost, os.Getenv("EROGS_ENDPOINT"), strings.NewReader(formData.Encode()))
 	if err != nil {
 		return "", err
 	}
