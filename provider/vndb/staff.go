@@ -5,11 +5,10 @@ import (
 	"strings"
 
 	kurohelpererrors "kurohelper/errors"
-	vndbmodels "kurohelper/models/vndb"
 )
 
-func GetStaffByFuzzy(keyword string, roleType string) (*vndbmodels.BasicResponse[vndbmodels.StaffSearchResponse], error) {
-	req := vndbmodels.VndbCreate()
+func GetStaffByFuzzy(keyword string, roleType string) (*BasicResponse[StaffSearchResponse], error) {
+	req := VndbCreate()
 
 	filters := []interface{}{}
 	if roleType != "" {
@@ -45,7 +44,7 @@ func GetStaffByFuzzy(keyword string, roleType string) (*vndbmodels.BasicResponse
 		return nil, err
 	}
 
-	var res vndbmodels.BasicResponse[vndbmodels.StaffSearchResponse]
+	var res BasicResponse[StaffSearchResponse]
 	err = json.Unmarshal(r, &res)
 	if err != nil {
 		return nil, err

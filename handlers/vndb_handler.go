@@ -10,10 +10,8 @@ import (
 
 	"kurohelper/cache"
 	kurohelpererrors "kurohelper/errors"
-	"kurohelper/models"
-	vndbmodels "kurohelper/models/vndb"
+	"kurohelper/provider/vndb"
 	"kurohelper/utils"
-	"kurohelper/vndb"
 )
 
 func VndbStats(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -199,8 +197,8 @@ func VndbSearchGameByID(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	utils.InteractionEmbedRespond(s, i, embed, nil, true)
 }
 
-func VndbFuzzySearchBrand(s *discordgo.Session, i *discordgo.InteractionCreate, cid *models.CustomID) {
-	var res *vndbmodels.ProducerSearchResponse
+func VndbFuzzySearchBrand(s *discordgo.Session, i *discordgo.InteractionCreate, cid *CustomID) {
+	var res *vndb.ProducerSearchResponse
 	var messageComponent []discordgo.MessageComponent
 	var hasMore bool
 
@@ -242,7 +240,7 @@ func VndbFuzzySearchBrand(s *discordgo.Session, i *discordgo.InteractionCreate, 
 			utils.HandleError(err, s, i)
 			return
 		}
-		resValue := cacheValue.(vndbmodels.ProducerSearchResponse)
+		resValue := cacheValue.(vndb.ProducerSearchResponse)
 		res = &resValue
 		// 資料分頁
 		hasMore = pagination(&(res.Vn.Results), cid.Value, true)

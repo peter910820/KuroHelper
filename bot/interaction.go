@@ -7,16 +7,8 @@ import (
 	"github.com/bwmarrin/discordgo"
 
 	"kurohelper/handlers"
-	"kurohelper/models"
 	"kurohelper/utils"
 )
-
-// CustomID struct
-type CustomID struct {
-	ID    string `json:"id"`
-	Key   string `json:"key"`
-	Value string `json:"value"`
-}
 
 func OnInteraction(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	switch i.Type {
@@ -25,7 +17,6 @@ func OnInteraction(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	case discordgo.InteractionMessageComponent:
 		onInteractionMessageComponent(s, i)
 	}
-
 }
 
 func onInteractionApplicationCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -56,7 +47,7 @@ func onInteractionMessageComponent(s *discordgo.Session, i *discordgo.Interactio
 		utils.HandleError(err, s, i)
 		return
 	}
-	cidStruct := models.CustomID{
+	cidStruct := handlers.CustomID{
 		ID:          cid[1],
 		CommandName: cid[0],
 		Type:        cid[2],

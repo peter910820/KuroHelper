@@ -7,8 +7,6 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"gorm.io/gorm"
-
-	"kurohelper/models"
 )
 
 func Migration(dbName string, db *gorm.DB) {
@@ -19,7 +17,7 @@ func Migration(dbName string, db *gorm.DB) {
 
 	switch dbName {
 	case os.Getenv("DB_NAME"):
-		db.AutoMigrate(&models.ZhtwToJp{})
+		db.AutoMigrate(&ZhtwToJp{})
 	default:
 		logrus.Fatal("error in migration function")
 	}

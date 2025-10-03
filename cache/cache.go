@@ -7,7 +7,6 @@ import (
 
 	"kurohelper/database"
 	kurohelpererrors "kurohelper/errors"
-	"kurohelper/models"
 
 	"github.com/sirupsen/logrus"
 )
@@ -57,7 +56,7 @@ func Clean() {
 }
 
 func InitZhtwToJp() {
-	var entries []models.ZhtwToJp
+	var entries []database.ZhtwToJp
 	if err := database.Dbs[os.Getenv("DB_NAME")].Find(&entries).Error; err != nil {
 		logrus.Fatal(err)
 	}

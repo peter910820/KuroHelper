@@ -10,17 +10,14 @@ import (
 	"github.com/google/uuid"
 
 	"kurohelper/cache"
-	"kurohelper/erogs"
 	kurohelpererrors "kurohelper/errors"
-	"kurohelper/models"
-	erogsmodels "kurohelper/models/erogs"
-	vndbmodels "kurohelper/models/vndb"
+	"kurohelper/provider/erogs"
+	"kurohelper/provider/vndb"
 	"kurohelper/utils"
-	"kurohelper/vndb"
 )
 
-func ErogsFuzzySearchCreator(s *discordgo.Session, i *discordgo.InteractionCreate, cid *models.CustomID) {
-	var res *erogsmodels.FuzzySearchCreatorResponse
+func ErogsFuzzySearchCreator(s *discordgo.Session, i *discordgo.InteractionCreate, cid *CustomID) {
+	var res *erogs.FuzzySearchCreatorResponse
 	var messageComponent []discordgo.MessageComponent
 	var hasMore bool
 	var count int
@@ -74,7 +71,7 @@ func ErogsFuzzySearchCreator(s *discordgo.Session, i *discordgo.InteractionCreat
 			utils.HandleError(err, s, i)
 			return
 		}
-		resValue := cacheValue.(erogsmodels.FuzzySearchCreatorResponse)
+		resValue := cacheValue.(erogs.FuzzySearchCreatorResponse)
 		res = &resValue
 
 		// 根據遊戲評價排序
@@ -153,12 +150,12 @@ func ErogsFuzzySearchCreator(s *discordgo.Session, i *discordgo.InteractionCreat
 
 }
 
-func ErogsFuzzySearchMusic(s *discordgo.Session, i *discordgo.InteractionCreate, cid *models.CustomID) {
+func ErogsFuzzySearchMusic(s *discordgo.Session, i *discordgo.InteractionCreate, cid *CustomID) {
 	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseDeferredChannelMessageWithSource,
 	})
 
-	var res *erogsmodels.FuzzySearchMusicResponse
+	var res *erogs.FuzzySearchMusicResponse
 	keyword, err := utils.GetOptions(i, "keyword")
 	if err != nil {
 		utils.HandleError(err, s, i)
@@ -248,13 +245,13 @@ func ErogsFuzzySearchMusic(s *discordgo.Session, i *discordgo.InteractionCreate,
 	utils.InteractionEmbedRespond(s, i, embed, nil, true)
 }
 
-func ErogsFuzzySearchGame(s *discordgo.Session, i *discordgo.InteractionCreate, cid *models.CustomID) {
+func ErogsFuzzySearchGame(s *discordgo.Session, i *discordgo.InteractionCreate, cid *CustomID) {
 	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseDeferredChannelMessageWithSource,
 	})
 
-	var res *erogsmodels.FuzzySearchGameResponse
-	var resVndb *vndbmodels.BasicResponse[vndbmodels.GetVnUseIDResponse]
+	var res *erogs.FuzzySearchGameResponse
+	var resVndb *vndb.BasicResponse[vndb.GetVnUseIDResponse]
 
 	keyword, err := utils.GetOptions(i, "keyword")
 	if err != nil {

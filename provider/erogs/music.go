@@ -3,12 +3,9 @@ package erogs
 import (
 	"encoding/json"
 	"fmt"
-
-	kurohelpererrors "kurohelper/errors"
-	erogsmodels "kurohelper/models/erogs"
 )
 
-func GetMusicByFuzzy(search string, opt string) (*erogsmodels.FuzzySearchMusicResponse, error) {
+func GetMusicByFuzzy(search string, opt string) (*FuzzySearchMusicResponse, error) {
 	if opt == "" {
 		search = zhtwToJp(search)
 	}
@@ -22,15 +19,11 @@ func GetMusicByFuzzy(search string, opt string) (*erogsmodels.FuzzySearchMusicRe
 		return nil, err
 	}
 
-	var res erogsmodels.FuzzySearchMusicResponse
+	var res FuzzySearchMusicResponse
 	err = json.Unmarshal([]byte(jsonText), &res)
 	if err != nil {
 		fmt.Println(jsonText)
 		return nil, err
-	}
-
-	if len(res.GameCategories) == 0 {
-		return nil, kurohelpererrors.ErrSearchNoContent
 	}
 
 	return &res, nil

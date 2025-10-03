@@ -1,4 +1,4 @@
-package models
+package handlers
 
 type CustomID struct {
 	ID          string // cache ID

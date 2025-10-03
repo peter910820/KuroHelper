@@ -3,7 +3,7 @@ package bootstrap
 import (
 	"kurohelper/cache"
 	"kurohelper/database"
-	"kurohelper/erogs"
+	"kurohelper/provider/erogs"
 
 	"github.com/joho/godotenv"
 	"github.com/sirupsen/logrus"

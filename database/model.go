@@ -1,8 +1,6 @@
-package models
+package database
 
-import (
-	"time"
-)
+import "time"
 
 type (
 	ZhtwToJp struct {
