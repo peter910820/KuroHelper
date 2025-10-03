@@ -1,4 +1,4 @@
-package vndbmodels
+package vndb
 
 // vndb request factory
 func VndbCreate() *BasicRequest {

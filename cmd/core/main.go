@@ -7,15 +7,13 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"github.com/sirupsen/logrus"
 
+	"kurohelper/bootstrap"
 	"kurohelper/bot"
-	"kurohelper/config"
 )
 
 func main() {
-	// 初始化config
-	if err := config.Init(); err != nil {
-		logrus.Fatal(err)
-	}
+	// 初始化專案作業
+	bootstrap.Init()
 
 	token := os.Getenv("BOT_TOKEN")
 	kuroHelper, err := discordgo.New("Bot " + token)

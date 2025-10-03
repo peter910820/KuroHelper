@@ -13,7 +13,7 @@ func HandleError(err error, s *discordgo.Session, i *discordgo.InteractionCreate
 	logrus.Error(err)
 	switch {
 	case errors.Is(err, kurohelpererrors.ErrRateLimit):
-		InteractionRespond(s, i, "速率限制，請過約1分鐘後再試")
+		InteractionEmbedErrorRespond(s, i, "速率限制，請過約1分鐘後再試", true)
 	case errors.Is(err, kurohelpererrors.ErrSearchNoContent):
 		InteractionEmbedErrorRespond(s, i, "找不到任何結果喔", true)
 	case errors.Is(err, kurohelpererrors.ErrCacheLost):

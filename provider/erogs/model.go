@@ -1,4 +1,4 @@
-package erogsmodels
+package erogs
 
 // 只抓一筆(LIMIT 1)
 type FuzzySearchCreatorResponse struct {

@@ -5,11 +5,10 @@ import (
 	"strings"
 
 	kurohelpererrors "kurohelper/errors"
-	vndbmodels "kurohelper/models/vndb"
 )
 
-func GetVnUseID(brandid string) (*vndbmodels.BasicResponse[vndbmodels.GetVnUseIDResponse], error) {
-	req := vndbmodels.VndbCreate()
+func GetVnUseID(brandid string) (*BasicResponse[GetVnUseIDResponse], error) {
+	req := VndbCreate()
 
 	req.Filters = []interface{}{
 		"id", "=", brandid,
@@ -49,7 +48,7 @@ func GetVnUseID(brandid string) (*vndbmodels.BasicResponse[vndbmodels.GetVnUseID
 		return nil, err
 	}
 
-	var res vndbmodels.BasicResponse[vndbmodels.GetVnUseIDResponse]
+	var res BasicResponse[GetVnUseIDResponse]
 	err = json.Unmarshal(body, &res)
 	if err != nil {
 		return nil, err

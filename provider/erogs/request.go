@@ -24,12 +24,18 @@ type rateLimitStruct struct {
 }
 
 var (
-	resetTime       = time.Duration(utils.GetEnvInt(os.Getenv("EROGS_RATE_LIMIT_RESET_TIME"), 10)) * time.Second
+	resetTime       time.Duration
+	rateLimitRecord rateLimitStruct
+)
+
+// 確保設定檔初始化後才初始化速率鎖的變數
+func InitRateLimit() {
+	resetTime = time.Duration(utils.GetEnvInt("EROGS_RATE_LIMIT_RESET_TIME", 10)) * time.Second
 	rateLimitRecord = rateLimitStruct{
 		Quota:     5,
 		ResetTime: time.Now().Add(resetTime),
 	}
-)
+}
 
 func sendPostRequest(sql string) (string, error) {
 	if !rateLimit(1) {

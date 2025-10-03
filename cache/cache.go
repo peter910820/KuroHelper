@@ -1,10 +1,14 @@
 package cache
 
 import (
+	"os"
 	"sync"
 	"time"
 
+	"kurohelper/database"
 	kurohelpererrors "kurohelper/errors"
+
+	"github.com/sirupsen/logrus"
 )
 
 // cache struct
@@ -16,6 +20,8 @@ type Cache struct {
 var (
 	commonCache   = make(map[string]*Cache)
 	commonCacheMu sync.RWMutex
+
+	ZhtwToJp map[rune]rune
 )
 
 func Set(key string, value any) {
@@ -46,5 +52,24 @@ func Clean() {
 	defer commonCacheMu.Unlock()
 	for k := range commonCache {
 		delete(commonCache, k)
+	}
+}
+
+func InitZhtwToJp() {
+	var entries []database.ZhtwToJp
+	if err := database.Dbs[os.Getenv("DB_NAME")].Find(&entries).Error; err != nil {
+		logrus.Fatal(err)
+	}
+
+	// 轉換
+	ZhtwToJp = make(map[rune]rune, len(entries))
+	for _, e := range entries {
+		keyRunes := []rune(e.ZhTw)
+		valRunes := []rune(e.Jp)
+
+		// 確保都是單一字
+		if len(keyRunes) == 1 && len(valRunes) == 1 {
+			ZhtwToJp[keyRunes[0]] = valRunes[0]
+		}
 	}
 }
