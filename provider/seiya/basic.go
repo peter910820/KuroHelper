@@ -2,10 +2,10 @@ package seiya
 
 import (
 	"bytes"
+	"strings"
 	"sync"
 
 	"github.com/PuerkitoBio/goquery"
-	"github.com/sirupsen/logrus"
 )
 
 type game struct {
@@ -18,8 +18,40 @@ var (
 	seiyaDataMu sync.RWMutex
 )
 
-func AllDataQuery() {
+func GetGuideURL(keyword string) string {
+	tokens := strings.Fields(strings.ToLower(keyword))
+	weight := make(map[string]int)
 
+	seiyaDataMu.RLock()
+	defer seiyaDataMu.RUnlock()
+
+	for _, seiya := range seiyaData {
+		nameLower := strings.ToLower(seiya.Name)
+		score := 0
+		for _, token := range tokens {
+			if strings.Contains(nameLower, token) {
+				score++
+			}
+		}
+		if score > 0 {
+			weight[seiya.URL] = score
+		}
+	}
+
+	// 選出最大權重
+	var targetURL string
+	maxValue := -1
+	for k, v := range weight {
+		if v > maxValue {
+			targetURL = k
+			maxValue = v
+		}
+	}
+
+	if targetURL != "" {
+		targetURL = "https://seiya-saiga.com/game/" + targetURL
+	}
+	return targetURL
 }
 
 func Init() error {
@@ -43,6 +75,5 @@ func Init() error {
 		})
 	})
 
-	logrus.Debugf("%+v", seiyaData)
 	return nil
 }
