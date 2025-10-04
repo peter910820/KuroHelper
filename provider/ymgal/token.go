@@ -10,6 +10,8 @@ import (
 	kurohelpererrors "kurohelper/errors"
 )
 
+var token tokenResp
+
 func GetToken() error {
 	req, err := http.NewRequest(http.MethodGet, os.Getenv("YMGAL_ENDPOINT")+fmt.Sprintf("/oauth/token?grant_type=client_credentials&client_id=%s&client_secret=%s&scope=public", os.Getenv("CLIENT_ID"), os.Getenv("CLIENT_SECRET")), nil)
 	if err != nil {

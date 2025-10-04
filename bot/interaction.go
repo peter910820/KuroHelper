@@ -35,6 +35,8 @@ func onInteractionApplicationCommand(s *discordgo.Session, i *discordgo.Interact
 		go handlers.ErogsFuzzySearchMusic(s, i, nil)
 	case "查詢遊戲":
 		go handlers.ErogsFuzzySearchGame(s, i, nil)
+	case "隨機遊戲":
+		go handlers.RandomGameHandler(s, i)
 	case "清除快取":
 		go handlers.CleanCache(s, i)
 	}

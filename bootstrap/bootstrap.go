@@ -1,14 +1,14 @@
 package bootstrap
 
 import (
+	"github.com/joho/godotenv"
+	"github.com/sirupsen/logrus"
+
 	"kurohelper/cache"
 	"kurohelper/database"
 	"kurohelper/provider/erogs"
 	"kurohelper/provider/seiya"
 	"kurohelper/provider/ymgal"
-
-	"github.com/joho/godotenv"
-	"github.com/sirupsen/logrus"
 )
 
 // 啟動函式
