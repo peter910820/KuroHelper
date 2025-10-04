@@ -12,6 +12,7 @@ import (
 	"kurohelper/cache"
 	kurohelpererrors "kurohelper/errors"
 	"kurohelper/provider/erogs"
+	"kurohelper/provider/seiya"
 	"kurohelper/provider/vndb"
 	"kurohelper/utils"
 )
@@ -352,6 +353,13 @@ func ErogsFuzzySearchGame(s *discordgo.Session, i *discordgo.InteractionCreate, 
 		junni = 0xCD7F32 // Bronze
 		rank = "批評空間 TOP 500"
 	}
+
+	// 用批評空間回來的遊戲名對誠也做模糊搜尋
+	seiyaURL := seiya.GetGuideURL(res.Gamename)
+	if seiyaURL != "" {
+		rank += "  " + fmt.Sprintf("[誠也攻略](%s)", seiyaURL)
+	}
+
 	embed := &discordgo.MessageEmbed{
 		Author: &discordgo.MessageEmbedAuthor{
 			Name: res.BrandName,
