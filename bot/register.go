@@ -93,6 +93,10 @@ func vndbCommands() []*discordgo.ApplicationCommand {
 				},
 			},
 		},
+		{
+			Name:        "隨機遊戲",
+			Description: "隨機一部Galgame(ymgal)",
+		},
 		// {
 		// 	Name:        "vndb模糊查詢創作家",
 		// 	Description: "根據關鍵字查詢創作家資料",

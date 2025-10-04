@@ -15,4 +15,7 @@ var (
 	ErrRateLimit = errors.New("rate limit: rate limit, quota exhausted")
 	// cache lost or expired
 	ErrCacheLost = errors.New("cache: cache lost or expired")
+
+	//ymgal invalid access token(401)
+	ErrYmgalInvalidAccessToken = errors.New("ymgal: invalid access token or other 401 error")
 )

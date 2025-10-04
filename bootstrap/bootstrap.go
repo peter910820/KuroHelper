@@ -1,13 +1,14 @@
 package bootstrap
 
 import (
+	"github.com/joho/godotenv"
+	"github.com/sirupsen/logrus"
+
 	"kurohelper/cache"
 	"kurohelper/database"
 	"kurohelper/provider/erogs"
 	"kurohelper/provider/seiya"
-
-	"github.com/joho/godotenv"
-	"github.com/sirupsen/logrus"
+	"kurohelper/provider/ymgal"
 )
 
 // 啟動函式
@@ -39,6 +40,12 @@ func Init() {
 
 	// seiya init
 	err = seiya.Init()
+	if err != nil {
+		logrus.Fatal(err)
+	}
+
+	// ymgal init token
+	err = ymgal.GetToken()
 	if err != nil {
 		logrus.Fatal(err)
 	}
