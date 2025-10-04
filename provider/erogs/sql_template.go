@@ -195,3 +195,76 @@ FROM (
 ) t;
 `, result), nil
 }
+
+func buildSearchBrandSQL(search string) (string, error) {
+	search = strings.ReplaceAll(search, "'", "''")
+	result := "%"
+	if utils.IsAllEnglish(search) {
+		result += search + "%"
+	} else {
+		for _, r := range search {
+			result += string(r) + "%"
+		}
+	}
+
+	if strings.TrimSpace(search) == "" {
+		return "", kurohelpererrors.ErrSearchNoContent
+	}
+
+	return fmt.Sprintf(`
+WITH single_brand AS (
+    SELECT
+        id,
+        brandname,
+        brandfurigana,
+        url,
+        kind,
+        lost,
+        directlink,
+        median,
+        twitter,
+        count2,
+        count_all,
+        average2,
+        stdev
+    FROM brandlist
+    WHERE brandname ILIKE '%s'
+    ORDER BY count2 DESC NULLS LAST, median DESC NULLS LAST
+    LIMIT 1
+)
+SELECT row_to_json(r)
+FROM (
+    SELECT 
+        A.id, 
+        A.brandname, 
+        A.brandfurigana, 
+        A.url, 
+        A.kind, 
+        A.lost, 
+        A.directlink, 
+        A.median, 
+        A.twitter, 
+        A.count2, 
+        A.count_all, 
+        A.average2, 
+        A.stdev,
+        (
+            SELECT json_agg(
+                json_build_object(
+                    'id', g.id,
+                    'gamename', g.gamename,
+                    'furigana', g.furigana,
+                    'sellday', g.sellday,
+                    'median', g.median,
+                    'stdev', g.stdev,
+                    'count2', g.count2,
+                    'vndb', g.vndb
+                ) ORDER BY g.sellday DESC
+            )
+            FROM gamelist g
+            WHERE g.brandname = A.id
+        ) AS gamelist
+    FROM single_brand A
+) r;
+`, result), nil
+}
