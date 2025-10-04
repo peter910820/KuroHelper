@@ -4,6 +4,7 @@ import (
 	"kurohelper/cache"
 	"kurohelper/database"
 	"kurohelper/provider/erogs"
+	"kurohelper/provider/seiya"
 
 	"github.com/joho/godotenv"
 	"github.com/sirupsen/logrus"
@@ -33,6 +34,12 @@ func Init() {
 	// init ZhtwToJp var
 	cache.InitZhtwToJp()
 
-	// 初始化erogs速率鎖
+	// erogs rate limit init
 	erogs.InitRateLimit()
+
+	// seiya init
+	err = seiya.Init()
+	if err != nil {
+		logrus.Fatal(err)
+	}
 }

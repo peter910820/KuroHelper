@@ -1,18 +1,18 @@
 package seiya
 
 import (
-	"bytes"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
 
-	"github.com/PuerkitoBio/goquery"
+	"golang.org/x/text/encoding/japanese"
+	"golang.org/x/text/transform"
 
 	kurohelpererrors "kurohelper/errors"
 )
 
-func sendGetRequest() (*goquery.Document, error) {
+func sendGetRequest() ([]byte, error) {
 	req, err := http.NewRequest(http.MethodGet, os.Getenv("SEIYA_ENDPOINT"), nil)
 	if err != nil {
 		return nil, err
@@ -32,16 +32,11 @@ func sendGetRequest() (*goquery.Document, error) {
 		return nil, fmt.Errorf("%w %d", kurohelpererrors.ErrStatusCodeAbnormal, resp.StatusCode)
 	}
 
-	r, err := io.ReadAll(resp.Body)
+	reader := transform.NewReader(resp.Body, japanese.ShiftJIS.NewDecoder())
+	r, err := io.ReadAll(reader)
 	if err != nil {
 		return nil, err
 	}
 
-	// 解析 HTML
-	doc, err := goquery.NewDocumentFromReader(bytes.NewReader(r))
-	if err != nil {
-		return nil, err
-	}
-
-	return doc, nil
+	return r, nil
 }
