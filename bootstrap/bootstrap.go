@@ -5,6 +5,7 @@ import (
 	"kurohelper/database"
 	"kurohelper/provider/erogs"
 	"kurohelper/provider/seiya"
+	"kurohelper/provider/ymgal"
 
 	"github.com/joho/godotenv"
 	"github.com/sirupsen/logrus"
@@ -39,6 +40,12 @@ func Init() {
 
 	// seiya init
 	err = seiya.Init()
+	if err != nil {
+		logrus.Fatal(err)
+	}
+
+	// ymgal init token
+	err = ymgal.GetToken()
 	if err != nil {
 		logrus.Fatal(err)
 	}
