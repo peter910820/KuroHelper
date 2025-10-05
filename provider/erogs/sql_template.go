@@ -17,7 +17,7 @@ func buildSearchStringSQL(search string) (string, error) {
 	result := "%"
 	searchRune := []rune(search)
 	for i, r := range searchRune {
-		if utils.IsEnglish(r) && i < len(searchRune) {
+		if utils.IsEnglish(r) && i < len(searchRune)-1 {
 			if utils.IsEnglish(searchRune[i+1]) {
 				result += string(r)
 			} else {
