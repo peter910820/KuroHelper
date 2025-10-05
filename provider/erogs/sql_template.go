@@ -109,7 +109,7 @@ FROM (
         COALESCE(STRING_AGG(DISTINCT l_c.name, ','), '無') AS lyric_name,
         COALESCE(STRING_AGG(DISTINCT a_c.name, ','), '無') AS arrangement_name,
         COALESCE(STRING_AGG(DISTINCT comp_c.name, ','), '無') AS composition_name,
-        json_agg(DISTINCT jsonb_build_object('game_name', g.gamename, 'category', gm.category)) AS game_categories,
+        json_agg(DISTINCT jsonb_build_object('game_name', g.gamename, 'game_model', g.model ,'category', gm.category)) AS game_categories,
         COALESCE(STRING_AGG(DISTINCT mi.name, ','), '') AS album_name
     FROM musiclist m
     -- 歌手
@@ -259,6 +259,7 @@ FROM (
                     'furigana', g.furigana,
                     'sellday', g.sellday,
                     'median', g.median,
+                    'model', g.model,
                     'stdev', g.stdev,
                     'count2', g.count2,
                     'vndb', g.vndb
