@@ -33,9 +33,10 @@ $ go run ./cmd/core/main.go
 - global instructions:
     - vndb統計資料: 取得VNDB統計資料(VNDB)
     - 查詢指定遊戲: 根據VNDB ID查詢指定遊戲資料(VNDB)
-    - 查詢公司品牌: 根據關鍵字查詢公司品牌資料(VNDB)
+    - 查詢公司品牌: 根據關鍵字查詢公司品牌資料(VNDB&ErogameScape)
     - 查詢創作者: 根據關鍵字查詢創作者資料(ErogameScape)
     - 查詢音樂: 據關鍵字查詢音樂資料(ErogameScape)
     - 查詢遊戲: 根據關鍵字查詢遊戲資料(ErogameScape)
+    - 隨機遊戲: 隨機一部Galgame(ymgal)
 - guild instructions:
     - 清除快取: 清除搜尋資料快取(管理員專用)
