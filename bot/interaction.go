@@ -26,15 +26,15 @@ func onInteractionApplicationCommand(s *discordgo.Session, i *discordgo.Interact
 	case "查詢指定遊戲":
 		go handlers.VndbSearchGameByID(s, i)
 	case "查詢公司品牌":
-		go handlers.VndbFuzzySearchBrand(s, i, nil)
+		go handlers.FuzzySearchBrand(s, i, nil)
 	// case "vndb模糊查詢創作家":
 	// 	go handlers.VndbFuzzySearchStaff(s, i, nil)
 	case "查詢創作者":
 		go handlers.ErogsFuzzySearchCreator(s, i, nil)
 	case "查詢音樂":
-		go handlers.ErogsFuzzySearchMusic(s, i, nil)
+		go handlers.ErogsFuzzySearchMusic(s, i)
 	case "查詢遊戲":
-		go handlers.ErogsFuzzySearchGame(s, i, nil)
+		go handlers.ErogsFuzzySearchGame(s, i)
 	case "清除快取":
 		go handlers.CleanCache(s, i)
 	}
@@ -55,8 +55,10 @@ func onInteractionMessageComponent(s *discordgo.Session, i *discordgo.Interactio
 	}
 
 	switch cidStruct.CommandName {
-	case "查詢公司品牌":
+	case "查詢公司品牌(vndb)":
 		go handlers.VndbFuzzySearchBrand(s, i, &cidStruct)
+	case "查詢公司品牌(erogs)":
+		go handlers.ErogsFuzzySearchBrand(s, i, &cidStruct)
 	case "查詢創作者":
 		go handlers.ErogsFuzzySearchCreator(s, i, &cidStruct)
 	}

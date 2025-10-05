@@ -211,5 +211,29 @@ func erogsCommands() []*discordgo.ApplicationCommand {
 				},
 			},
 		},
+		{
+			Name:        "查詢公司品牌",
+			Description: "根據關鍵字查詢公司品牌資料",
+			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "keyword",
+					Description: "關鍵字",
+					Required:    true,
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "查詢資料庫選項",
+					Description: "選擇查詢的資料庫",
+					Required:    false,
+					Choices: []*discordgo.ApplicationCommandOptionChoice{
+						{
+							Name:  "VNDB",
+							Value: "1",
+						},
+					},
+				},
+			},
+		},
 	}
 }
