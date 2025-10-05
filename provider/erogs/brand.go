@@ -5,9 +5,9 @@ import (
 	"fmt"
 )
 
-func GetGameByFuzzy(search string) (*FuzzySearchGameResponse, error) {
+func GetBrandByFuzzy(search string) (*FuzzySearchBrandResponse, error) {
 	searchJP := zhtwToJp(search)
-	sql, err := buildFuzzySearchGameSQL(search, searchJP)
+	sql, err := buildFuzzySearchBrandSQL(search, searchJP)
 	if err != nil {
 		return nil, err
 	}
@@ -17,7 +17,7 @@ func GetGameByFuzzy(search string) (*FuzzySearchGameResponse, error) {
 		return nil, err
 	}
 
-	var res FuzzySearchGameResponse
+	var res FuzzySearchBrandResponse
 	err = json.Unmarshal([]byte(jsonText), &res)
 	if err != nil {
 		fmt.Println(jsonText)

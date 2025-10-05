@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"errors"
 	"fmt"
 	"sort"
 	"strings"
@@ -10,7 +9,6 @@ import (
 	"github.com/google/uuid"
 
 	"kurohelper/cache"
-	kurohelpererrors "kurohelper/errors"
 	"kurohelper/provider/erogs"
 	"kurohelper/provider/seiya"
 	"kurohelper/provider/vndb"
@@ -36,13 +34,7 @@ func ErogsFuzzySearchCreator(s *discordgo.Session, i *discordgo.InteractionCreat
 			return
 		}
 
-		opt, err := utils.GetOptions(i, "查詢優化選項")
-		if err != nil && errors.Is(err, kurohelpererrors.ErrOptionTranslateFail) {
-			utils.HandleError(err, s, i)
-			return
-		}
-
-		res, err = erogs.GetCreatorByFuzzy(keyword, opt)
+		res, err = erogs.GetCreatorByFuzzy(keyword)
 		if err != nil {
 			utils.HandleError(err, s, i)
 			return
@@ -126,7 +118,7 @@ func ErogsFuzzySearchCreator(s *discordgo.Session, i *discordgo.InteractionCreat
 		if cid == nil {
 			gameData = append(gameData, fmt.Sprintf("%d. **%s**  (%s) / %d分 / %s", i+1, g.Gamename, strings.Join(shokushu, ", "), g.Median, g.SellDay))
 		} else {
-			gameData = append(gameData, fmt.Sprintf("%d. **%s**  (%s) / %d分 / %s", cid.Value*15+1, g.Gamename, strings.Join(shokushu, ", "), g.Median, g.SellDay))
+			gameData = append(gameData, fmt.Sprintf("%d. **%s**  (%s) / %d分 / %s", cid.Value*10+i+1, g.Gamename, strings.Join(shokushu, ", "), g.Median, g.SellDay))
 		}
 	}
 
@@ -151,7 +143,7 @@ func ErogsFuzzySearchCreator(s *discordgo.Session, i *discordgo.InteractionCreat
 
 }
 
-func ErogsFuzzySearchMusic(s *discordgo.Session, i *discordgo.InteractionCreate, cid *CustomID) {
+func ErogsFuzzySearchMusic(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseDeferredChannelMessageWithSource,
 	})
@@ -163,13 +155,7 @@ func ErogsFuzzySearchMusic(s *discordgo.Session, i *discordgo.InteractionCreate,
 		return
 	}
 
-	opt, err := utils.GetOptions(i, "查詢優化選項")
-	if err != nil && errors.Is(err, kurohelpererrors.ErrOptionTranslateFail) {
-		utils.HandleError(err, s, i)
-		return
-	}
-
-	res, err = erogs.GetMusicByFuzzy(keyword, opt)
+	res, err = erogs.GetMusicByFuzzy(keyword)
 	if err != nil {
 		utils.HandleError(err, s, i)
 		return
@@ -246,7 +232,7 @@ func ErogsFuzzySearchMusic(s *discordgo.Session, i *discordgo.InteractionCreate,
 	utils.InteractionEmbedRespond(s, i, embed, nil, true)
 }
 
-func ErogsFuzzySearchGame(s *discordgo.Session, i *discordgo.InteractionCreate, cid *CustomID) {
+func ErogsFuzzySearchGame(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseDeferredChannelMessageWithSource,
 	})
@@ -260,13 +246,7 @@ func ErogsFuzzySearchGame(s *discordgo.Session, i *discordgo.InteractionCreate, 
 		return
 	}
 
-	opt, err := utils.GetOptions(i, "查詢優化選項")
-	if err != nil && errors.Is(err, kurohelpererrors.ErrOptionTranslateFail) {
-		utils.HandleError(err, s, i)
-		return
-	}
-
-	res, err = erogs.GetGameByFuzzy(keyword, opt)
+	res, err = erogs.GetGameByFuzzy(keyword)
 	if err != nil {
 		utils.HandleError(err, s, i)
 		return
@@ -435,4 +415,105 @@ func ErogsFuzzySearchGame(s *discordgo.Session, i *discordgo.InteractionCreate, 
 		},
 	}
 	utils.InteractionEmbedRespond(s, i, embed, nil, true)
+}
+
+func ErogsFuzzySearchBrand(s *discordgo.Session, i *discordgo.InteractionCreate, cid *CustomID) {
+	var res *erogs.FuzzySearchBrandResponse
+	var messageComponent []discordgo.MessageComponent
+	var hasMore bool
+	var count int
+
+	if cid == nil {
+		keyword, err := utils.GetOptions(i, "keyword")
+		if err != nil {
+			utils.HandleError(err, s, i)
+			return
+		}
+
+		res, err = erogs.GetBrandByFuzzy(keyword)
+		if err != nil {
+			utils.HandleError(err, s, i)
+			return
+		}
+
+		idStr := uuid.New().String()
+		cache.Set(idStr, *res)
+
+		// 根據遊戲評價排序
+		sort.Slice(res.GameList, func(i, j int) bool {
+			if res.GameList[i].SellDay == "2050-01-01" {
+				return false
+			} else if res.GameList[j].SellDay == "2050-01-01" {
+				return true
+			} else {
+				return res.GameList[i].SellDay > res.GameList[j].SellDay // 晚到早排序
+			}
+		})
+		// 計算筆數
+		count = len(res.GameList)
+
+		hasMore = pagination(&(res.GameList), 0, false)
+
+		if hasMore {
+			messageComponent = []discordgo.MessageComponent{utils.MakePageComponent("▶️", "查詢公司品牌(erogs)", idStr, 1)}
+		}
+	} else {
+		cacheValue, err := cache.Get(cid.ID)
+		if err != nil {
+			utils.HandleError(err, s, i)
+			return
+		}
+		resValue := cacheValue.(erogs.FuzzySearchBrandResponse)
+		res = &resValue
+		count = len(res.GameList)
+		hasMore = pagination(&(res.GameList), cid.Value, true)
+		if hasMore {
+			if cid.Value == 0 {
+				messageComponent = []discordgo.MessageComponent{utils.MakePageComponent("▶️", cid.CommandName, cid.ID, 1)}
+			} else {
+				messageComponent = []discordgo.MessageComponent{utils.MakePageComponent("◀️", cid.CommandName, cid.ID, cid.Value-1)}
+				messageComponent = append(messageComponent, utils.MakePageComponent("▶️", cid.CommandName, cid.ID, cid.Value+1))
+			}
+		} else {
+			messageComponent = []discordgo.MessageComponent{utils.MakePageComponent("◀️", cid.CommandName, cid.ID, cid.Value-1)}
+		}
+	}
+
+	actionsRow := utils.MakeActionsRow(messageComponent)
+
+	gameData := make([]string, 0, len(res.GameList))
+	for _, g := range res.GameList {
+		gameData = append(gameData, fmt.Sprintf("%s　%d(%d)　**%s**", g.SellDay, g.Median, g.Count2, g.GameName))
+	}
+
+	if res.Lost {
+		res.BrandName += " (解散)"
+	}
+	link := ""
+	if res.URL != "" {
+		link += fmt.Sprintf("[官網](%s) ", res.URL)
+	}
+	if res.Twitter != "" {
+		link += fmt.Sprintf("[Twitter](https://x.com/%s) ", res.Twitter)
+	}
+
+	embed := &discordgo.MessageEmbed{
+		Title:       fmt.Sprintf("%s (%d筆)", res.BrandName, count),
+		Color:       0xF8F8DF,
+		Description: link,
+		Fields: []*discordgo.MessageEmbedField{
+			{
+				Name:   "歷代作品(發售日排序)",
+				Value:  strings.Join(gameData, "\n"),
+				Inline: false,
+			},
+		},
+	}
+
+	if cid == nil {
+		utils.InteractionEmbedRespond(s, i, embed, actionsRow, true)
+	} else {
+		utils.EditEmbedRespond(s, i, embed, actionsRow)
+	}
+
 }

@@ -8,21 +8,37 @@ import (
 	"kurohelper/utils"
 )
 
-func buildFuzzySearchCreatorSQL(search string) (string, error) {
+func buildSearchStringSQL(search string) (string, error) {
 	search = strings.ReplaceAll(search, "'", "''")
-	result := "%"
-	if utils.IsAllEnglish(search) {
-		result += search + "%"
-	} else {
-		for _, r := range search {
-			result += string(r) + "%"
-		}
-	}
-
 	if strings.TrimSpace(search) == "" {
 		return "", kurohelpererrors.ErrSearchNoContent
 	}
 
+	result := "%"
+	for i, r := range search {
+		if utils.IsEnglish(r) {
+			if i != len([]rune(search))-1 && utils.IsEnglish([]rune(search)[i+1]) {
+				result += string(r)
+			} else {
+				result += string(r) + "%"
+			}
+		} else {
+			result += string(r) + "%"
+		}
+	}
+	return result, nil
+}
+
+func buildFuzzySearchCreatorSQL(searchTW string, searchJP string) (string, error) {
+	resultTW, err := buildSearchStringSQL(searchTW)
+	if err != nil {
+		return "", err
+	}
+
+	resultJP, err := buildSearchStringSQL(searchJP)
+	if err != nil {
+		return "", err
+	}
 	return fmt.Sprintf(`
 SELECT row_to_json(c)
 FROM (
@@ -63,26 +79,21 @@ FROM (
             ) AS game_data
         ) AS games
     FROM createrlist cr
-    WHERE cr.name ILIKE '%s'
+    WHERE cr.name ILIKE '%s' OR cr.name ILIKE '%s'
     LIMIT 1
-) AS c;`, result), nil
+) AS c;`, resultTW, resultJP), nil
 }
 
-func buildFuzzySearchMusicSQL(search string) (string, error) {
-	search = strings.ReplaceAll(search, "'", "''")
-	result := "%"
-	if utils.IsAllEnglish(search) {
-		result += search + "%"
-	} else {
-		for _, r := range search {
-			result += string(r) + "%"
-		}
+func buildFuzzySearchMusicSQL(searchTW string, searchJP string) (string, error) {
+	resultTW, err := buildSearchStringSQL(searchTW)
+	if err != nil {
+		return "", err
 	}
 
-	if strings.TrimSpace(search) == "" {
-		return "", kurohelpererrors.ErrSearchNoContent
+	resultJP, err := buildSearchStringSQL(searchJP)
+	if err != nil {
+		return "", err
 	}
-
 	return fmt.Sprintf(`
 SELECT row_to_json(t)
 FROM (
@@ -120,34 +131,29 @@ FROM (
     LEFT JOIN musicitemlist mi ON mi.id = mim.musicitem
     -- 評分
     LEFT JOIN usermusic_tokuten ut ON ut.music = m.id
-    WHERE m.name ILIKE '%s'
+    WHERE m.name ILIKE '%s' OR m.name ILIKE '%s'
     GROUP BY m.id, m.name, m.playtime, m.releasedate
     ORDER BY tokuten_count DESC NULLS LAST, avg_tokuten DESC NULLS LAST
     LIMIT 1
 ) t;
-`, result), nil
+`, resultTW, resultJP), nil
 }
 
-func buildFuzzySearchGameSQL(search string) (string, error) {
-	search = strings.ReplaceAll(search, "'", "''")
-	result := "%"
-	if utils.IsAllEnglish(search) {
-		result += search + "%"
-	} else {
-		for _, r := range search {
-			result += string(r) + "%"
-		}
+func buildFuzzySearchGameSQL(searchTW string, searchJP string) (string, error) {
+	resultTW, err := buildSearchStringSQL(searchTW)
+	if err != nil {
+		return "", err
 	}
 
-	if strings.TrimSpace(search) == "" {
-		return "", kurohelpererrors.ErrSearchNoContent
+	resultJP, err := buildSearchStringSQL(searchJP)
+	if err != nil {
+		return "", err
 	}
-
 	return fmt.Sprintf(`
 WITH filtered_games AS (
     SELECT *
     FROM gamelist
-    WHERE gamename ILIKE '%s'
+    WHERE gamename ILIKE '%s' OR gamename ILIKE '%s'
     ORDER BY count2 DESC NULLS LAST, median DESC NULLS LAST
     LIMIT 1
 )
@@ -193,5 +199,73 @@ FROM (
         LIMIT 1
     ) j ON TRUE
 ) t;
-`, result), nil
+`, resultTW, resultJP), nil
+}
+
+func buildFuzzySearchBrandSQL(searchTW string, searchJP string) (string, error) {
+	resultTW, err := buildSearchStringSQL(searchTW)
+	if err != nil {
+		return "", err
+	}
+
+	resultJP, err := buildSearchStringSQL(searchJP)
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf(`
+WITH single_brand AS (
+    SELECT
+        id,
+        brandname,
+        brandfurigana,
+        url,
+        kind,
+        lost,
+        directlink,
+        median,
+        twitter,
+        count2,
+        count_all,
+        average2,
+        stdev
+    FROM brandlist
+    WHERE brandname ILIKE '%s' OR brandname ILIKE '%s'
+    ORDER BY count2 DESC NULLS LAST, median DESC NULLS LAST
+    LIMIT 1
+)
+SELECT row_to_json(r)
+FROM (
+    SELECT 
+        A.id, 
+        A.brandname, 
+        A.brandfurigana, 
+        A.url, 
+        A.kind, 
+        A.lost, 
+        A.directlink, 
+        A.median, 
+        A.twitter, 
+        A.count2, 
+        A.count_all, 
+        A.average2, 
+        A.stdev,
+        (
+            SELECT json_agg(
+                json_build_object(
+                    'id', g.id,
+                    'gamename', g.gamename,
+                    'furigana', g.furigana,
+                    'sellday', g.sellday,
+                    'median', g.median,
+                    'stdev', g.stdev,
+                    'count2', g.count2,
+                    'vndb', g.vndb
+                ) ORDER BY g.sellday DESC
+            )
+            FROM gamelist g
+            WHERE g.brandname = A.id
+        ) AS gamelist
+    FROM single_brand A
+) r;
+`, resultTW, resultJP), nil
 }

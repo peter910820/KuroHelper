@@ -153,18 +153,6 @@ func erogsCommands() []*discordgo.ApplicationCommand {
 					Description: "關鍵字",
 					Required:    true,
 				},
-				{
-					Type:        discordgo.ApplicationCommandOptionString,
-					Name:        "查詢優化選項",
-					Description: "選擇查詢優化方式",
-					Required:    false,
-					Choices: []*discordgo.ApplicationCommandOptionChoice{
-						{
-							Name:  "不優化",
-							Value: "1",
-						},
-					},
-				},
 			},
 		},
 		{
@@ -176,18 +164,6 @@ func erogsCommands() []*discordgo.ApplicationCommand {
 					Name:        "keyword",
 					Description: "關鍵字",
 					Required:    true,
-				},
-				{
-					Type:        discordgo.ApplicationCommandOptionString,
-					Name:        "查詢優化選項",
-					Description: "選擇查詢優化方式",
-					Required:    false,
-					Choices: []*discordgo.ApplicationCommandOptionChoice{
-						{
-							Name:  "不優化",
-							Value: "1",
-						},
-					},
 				},
 			},
 		},
@@ -201,14 +177,26 @@ func erogsCommands() []*discordgo.ApplicationCommand {
 					Description: "關鍵字",
 					Required:    true,
 				},
+			},
+		},
+		{
+			Name:        "查詢公司品牌",
+			Description: "根據關鍵字查詢公司品牌資料",
+			Options: []*discordgo.ApplicationCommandOption{
 				{
 					Type:        discordgo.ApplicationCommandOptionString,
-					Name:        "查詢優化選項",
-					Description: "選擇查詢優化方式",
+					Name:        "keyword",
+					Description: "關鍵字",
+					Required:    true,
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "查詢資料庫選項",
+					Description: "選擇查詢的資料庫",
 					Required:    false,
 					Choices: []*discordgo.ApplicationCommandOptionChoice{
 						{
-							Name:  "不優化",
+							Name:  "VNDB",
 							Value: "1",
 						},
 					},

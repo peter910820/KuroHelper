@@ -5,11 +5,9 @@ import (
 	"fmt"
 )
 
-func GetMusicByFuzzy(search string, opt string) (*FuzzySearchMusicResponse, error) {
-	if opt == "" {
-		search = zhtwToJp(search)
-	}
-	sql, err := buildFuzzySearchMusicSQL(search)
+func GetMusicByFuzzy(search string) (*FuzzySearchMusicResponse, error) {
+	searchJP := zhtwToJp(search)
+	sql, err := buildFuzzySearchMusicSQL(search, searchJP)
 	if err != nil {
 		return nil, err
 	}

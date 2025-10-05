@@ -204,11 +204,6 @@ func VndbFuzzySearchBrand(s *discordgo.Session, i *discordgo.InteractionCreate, 
 
 	// 第一次查詢
 	if cid == nil {
-		// 長時間查詢
-		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-			Type: discordgo.InteractionResponseDeferredChannelMessageWithSource,
-		})
-
 		keyword, err := utils.GetOptions(i, "keyword")
 		if err != nil {
 			utils.HandleError(err, s, i)
@@ -232,7 +227,7 @@ func VndbFuzzySearchBrand(s *discordgo.Session, i *discordgo.InteractionCreate, 
 		hasMore = pagination(&(res.Vn.Results), 0, false)
 
 		if hasMore {
-			messageComponent = []discordgo.MessageComponent{utils.MakePageComponent("▶️", i.ApplicationCommandData().Name, idStr, 1)}
+			messageComponent = []discordgo.MessageComponent{utils.MakePageComponent("▶️", "查詢公司品牌(vndb)", idStr, 1)}
 		}
 	} else {
 		cacheValue, err := cache.Get(cid.ID)
