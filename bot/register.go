@@ -149,12 +149,6 @@ func erogsCommands() []*discordgo.ApplicationCommand {
 					Description: "關鍵字",
 					Required:    true,
 				},
-				{
-					Type:        discordgo.ApplicationCommandOptionString,
-					Name:        "查詢優化選項",
-					Description: "選擇查詢優化方式",
-					Required:    false,
-				},
 			},
 		},
 		{
@@ -167,12 +161,6 @@ func erogsCommands() []*discordgo.ApplicationCommand {
 					Description: "關鍵字",
 					Required:    true,
 				},
-				{
-					Type:        discordgo.ApplicationCommandOptionString,
-					Name:        "查詢優化選項",
-					Description: "選擇查詢優化方式",
-					Required:    false,
-				},
 			},
 		},
 		{
@@ -184,12 +172,6 @@ func erogsCommands() []*discordgo.ApplicationCommand {
 					Name:        "keyword",
 					Description: "關鍵字",
 					Required:    true,
-				},
-				{
-					Type:        discordgo.ApplicationCommandOptionString,
-					Name:        "查詢優化選項",
-					Description: "選擇查詢優化方式",
-					Required:    false,
 				},
 			},
 		},
