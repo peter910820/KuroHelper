@@ -48,9 +48,10 @@ func GetGuideURL(keyword string) string {
 		}
 	}
 
-	if targetURL != "" {
+	if !strings.HasPrefix(targetURL, "https://") && targetURL != "" {
 		targetURL = "https://seiya-saiga.com/game/" + targetURL
 	}
+
 	return targetURL
 }
 
