@@ -55,7 +55,7 @@ FROM (
                     g.gamename,
                     g.sellday,
                     g.median,
-                    g.count_all,
+                    g.count2,
                     (
                         SELECT json_agg(
                             json_build_object(
@@ -75,7 +75,7 @@ FROM (
                     WHERE s3.creater = cr.id
                       AND s3.game = g.id
                 )
-                GROUP BY g.id, g.gamename, g.sellday, g.median, g.count_all
+                GROUP BY g.id, g.gamename, g.sellday, g.median, g.count2
             ) AS game_data
         ) AS games
     FROM createrlist cr
