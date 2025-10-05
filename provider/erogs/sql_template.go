@@ -15,10 +15,14 @@ func buildSearchStringSQL(search string) (string, error) {
 	}
 
 	result := "%"
-	if utils.IsAllEnglish(search) {
-		result += search + "%"
-	} else {
-		for _, r := range search {
+	for i, r := range search {
+		if utils.IsEnglish(r) {
+			if i != len([]rune(search))-1 && utils.IsEnglish([]rune(search)[i+1]) {
+				result += string(r)
+			} else {
+				result += string(r) + "%"
+			}
+		} else {
 			result += string(r) + "%"
 		}
 	}
