@@ -15,9 +15,10 @@ func buildSearchStringSQL(search string) (string, error) {
 	}
 
 	result := "%"
-	for i, r := range search {
-		if utils.IsEnglish(r) {
-			if i != len([]rune(search))-1 && utils.IsEnglish([]rune(search)[i+1]) {
+	searchRune := []rune(search)
+	for i, r := range searchRune {
+		if utils.IsEnglish(r) && i < len(searchRune) {
+			if utils.IsEnglish(searchRune[i+1]) {
 				result += string(r)
 			} else {
 				result += string(r) + "%"
@@ -163,6 +164,7 @@ FROM (
            b.brandname,
            g.gamename,
            g.sellday,
+           g.model,
            COALESCE(g.median::text, '無') AS median,
            COALESCE(g.count2::text, '無') AS count2,
            COALESCE(g.total_play_time_median::text, '無') AS total_play_time_median,
