@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-func GetBrandBYFuzzy(search string, opt string) (*SearchBrandResponse, error) {
+func GetBrandByFuzzy(search string) (*FuzzySearchBrandResponse, error) {
 	sql, err := buildSearchBrandSQL(search)
 	if err != nil {
 		return nil, err
@@ -16,7 +16,7 @@ func GetBrandBYFuzzy(search string, opt string) (*SearchBrandResponse, error) {
 		return nil, err
 	}
 
-	var res SearchBrandResponse
+	var res FuzzySearchBrandResponse
 	err = json.Unmarshal([]byte(jsonText), &res)
 	if err != nil {
 		fmt.Println(jsonText)
