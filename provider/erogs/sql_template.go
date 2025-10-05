@@ -15,9 +15,10 @@ func buildSearchStringSQL(search string) (string, error) {
 	}
 
 	result := "%"
-	for i, r := range search {
-		if utils.IsEnglish(r) {
-			if i != len([]rune(search))-1 && utils.IsEnglish([]rune(search)[i+1]) {
+	searchRune := []rune(search)
+	for i, r := range searchRune {
+		if utils.IsEnglish(r) && i < len(searchRune) {
+			if utils.IsEnglish(searchRune[i+1]) {
 				result += string(r)
 			} else {
 				result += string(r) + "%"
@@ -55,7 +56,7 @@ FROM (
                     g.gamename,
                     g.sellday,
                     g.median,
-                    g.count_all,
+                    g.count2,
                     (
                         SELECT json_agg(
                             json_build_object(
@@ -75,7 +76,7 @@ FROM (
                     WHERE s3.creater = cr.id
                       AND s3.game = g.id
                 )
-                GROUP BY g.id, g.gamename, g.sellday, g.median, g.count_all
+                GROUP BY g.id, g.gamename, g.sellday, g.median, g.count2
             ) AS game_data
         ) AS games
     FROM createrlist cr
@@ -163,6 +164,7 @@ FROM (
            b.brandname,
            g.gamename,
            g.sellday,
+           g.model,
            COALESCE(g.median::text, '無') AS median,
            COALESCE(g.count2::text, '無') AS count2,
            COALESCE(g.total_play_time_median::text, '無') AS total_play_time_median,
