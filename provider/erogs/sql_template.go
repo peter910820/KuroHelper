@@ -8,8 +8,12 @@ import (
 	"kurohelper/utils"
 )
 
-func buildFuzzySearchCreatorSQL(search string) (string, error) {
+func buildSearchStringSQL(search string) (string, error) {
 	search = strings.ReplaceAll(search, "'", "''")
+	if strings.TrimSpace(search) == "" {
+		return "", kurohelpererrors.ErrSearchNoContent
+	}
+
 	result := "%"
 	if utils.IsAllEnglish(search) {
 		result += search + "%"
@@ -18,9 +22,18 @@ func buildFuzzySearchCreatorSQL(search string) (string, error) {
 			result += string(r) + "%"
 		}
 	}
+	return result, nil
+}
 
-	if strings.TrimSpace(search) == "" {
-		return "", kurohelpererrors.ErrSearchNoContent
+func buildFuzzySearchCreatorSQL(searchTW string, searchJP string) (string, error) {
+	resultTW, err := buildSearchStringSQL(searchTW)
+	if err != nil {
+		return "", err
+	}
+
+	resultJP, err := buildSearchStringSQL(searchJP)
+	if err != nil {
+		return "", err
 	}
 
 	return fmt.Sprintf(`
@@ -63,24 +76,20 @@ FROM (
             ) AS game_data
         ) AS games
     FROM createrlist cr
-    WHERE cr.name ILIKE '%s'
+    WHERE cr.name ILIKE '%s' OR cr.name ILIKE '%s'
     LIMIT 1
-) AS c;`, result), nil
+) AS c;`, resultTW, resultJP), nil
 }
 
-func buildFuzzySearchMusicSQL(search string) (string, error) {
-	search = strings.ReplaceAll(search, "'", "''")
-	result := "%"
-	if utils.IsAllEnglish(search) {
-		result += search + "%"
-	} else {
-		for _, r := range search {
-			result += string(r) + "%"
-		}
+func buildFuzzySearchMusicSQL(searchTW string, searchJP string) (string, error) {
+	resultTW, err := buildSearchStringSQL(searchTW)
+	if err != nil {
+		return "", err
 	}
 
-	if strings.TrimSpace(search) == "" {
-		return "", kurohelpererrors.ErrSearchNoContent
+	resultJP, err := buildSearchStringSQL(searchJP)
+	if err != nil {
+		return "", err
 	}
 
 	return fmt.Sprintf(`
@@ -120,34 +129,30 @@ FROM (
     LEFT JOIN musicitemlist mi ON mi.id = mim.musicitem
     -- 評分
     LEFT JOIN usermusic_tokuten ut ON ut.music = m.id
-    WHERE m.name ILIKE '%s'
+    WHERE m.name ILIKE '%s' OR m.name ILIKE '%s'
     GROUP BY m.id, m.name, m.playtime, m.releasedate
     ORDER BY tokuten_count DESC NULLS LAST, avg_tokuten DESC NULLS LAST
     LIMIT 1
 ) t;
-`, result), nil
+`, resultTW, resultJP), nil
 }
 
-func buildFuzzySearchGameSQL(search string) (string, error) {
-	search = strings.ReplaceAll(search, "'", "''")
-	result := "%"
-	if utils.IsAllEnglish(search) {
-		result += search + "%"
-	} else {
-		for _, r := range search {
-			result += string(r) + "%"
-		}
+func buildFuzzySearchGameSQL(searchTW string, searchJP string) (string, error) {
+	resultTW, err := buildSearchStringSQL(searchTW)
+	if err != nil {
+		return "", err
 	}
 
-	if strings.TrimSpace(search) == "" {
-		return "", kurohelpererrors.ErrSearchNoContent
+	resultJP, err := buildSearchStringSQL(searchJP)
+	if err != nil {
+		return "", err
 	}
 
 	return fmt.Sprintf(`
 WITH filtered_games AS (
     SELECT *
     FROM gamelist
-    WHERE gamename ILIKE '%s'
+    WHERE gamename ILIKE '%s' OR gamename ILIKE '%s'
     ORDER BY count2 DESC NULLS LAST, median DESC NULLS LAST
     LIMIT 1
 )
@@ -193,7 +198,7 @@ FROM (
         LIMIT 1
     ) j ON TRUE
 ) t;
-`, result), nil
+`, resultTW, resultJP), nil
 }
 
 func buildSearchBrandSQL(search string) (string, error) {

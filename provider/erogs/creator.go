@@ -4,11 +4,9 @@ import (
 	"encoding/json"
 )
 
-func GetCreatorByFuzzy(search string, opt string) (*FuzzySearchCreatorResponse, error) {
-	if opt == "" {
-		search = zhtwToJp(search)
-	}
-	sql, err := buildFuzzySearchCreatorSQL(search)
+func GetCreatorByFuzzy(search string) (*FuzzySearchCreatorResponse, error) {
+	searchJP := zhtwToJp(search)
+	sql, err := buildFuzzySearchCreatorSQL(search, searchJP)
 	if err != nil {
 		return nil, err
 	}

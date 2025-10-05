@@ -5,11 +5,9 @@ import (
 	"fmt"
 )
 
-func GetGameByFuzzy(search string, opt string) (*FuzzySearchGameResponse, error) {
-	if opt == "" {
-		search = zhtwToJp(search)
-	}
-	sql, err := buildFuzzySearchGameSQL(search)
+func GetGameByFuzzy(search string) (*FuzzySearchGameResponse, error) {
+	searchJP := zhtwToJp(search)
+	sql, err := buildFuzzySearchGameSQL(search, searchJP)
 	if err != nil {
 		return nil, err
 	}
