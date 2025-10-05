@@ -35,7 +35,6 @@ func buildFuzzySearchCreatorSQL(searchTW string, searchJP string) (string, error
 	if err != nil {
 		return "", err
 	}
-
 	return fmt.Sprintf(`
 SELECT row_to_json(c)
 FROM (
@@ -91,7 +90,6 @@ func buildFuzzySearchMusicSQL(searchTW string, searchJP string) (string, error) 
 	if err != nil {
 		return "", err
 	}
-
 	return fmt.Sprintf(`
 SELECT row_to_json(t)
 FROM (
@@ -147,7 +145,6 @@ func buildFuzzySearchGameSQL(searchTW string, searchJP string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-
 	return fmt.Sprintf(`
 WITH filtered_games AS (
     SELECT *
@@ -201,21 +198,16 @@ FROM (
 `, resultTW, resultJP), nil
 }
 
-func buildSearchBrandSQL(search string) (string, error) {
-	search = strings.ReplaceAll(search, "'", "''")
-	result := "%"
-	if utils.IsAllEnglish(search) {
-		result += search + "%"
-	} else {
-		for _, r := range search {
-			result += string(r) + "%"
-		}
+func buildFuzzySearchBrandSQL(searchTW string, searchJP string) (string, error) {
+	resultTW, err := buildSearchStringSQL(searchTW)
+	if err != nil {
+		return "", err
 	}
 
-	if strings.TrimSpace(search) == "" {
-		return "", kurohelpererrors.ErrSearchNoContent
+	resultJP, err := buildSearchStringSQL(searchJP)
+	if err != nil {
+		return "", err
 	}
-
 	return fmt.Sprintf(`
 WITH single_brand AS (
     SELECT
@@ -233,7 +225,7 @@ WITH single_brand AS (
         average2,
         stdev
     FROM brandlist
-    WHERE brandname ILIKE '%s'
+    WHERE brandname ILIKE '%s' OR brandname ILIKE '%s'
     ORDER BY count2 DESC NULLS LAST, median DESC NULLS LAST
     LIMIT 1
 )
@@ -271,5 +263,5 @@ FROM (
         ) AS gamelist
     FROM single_brand A
 ) r;
-`, result), nil
+`, resultTW, resultJP), nil
 }

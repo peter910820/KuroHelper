@@ -6,7 +6,8 @@ import (
 )
 
 func GetBrandByFuzzy(search string) (*FuzzySearchBrandResponse, error) {
-	sql, err := buildSearchBrandSQL(search)
+	searchJP := zhtwToJp(search)
+	sql, err := buildFuzzySearchBrandSQL(search, searchJP)
 	if err != nil {
 		return nil, err
 	}
