@@ -40,3 +40,19 @@ func FuzzySearchGame(s *discordgo.Session, i *discordgo.InteractionCreate, cid *
 		ErogsFuzzySearchGameList(s, i, cid)
 	}
 }
+
+func FuzzySearchMusic(s *discordgo.Session, i *discordgo.InteractionCreate, cid *CustomID) {
+	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseDeferredChannelMessageWithSource,
+	})
+	opt, err := utils.GetOptions(i, "列表搜尋")
+	if err != nil && errors.Is(err, kurohelpererrors.ErrOptionTranslateFail) {
+		utils.HandleError(err, s, i)
+		return
+	}
+	if opt == "" {
+		ErogsFuzzySearchMusic(s, i)
+	} else {
+		ErogsFuzzySearchMusicList(s, i, cid)
+	}
+}

@@ -102,7 +102,7 @@ type BrandGame struct {
 }
 
 type FuzzySearchListResponse struct {
-	ID    int    `json:"id"`
-	Name  string `json:"name"`
-	Model string `json:"model"`
+	ID       int    `json:"id"`
+	Name     string `json:"name"`
+	Category string `json:"category"`
 }

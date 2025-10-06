@@ -32,7 +32,7 @@ func onInteractionApplicationCommand(s *discordgo.Session, i *discordgo.Interact
 	case "查詢創作者":
 		go handlers.ErogsFuzzySearchCreator(s, i, nil)
 	case "查詢音樂":
-		go handlers.ErogsFuzzySearchMusic(s, i)
+		go handlers.FuzzySearchMusic(s, i, nil)
 	case "查詢遊戲":
 		go handlers.FuzzySearchGame(s, i, nil)
 	case "隨機遊戲":
@@ -65,5 +65,7 @@ func onInteractionMessageComponent(s *discordgo.Session, i *discordgo.Interactio
 		go handlers.ErogsFuzzySearchCreator(s, i, &cidStruct)
 	case "查詢遊戲列表":
 		go handlers.ErogsFuzzySearchGameList(s, i, &cidStruct)
+	case "查詢音樂列表":
+		go handlers.ErogsFuzzySearchMusicList(s, i, &cidStruct)
 	}
 }
