@@ -35,6 +35,8 @@ func Init() {
 	// init ZhtwToJp var
 	cache.InitZhtwToJp()
 
+	cache.InitSeiyaCorrespond()
+
 	// erogs rate limit init
 	erogs.InitRateLimit()
 
