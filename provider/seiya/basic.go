@@ -24,10 +24,14 @@ type (
 )
 
 var rightWeightMap = map[string]struct{}{
-	"full":  {},
-	"voice": {},
-	"ver":   {},
-	"ver.":  {},
+	"full":    {},
+	"voice":   {},
+	"ver":     {},
+	"the":     {},
+	"edition": {},
+	"hd":      {},
+	"remake":  {},
+	"plus":    {},
 }
 
 var (
@@ -46,14 +50,17 @@ func GetGuideURL(keyword string) string {
 		nameLower := strings.ToLower(seiya.Name)
 		leftWeight := 0
 		rightWeight := 0
-		isRight := false
-		_, ok := rightWeightMap[nameLower]
-		if ok {
-			isRight = true
-		}
 		for _, token := range tokens {
+			token = strings.Map(func(r rune) rune {
+				switch r {
+				case '-', '!', '！', '.', '～':
+					return -1 // delete rune
+				}
+				return r
+			}, token)
 			if strings.Contains(nameLower, token) {
-				if isRight {
+				_, ok := rightWeightMap[token]
+				if ok {
 					rightWeight++
 				} else {
 					leftWeight++
