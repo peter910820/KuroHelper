@@ -2,15 +2,32 @@ package seiya
 
 import (
 	"bytes"
+	"sort"
 	"strings"
 	"sync"
 
 	"github.com/PuerkitoBio/goquery"
 )
 
-type game struct {
-	Name string
-	URL  string
+type (
+	game struct {
+		Name string
+		URL  string
+	}
+
+	candidate struct {
+		Name  string
+		URL   string
+		Left  int
+		Right int
+	}
+)
+
+var rightWeightMap = map[string]struct{}{
+	"full":  {},
+	"voice": {},
+	"ver":   {},
+	"ver.":  {},
 }
 
 var (
@@ -20,35 +37,53 @@ var (
 
 func GetGuideURL(keyword string) string {
 	tokens := strings.Fields(strings.ToLower(keyword))
-	weight := make(map[string]int)
+	var candidateGames []candidate
 
 	seiyaDataMu.RLock()
 	defer seiyaDataMu.RUnlock()
 
 	for _, seiya := range seiyaData {
 		nameLower := strings.ToLower(seiya.Name)
-		score := 0
+		leftWeight := 0
+		rightWeight := 0
+		isRight := false
+		_, ok := rightWeightMap[nameLower]
+		if ok {
+			isRight = true
+		}
 		for _, token := range tokens {
 			if strings.Contains(nameLower, token) {
-				score++
+				if isRight {
+					rightWeight++
+				} else {
+					leftWeight++
+				}
 			}
 		}
-		if score > 0 {
-			weight[seiya.URL] = score
+		if leftWeight > 0 {
+			candidateGames = append(candidateGames, candidate{
+				Name:  seiya.Name,
+				URL:   seiya.URL,
+				Left:  leftWeight,
+				Right: rightWeight,
+			})
 		}
+	}
+
+	var targetURL string
+	if len(candidateGames) == 0 {
+		return targetURL
 	}
 
 	// 選出最大權重
-	var targetURL string
-	maxValue := -1
-	for k, v := range weight {
-		if v > maxValue {
-			targetURL = k
-			maxValue = v
+	sort.Slice(candidateGames, func(i, j int) bool {
+		if candidateGames[i].Left != candidateGames[j].Left {
+			return candidateGames[i].Left > candidateGames[j].Left
 		}
-	}
+		return candidateGames[i].Right > candidateGames[j].Right
+	})
 
-	if !strings.HasPrefix(targetURL, "https://") && targetURL != "" {
+	if !strings.HasPrefix(candidateGames[0].URL, "https://") && strings.TrimSpace(candidateGames[0].URL) != "" {
 		targetURL = "https://seiya-saiga.com/game/" + targetURL
 	}
 
