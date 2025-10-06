@@ -25,16 +25,17 @@ type (
 )
 
 var rightWeightMap = map[string]struct{}{
-	"full":    {},
-	"voice":   {},
-	"ver":     {},
-	"the":     {},
-	"edition": {},
-	"hd":      {},
-	"remake":  {},
-	"plus":    {},
-	"of":      {},
-	"or":      {},
+	"full":     {},
+	"voice":    {},
+	"ver":      {},
+	"the":      {},
+	"edition":  {},
+	"hd":       {},
+	"remake":   {},
+	"plus":     {},
+	"of":       {},
+	"or":       {},
+	"infinity": {},
 }
 
 var (
