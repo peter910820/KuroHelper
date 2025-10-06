@@ -7,7 +7,6 @@ import (
 	"sync"
 
 	"github.com/PuerkitoBio/goquery"
-	"github.com/sirupsen/logrus"
 )
 
 type (
@@ -33,6 +32,8 @@ var rightWeightMap = map[string]struct{}{
 	"hd":      {},
 	"remake":  {},
 	"plus":    {},
+	"of":      {},
+	"or":      {},
 }
 
 var (
@@ -52,7 +53,6 @@ func GetGuideURL(keyword string) string {
 		leftWeight := 0
 		rightWeight := 0
 		for _, token := range tokens {
-			logrus.Debug(token + "/before")
 			token = strings.Map(func(r rune) rune {
 				switch r {
 				case '-', '!', '！', '.', '～':
@@ -60,7 +60,6 @@ func GetGuideURL(keyword string) string {
 				}
 				return r
 			}, token)
-			logrus.Debug(token + "/after")
 			if strings.Contains(nameLower, token) {
 				_, ok := rightWeightMap[token]
 				if ok {
