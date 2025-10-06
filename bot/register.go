@@ -177,6 +177,18 @@ func erogsCommands() []*discordgo.ApplicationCommand {
 					Description: "關鍵字",
 					Required:    true,
 				},
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "列表搜尋",
+					Description: "是否啟用列表搜尋",
+					Required:    false,
+					Choices: []*discordgo.ApplicationCommandOptionChoice{
+						{
+							Name:  "啟用",
+							Value: "1",
+						},
+					},
+				},
 			},
 		},
 		{

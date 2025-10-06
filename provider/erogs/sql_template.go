@@ -204,6 +204,30 @@ FROM (
 `, resultTW, resultJP), nil
 }
 
+func buildFuzzySearchGameListSQL(searchTW string, searchJP string) (string, error) {
+	resultTW, err := buildSearchStringSQL(searchTW)
+	if err != nil {
+		return "", err
+	}
+
+	resultJP, err := buildSearchStringSQL(searchJP)
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf(`
+SELECT json_agg(row_to_json(t))
+FROM (
+    SELECT g.id,
+           g.gamename AS name,
+           g.model
+    FROM gamelist g
+    WHERE gamename ILIKE '%s' OR gamename ILIKE '%s'
+    ORDER BY count2 DESC NULLS LAST, median DESC NULLS LAST
+    LIMIT 200
+) t;
+`, resultTW, resultJP), nil
+}
+
 func buildFuzzySearchBrandSQL(searchTW string, searchJP string) (string, error) {
 	resultTW, err := buildSearchStringSQL(searchTW)
 	if err != nil {

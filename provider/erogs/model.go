@@ -100,3 +100,9 @@ type BrandGame struct {
 	Count2   int    `json:"count2"` // 分數計算的樣本數
 	VNDB     string `json:"vndb"`   // *string
 }
+
+type FuzzySearchListResponse struct {
+	ID    int    `json:"id"`
+	Name  string `json:"name"`
+	Model string `json:"model"`
+}
