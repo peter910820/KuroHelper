@@ -163,7 +163,7 @@ func ErogsFuzzySearchMusic(s *discordgo.Session, i *discordgo.InteractionCreate)
 
 	musicData := make([]string, 0, len(res.GameCategories))
 	for _, m := range res.GameCategories {
-		musicData = append(musicData, m.GameName+" ("+m.Category+")")
+		musicData = append(musicData, m.GameName+" ("+m.GameModel+")"+" ("+m.Category+")")
 	}
 
 	singerList := strings.Split(res.Singers, ",")
@@ -339,6 +339,10 @@ func ErogsFuzzySearchGame(s *discordgo.Session, i *discordgo.InteractionCreate) 
 	if seiyaURL != "" {
 		rank += "  " + fmt.Sprintf("[誠也攻略](%s)", seiyaURL)
 	}
+	erogsURL := "https://erogamescape.dyndns.org/~ap2/ero/toukei_kaiseki/game.php?game=" + fmt.Sprint(res.ID)
+	rank += "  " + fmt.Sprintf("[批評空間](%s)", erogsURL)
+	vndbURL := "https://vndb.org/" + res.VndbId
+	rank += "  " + fmt.Sprintf("[VNDB](%s)", vndbURL)
 
 	embed := &discordgo.MessageEmbed{
 		Author: &discordgo.MessageEmbedAuthor{
@@ -397,7 +401,12 @@ func ErogsFuzzySearchGame(s *discordgo.Session, i *discordgo.InteractionCreate) 
 			{
 				Name:   "開始理解遊戲樂趣時數",
 				Value:  res.TimeBeforeUnderstandingFunMedian,
-				Inline: false,
+				Inline: true,
+			},
+			{
+				Name:   "發行機種",
+				Value:  res.Model,
+				Inline: true,
 			},
 			{
 				Name:   "類型",
@@ -483,7 +492,7 @@ func ErogsFuzzySearchBrand(s *discordgo.Session, i *discordgo.InteractionCreate,
 
 	gameData := make([]string, 0, len(res.GameList))
 	for _, g := range res.GameList {
-		gameData = append(gameData, fmt.Sprintf("%s　%d(%d)　**%s**", g.SellDay, g.Median, g.Count2, g.GameName))
+		gameData = append(gameData, fmt.Sprintf("%s　%d(%d)　**%s** (%s)", g.SellDay, g.Median, g.Count2, g.GameName, g.Model))
 	}
 
 	if res.Lost {

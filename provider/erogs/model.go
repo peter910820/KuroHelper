@@ -39,8 +39,9 @@ type FuzzySearchMusicResponse struct {
 	Album          string         `json:"album_name"`
 }
 type GameCategory struct {
-	GameName string `json:"game_name"`
-	Category string `json:"category"`
+	GameName  string `json:"game_name"`
+	GameModel string `json:"game_model"`
+	Category  string `json:"category"`
 }
 
 type FuzzySearchGameResponse struct {
@@ -48,6 +49,7 @@ type FuzzySearchGameResponse struct {
 	BrandName                        string           `json:"brandname"`
 	Gamename                         string           `json:"gamename"`
 	SellDay                          string           `json:"sellday"`
+	Model                            string           `json:"model"`
 	Median                           string           `json:"median"`
 	TokutenCount                     string           `json:"count2"`
 	TotalPlayTimeMedian              string           `json:"total_play_time_median"`
@@ -92,6 +94,7 @@ type BrandGame struct {
 	GameName string `json:"gamename"`
 	Furigana string `json:"furigana"`
 	SellDay  string `json:"sellday"`
+	Model    string `json:"model"`
 	Median   int    `json:"median"` // 分數中位數(一天更新一次)
 	Stdev    int    `json:"stdev"`  // 分數標準偏差值(一天更新一次)
 	Count2   int    `json:"count2"` // 分數計算的樣本數
