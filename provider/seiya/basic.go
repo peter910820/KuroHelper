@@ -2,6 +2,7 @@ package seiya
 
 import (
 	"bytes"
+	"kurohelper/cache"
 	"sort"
 	"strings"
 	"sync"
@@ -42,6 +43,12 @@ var (
 )
 
 func GetGuideURL(keyword string) string {
+	// 優先抓建檔的
+	correspondURL, ok := cache.SeiyaCorrespond[keyword]
+	if ok {
+		return correspondURL
+	}
+
 	tokens := strings.Fields(strings.ToLower(keyword))
 	var candidateGames []candidate
 
