@@ -21,7 +21,8 @@ var (
 	commonCache   = make(map[string]*Cache)
 	commonCacheMu sync.RWMutex
 
-	ZhtwToJp map[rune]rune
+	ZhtwToJp        map[rune]rune
+	SeiyaCorrespond map[string]string
 )
 
 func Set(key string, value any) {
@@ -71,5 +72,18 @@ func InitZhtwToJp() {
 		if len(keyRunes) == 1 && len(valRunes) == 1 {
 			ZhtwToJp[keyRunes[0]] = valRunes[0]
 		}
+	}
+}
+
+func InitSeiyaCorrespond() {
+	var entries []database.SeiyaCorrespond
+	if err := database.Dbs[os.Getenv("DB_NAME")].Find(&entries).Error; err != nil {
+		logrus.Fatal(err)
+	}
+
+	// 轉換
+	SeiyaCorrespond = make(map[string]string, len(entries))
+	for _, e := range entries {
+		SeiyaCorrespond[e.GameName] = e.SeiyaURL
 	}
 }

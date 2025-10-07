@@ -18,6 +18,7 @@ func Migration(dbName string, db *gorm.DB) {
 	switch dbName {
 	case os.Getenv("DB_NAME"):
 		db.AutoMigrate(&ZhtwToJp{})
+		db.AutoMigrate(&SeiyaCorrespond{})
 	default:
 		logrus.Fatal("error in migration function")
 	}
