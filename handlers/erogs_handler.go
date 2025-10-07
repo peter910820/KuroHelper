@@ -505,9 +505,14 @@ func ErogsFuzzySearchGame(s *discordgo.Session, i *discordgo.InteractionCreate) 
 	}
 	erogsURL := "https://erogamescape.dyndns.org/~ap2/ero/toukei_kaiseki/game.php?game=" + fmt.Sprint(res.ID)
 	rank += "  " + fmt.Sprintf("[批評空間](%s)", erogsURL)
-	vndbURL := "https://vndb.org/" + res.VndbId
-	rank += "  " + fmt.Sprintf("[VNDB](%s)", vndbURL)
-
+	if res.VndbId != "" {
+		vndbURL := "https://vndb.org/" + res.VndbId
+		rank += "  " + fmt.Sprintf("[VNDB](%s)", vndbURL)
+	}
+	vndbData := "無"
+	if vndbVotecount != 0 {
+		vndbData = fmt.Sprintf("%.1f/%d", vndbRating, vndbVotecount)
+	}
 	embed := &discordgo.MessageEmbed{
 		Author: &discordgo.MessageEmbedAuthor{
 			Name: res.BrandName,
@@ -554,7 +559,7 @@ func ErogsFuzzySearchGame(s *discordgo.Session, i *discordgo.InteractionCreate) 
 			},
 			{
 				Name:   "vndb分數/樣本數",
-				Value:  fmt.Sprintf("%.1f/%d", vndbRating, vndbVotecount),
+				Value:  vndbData,
 				Inline: true,
 			},
 			{
