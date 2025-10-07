@@ -2,7 +2,9 @@ package handlers
 
 import (
 	"fmt"
+	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/bwmarrin/discordgo"
@@ -33,8 +35,8 @@ func ErogsFuzzySearchCreator(s *discordgo.Session, i *discordgo.InteractionCreat
 			utils.HandleError(err, s, i)
 			return
 		}
-
-		res, err = erogs.GetCreatorByFuzzy(keyword)
+		idSearch, _ := regexp.MatchString(`^e\d+$`, keyword)
+		res, err = erogs.GetCreatorByFuzzy(keyword, idSearch)
 		if err != nil {
 			utils.HandleError(err, s, i)
 			return
@@ -143,6 +145,86 @@ func ErogsFuzzySearchCreator(s *discordgo.Session, i *discordgo.InteractionCreat
 
 }
 
+func ErogsFuzzySearchCreatorList(s *discordgo.Session, i *discordgo.InteractionCreate, cid *CustomID) {
+	var res *[]erogs.FuzzySearchListResponse
+	var messageComponent []discordgo.MessageComponent
+	var hasMore bool
+	var count int
+	if cid == nil {
+		keyword, err := utils.GetOptions(i, "keyword")
+		if err != nil {
+			utils.HandleError(err, s, i)
+			return
+		}
+
+		res, err = erogs.GetCreatorListByFuzzy(keyword)
+		if err != nil {
+			utils.HandleError(err, s, i)
+			return
+		}
+
+		idStr := uuid.New().String()
+		cache.Set(idStr, *res)
+
+		// 計算筆數
+		count = len(*res)
+
+		hasMore = pagination(res, 0, false)
+
+		if hasMore {
+			messageComponent = []discordgo.MessageComponent{utils.MakePageComponent("▶️", "查詢創作者列表", idStr, 1)}
+		}
+	} else {
+		cacheValue, err := cache.Get(cid.ID)
+		if err != nil {
+			utils.HandleError(err, s, i)
+			return
+		}
+		resValue := cacheValue.([]erogs.FuzzySearchListResponse)
+		res = &resValue
+
+		// 計算筆數
+		count = len(*res)
+
+		// 資料分頁
+		hasMore = pagination(res, cid.Value, true)
+		if hasMore {
+			if cid.Value == 0 {
+				messageComponent = []discordgo.MessageComponent{utils.MakePageComponent("▶️", cid.CommandName, cid.ID, 1)}
+			} else {
+				messageComponent = []discordgo.MessageComponent{utils.MakePageComponent("◀️", cid.CommandName, cid.ID, cid.Value-1)}
+				messageComponent = append(messageComponent, utils.MakePageComponent("▶️", cid.CommandName, cid.ID, cid.Value+1))
+			}
+		} else {
+			messageComponent = []discordgo.MessageComponent{utils.MakePageComponent("◀️", cid.CommandName, cid.ID, cid.Value-1)}
+		}
+	}
+	actionsRow := utils.MakeActionsRow(messageComponent)
+
+	listData := make([]string, 0, len(*res))
+	for _, r := range *res {
+		listData = append(listData, fmt.Sprintf("e%-5s　%s", strconv.Itoa(r.ID), r.Name))
+	}
+	embed := &discordgo.MessageEmbed{
+		Title: fmt.Sprintf("創作者列表搜尋 (%d筆)", count),
+		Color: 0xF8F8DF,
+		Fields: []*discordgo.MessageEmbedField{
+			{
+				Name:   "ID/名稱",
+				Value:  strings.Join(listData, "\n"),
+				Inline: false,
+			},
+		},
+	}
+
+	if cid == nil {
+		utils.InteractionEmbedRespond(s, i, embed, actionsRow, true)
+	} else {
+		utils.EditEmbedRespond(s, i, embed, actionsRow)
+	}
+
+}
+
 func ErogsFuzzySearchMusic(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseDeferredChannelMessageWithSource,
@@ -154,8 +236,8 @@ func ErogsFuzzySearchMusic(s *discordgo.Session, i *discordgo.InteractionCreate)
 		utils.HandleError(err, s, i)
 		return
 	}
-
-	res, err = erogs.GetMusicByFuzzy(keyword)
+	idSearch, _ := regexp.MatchString(`^e\d+$`, keyword)
+	res, err = erogs.GetMusicByFuzzy(keyword, idSearch)
 	if err != nil {
 		utils.HandleError(err, s, i)
 		return
@@ -232,6 +314,87 @@ func ErogsFuzzySearchMusic(s *discordgo.Session, i *discordgo.InteractionCreate)
 	utils.InteractionEmbedRespond(s, i, embed, nil, true)
 }
 
+func ErogsFuzzySearchMusicList(s *discordgo.Session, i *discordgo.InteractionCreate, cid *CustomID) {
+	var res *[]erogs.FuzzySearchListResponse
+	var messageComponent []discordgo.MessageComponent
+	var hasMore bool
+	var count int
+	if cid == nil {
+		keyword, err := utils.GetOptions(i, "keyword")
+		if err != nil {
+			utils.HandleError(err, s, i)
+			return
+		}
+
+		res, err = erogs.GetMusicListByFuzzy(keyword)
+		if err != nil {
+			utils.HandleError(err, s, i)
+			return
+		}
+
+		idStr := uuid.New().String()
+		cache.Set(idStr, *res)
+
+		// 計算筆數
+		count = len(*res)
+
+		hasMore = pagination(res, 0, false)
+
+		if hasMore {
+			messageComponent = []discordgo.MessageComponent{utils.MakePageComponent("▶️", "查詢音樂列表", idStr, 1)}
+		}
+	} else {
+		cacheValue, err := cache.Get(cid.ID)
+		if err != nil {
+			utils.HandleError(err, s, i)
+			return
+		}
+		resValue := cacheValue.([]erogs.FuzzySearchListResponse)
+		res = &resValue
+
+		// 計算筆數
+		count = len(*res)
+
+		// 資料分頁
+		hasMore = pagination(res, cid.Value, true)
+		if hasMore {
+			if cid.Value == 0 {
+				messageComponent = []discordgo.MessageComponent{utils.MakePageComponent("▶️", cid.CommandName, cid.ID, 1)}
+			} else {
+				messageComponent = []discordgo.MessageComponent{utils.MakePageComponent("◀️", cid.CommandName, cid.ID, cid.Value-1)}
+				messageComponent = append(messageComponent, utils.MakePageComponent("▶️", cid.CommandName, cid.ID, cid.Value+1))
+			}
+		} else {
+			messageComponent = []discordgo.MessageComponent{utils.MakePageComponent("◀️", cid.CommandName, cid.ID, cid.Value-1)}
+		}
+	}
+	actionsRow := utils.MakeActionsRow(messageComponent)
+
+	listData := make([]string, 0, len(*res))
+	for _, r := range *res {
+		categoryData := strings.Split(r.Category, ",")
+		listData = append(listData, fmt.Sprintf("e%-5s　%s (%s)", strconv.Itoa(r.ID), r.Name, strings.Join(categoryData, "/")))
+	}
+	embed := &discordgo.MessageEmbed{
+		Title: fmt.Sprintf("音樂列表搜尋 (%d筆)", count),
+		Color: 0xF8F8DF,
+		Fields: []*discordgo.MessageEmbedField{
+			{
+				Name:   "ID/名稱",
+				Value:  strings.Join(listData, "\n"),
+				Inline: false,
+			},
+		},
+	}
+
+	if cid == nil {
+		utils.InteractionEmbedRespond(s, i, embed, actionsRow, true)
+	} else {
+		utils.EditEmbedRespond(s, i, embed, actionsRow)
+	}
+
+}
+
 func ErogsFuzzySearchGame(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseDeferredChannelMessageWithSource,
@@ -246,7 +409,8 @@ func ErogsFuzzySearchGame(s *discordgo.Session, i *discordgo.InteractionCreate) 
 		return
 	}
 
-	res, err = erogs.GetGameByFuzzy(keyword)
+	idSearch, _ := regexp.MatchString(`^e\d+$`, keyword)
+	res, err = erogs.GetGameByFuzzy(keyword, idSearch)
 	if err != nil {
 		utils.HandleError(err, s, i)
 		return
@@ -341,9 +505,14 @@ func ErogsFuzzySearchGame(s *discordgo.Session, i *discordgo.InteractionCreate) 
 	}
 	erogsURL := "https://erogamescape.dyndns.org/~ap2/ero/toukei_kaiseki/game.php?game=" + fmt.Sprint(res.ID)
 	rank += "  " + fmt.Sprintf("[批評空間](%s)", erogsURL)
-	vndbURL := "https://vndb.org/" + res.VndbId
-	rank += "  " + fmt.Sprintf("[VNDB](%s)", vndbURL)
-
+	if res.VndbId != "" {
+		vndbURL := "https://vndb.org/" + res.VndbId
+		rank += "  " + fmt.Sprintf("[VNDB](%s)", vndbURL)
+	}
+	vndbData := "無"
+	if vndbVotecount != 0 {
+		vndbData = fmt.Sprintf("%.1f/%d", vndbRating, vndbVotecount)
+	}
 	embed := &discordgo.MessageEmbed{
 		Author: &discordgo.MessageEmbedAuthor{
 			Name: res.BrandName,
@@ -390,7 +559,7 @@ func ErogsFuzzySearchGame(s *discordgo.Session, i *discordgo.InteractionCreate) 
 			},
 			{
 				Name:   "vndb分數/樣本數",
-				Value:  fmt.Sprintf("%.1f/%d", vndbRating, vndbVotecount),
+				Value:  vndbData,
 				Inline: true,
 			},
 			{
@@ -424,6 +593,85 @@ func ErogsFuzzySearchGame(s *discordgo.Session, i *discordgo.InteractionCreate) 
 		},
 	}
 	utils.InteractionEmbedRespond(s, i, embed, nil, true)
+}
+
+func ErogsFuzzySearchGameList(s *discordgo.Session, i *discordgo.InteractionCreate, cid *CustomID) {
+	var res *[]erogs.FuzzySearchListResponse
+	var messageComponent []discordgo.MessageComponent
+	var hasMore bool
+	var count int
+	if cid == nil {
+		keyword, err := utils.GetOptions(i, "keyword")
+		if err != nil {
+			utils.HandleError(err, s, i)
+			return
+		}
+
+		res, err = erogs.GetGameListByFuzzy(keyword)
+		if err != nil {
+			utils.HandleError(err, s, i)
+			return
+		}
+
+		idStr := uuid.New().String()
+		cache.Set(idStr, *res)
+
+		// 計算筆數
+		count = len(*res)
+
+		hasMore = pagination(res, 0, false)
+
+		if hasMore {
+			messageComponent = []discordgo.MessageComponent{utils.MakePageComponent("▶️", "查詢遊戲列表", idStr, 1)}
+		}
+	} else {
+		cacheValue, err := cache.Get(cid.ID)
+		if err != nil {
+			utils.HandleError(err, s, i)
+			return
+		}
+		resValue := cacheValue.([]erogs.FuzzySearchListResponse)
+		res = &resValue
+
+		// 計算筆數
+		count = len(*res)
+
+		// 資料分頁
+		hasMore = pagination(res, cid.Value, true)
+		if hasMore {
+			if cid.Value == 0 {
+				messageComponent = []discordgo.MessageComponent{utils.MakePageComponent("▶️", cid.CommandName, cid.ID, 1)}
+			} else {
+				messageComponent = []discordgo.MessageComponent{utils.MakePageComponent("◀️", cid.CommandName, cid.ID, cid.Value-1)}
+				messageComponent = append(messageComponent, utils.MakePageComponent("▶️", cid.CommandName, cid.ID, cid.Value+1))
+			}
+		} else {
+			messageComponent = []discordgo.MessageComponent{utils.MakePageComponent("◀️", cid.CommandName, cid.ID, cid.Value-1)}
+		}
+	}
+	actionsRow := utils.MakeActionsRow(messageComponent)
+	listData := make([]string, 0, len(*res))
+	for _, r := range *res {
+		listData = append(listData, fmt.Sprintf("e%-5s　%s (%s)", strconv.Itoa(r.ID), r.Name, r.Category))
+	}
+	embed := &discordgo.MessageEmbed{
+		Title: fmt.Sprintf("遊戲列表搜尋 (%d筆)", count),
+		Color: 0xF8F8DF,
+		Fields: []*discordgo.MessageEmbedField{
+			{
+				Name:   "ID/名稱",
+				Value:  strings.Join(listData, "\n"),
+				Inline: false,
+			},
+		},
+	}
+
+	if cid == nil {
+		utils.InteractionEmbedRespond(s, i, embed, actionsRow, true)
+	} else {
+		utils.EditEmbedRespond(s, i, embed, actionsRow)
+	}
+
 }
 
 func ErogsFuzzySearchBrand(s *discordgo.Session, i *discordgo.InteractionCreate, cid *CustomID) {

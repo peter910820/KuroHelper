@@ -30,15 +30,22 @@ func buildSearchStringSQL(search string) (string, error) {
 	return result, nil
 }
 
-func buildFuzzySearchCreatorSQL(searchTW string, searchJP string) (string, error) {
-	resultTW, err := buildSearchStringSQL(searchTW)
-	if err != nil {
-		return "", err
-	}
+func buildFuzzySearchCreatorSQL(searchTW string, searchJP string, idSearch bool) (string, error) {
+	searchString := ""
+	if idSearch {
+		idString := searchTW[1:]
+		searchString = fmt.Sprintf("WHERE cr.id = %s", idString)
+	} else {
+		resultTW, err := buildSearchStringSQL(searchTW)
+		if err != nil {
+			return "", err
+		}
 
-	resultJP, err := buildSearchStringSQL(searchJP)
-	if err != nil {
-		return "", err
+		resultJP, err := buildSearchStringSQL(searchJP)
+		if err != nil {
+			return "", err
+		}
+		searchString = fmt.Sprintf("WHERE cr.name ILIKE '%s' OR cr.name ILIKE '%s'", resultTW, resultJP)
 	}
 	return fmt.Sprintf(`
 SELECT row_to_json(c)
@@ -80,12 +87,12 @@ FROM (
             ) AS game_data
         ) AS games
     FROM createrlist cr
-    WHERE cr.name ILIKE '%s' OR cr.name ILIKE '%s'
+    %s
     LIMIT 1
-) AS c;`, resultTW, resultJP), nil
+) AS c;`, searchString), nil
 }
 
-func buildFuzzySearchMusicSQL(searchTW string, searchJP string) (string, error) {
+func buildFuzzySearchCreatorListSQL(searchTW string, searchJP string) (string, error) {
 	resultTW, err := buildSearchStringSQL(searchTW)
 	if err != nil {
 		return "", err
@@ -94,6 +101,36 @@ func buildFuzzySearchMusicSQL(searchTW string, searchJP string) (string, error) 
 	resultJP, err := buildSearchStringSQL(searchJP)
 	if err != nil {
 		return "", err
+	}
+	return fmt.Sprintf(`
+SELECT json_agg(row_to_json(c))
+FROM (
+    SELECT
+        cr.id,
+        cr.name
+    FROM createrlist cr
+    WHERE cr.name ILIKE '%s' OR cr.name ILIKE '%s'
+    LIMIT 200
+) AS c;
+`, resultTW, resultJP), nil
+}
+
+func buildFuzzySearchMusicSQL(searchTW string, searchJP string, idSearch bool) (string, error) {
+	searchString := ""
+	if idSearch {
+		idString := searchTW[1:]
+		searchString = fmt.Sprintf("WHERE m.id = %s", idString)
+	} else {
+		resultTW, err := buildSearchStringSQL(searchTW)
+		if err != nil {
+			return "", err
+		}
+
+		resultJP, err := buildSearchStringSQL(searchJP)
+		if err != nil {
+			return "", err
+		}
+		searchString = fmt.Sprintf("WHERE m.name ILIKE '%s' OR m.name ILIKE '%s'", resultTW, resultJP)
 	}
 	return fmt.Sprintf(`
 WITH filtered_music AS (
@@ -106,7 +143,7 @@ WITH filtered_music AS (
         COUNT(DISTINCT ut.uid) AS tokuten_count
     FROM musiclist m
     LEFT JOIN usermusic_tokuten ut ON ut.music = m.id
-    WHERE m.name ILIKE '%s' OR m.name ILIKE '%s'
+    %s
     GROUP BY m.id, m.name, m.playtime, m.releasedate
     ORDER BY tokuten_count DESC NULLS LAST, avg_tokuten DESC NULLS LAST
     LIMIT 1
@@ -148,10 +185,10 @@ FROM (
     GROUP BY m.music_id, m.musicname, m.playtime, m.releasedate, m.avg_tokuten, m.tokuten_count
     ORDER BY tokuten_count DESC NULLS LAST, avg_tokuten DESC NULLS LAST
 ) t;
-`, resultTW, resultJP), nil
+`, searchString), nil
 }
 
-func buildFuzzySearchGameSQL(searchTW string, searchJP string) (string, error) {
+func buildFuzzySearchMusicListSQL(searchTW string, searchJP string) (string, error) {
 	resultTW, err := buildSearchStringSQL(searchTW)
 	if err != nil {
 		return "", err
@@ -162,10 +199,57 @@ func buildFuzzySearchGameSQL(searchTW string, searchJP string) (string, error) {
 		return "", err
 	}
 	return fmt.Sprintf(`
+WITH filtered_music AS (
+    SELECT 
+        m.id AS music_id,
+        m.name AS musicname,
+        ROUND(AVG(LEAST(ut.tokuten, 100))::numeric, 2) AS avg_tokuten,
+        COUNT(DISTINCT ut.uid) AS tokuten_count
+    FROM musiclist m
+    LEFT JOIN usermusic_tokuten ut ON ut.music = m.id
+    WHERE m.name ILIKE '%s' OR m.name ILIKE '%s'
+    GROUP BY m.id, m.name, m.playtime, m.releasedate
+    ORDER BY tokuten_count DESC NULLS LAST, avg_tokuten DESC NULLS LAST
+    LIMIT 200
+)
+SELECT json_agg(row_to_json(t))
+FROM (
+    SELECT 
+        m.music_id AS id,
+        m.musicname AS name,
+        m.tokuten_count,
+        m.avg_tokuten,
+        STRING_AGG(DISTINCT gm.category, ',') AS category
+    FROM filtered_music m
+    LEFT JOIN game_music gm ON gm.music = m.music_id
+    GROUP BY m.music_id,m.musicname,m.tokuten_count,m.avg_tokuten
+    ORDER BY tokuten_count DESC NULLS LAST, avg_tokuten DESC NULLS LAST
+) t;
+`, resultTW, resultJP), nil
+}
+
+func buildFuzzySearchGameSQL(searchTW string, searchJP string, idSearch bool) (string, error) {
+	searchString := ""
+	if idSearch {
+		idString := searchTW[1:]
+		searchString = fmt.Sprintf("WHERE id = %s", idString)
+	} else {
+		resultTW, err := buildSearchStringSQL(searchTW)
+		if err != nil {
+			return "", err
+		}
+
+		resultJP, err := buildSearchStringSQL(searchJP)
+		if err != nil {
+			return "", err
+		}
+		searchString = fmt.Sprintf("WHERE gamename ILIKE '%s' OR gamename ILIKE '%s'", resultTW, resultJP)
+	}
+	return fmt.Sprintf(`
 WITH filtered_games AS (
     SELECT *
     FROM gamelist
-    WHERE gamename ILIKE '%s' OR gamename ILIKE '%s'
+    %s
     ORDER BY count2 DESC NULLS LAST, median DESC NULLS LAST
     LIMIT 1
 )
@@ -211,6 +295,30 @@ FROM (
         ORDER BY j.date DESC NULLS LAST
         LIMIT 1
     ) j ON TRUE
+) t;
+`, searchString), nil
+}
+
+func buildFuzzySearchGameListSQL(searchTW string, searchJP string) (string, error) {
+	resultTW, err := buildSearchStringSQL(searchTW)
+	if err != nil {
+		return "", err
+	}
+
+	resultJP, err := buildSearchStringSQL(searchJP)
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf(`
+SELECT json_agg(row_to_json(t))
+FROM (
+    SELECT g.id,
+           g.gamename AS name,
+           g.model AS category
+    FROM gamelist g
+    WHERE gamename ILIKE '%s' OR gamename ILIKE '%s'
+    ORDER BY count2 DESC NULLS LAST, median DESC NULLS LAST
+    LIMIT 200
 ) t;
 `, resultTW, resultJP), nil
 }

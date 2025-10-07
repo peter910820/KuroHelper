@@ -30,11 +30,11 @@ func onInteractionApplicationCommand(s *discordgo.Session, i *discordgo.Interact
 	// case "vndb模糊查詢創作家":
 	// 	go handlers.VndbFuzzySearchStaff(s, i, nil)
 	case "查詢創作者":
-		go handlers.ErogsFuzzySearchCreator(s, i, nil)
+		go handlers.FuzzySearchCreator(s, i, nil)
 	case "查詢音樂":
-		go handlers.ErogsFuzzySearchMusic(s, i)
+		go handlers.FuzzySearchMusic(s, i, nil)
 	case "查詢遊戲":
-		go handlers.ErogsFuzzySearchGame(s, i)
+		go handlers.FuzzySearchGame(s, i, nil)
 	case "隨機遊戲":
 		go handlers.RandomGameHandler(s, i)
 	case "清除快取":
@@ -63,6 +63,11 @@ func onInteractionMessageComponent(s *discordgo.Session, i *discordgo.Interactio
 		go handlers.ErogsFuzzySearchBrand(s, i, &cidStruct)
 	case "查詢創作者":
 		go handlers.ErogsFuzzySearchCreator(s, i, &cidStruct)
+	case "查詢遊戲列表":
+		go handlers.ErogsFuzzySearchGameList(s, i, &cidStruct)
+	case "查詢音樂列表":
+		go handlers.ErogsFuzzySearchMusicList(s, i, &cidStruct)
+	case "查詢創作者列表":
+		go handlers.ErogsFuzzySearchCreatorList(s, i, &cidStruct)
 	}
-
 }
