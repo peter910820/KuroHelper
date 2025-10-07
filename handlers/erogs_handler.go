@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"fmt"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -34,8 +35,8 @@ func ErogsFuzzySearchCreator(s *discordgo.Session, i *discordgo.InteractionCreat
 			utils.HandleError(err, s, i)
 			return
 		}
-
-		res, err = erogs.GetCreatorByFuzzy(keyword)
+		idSearch, _ := regexp.MatchString(`^e\d+$`, keyword)
+		res, err = erogs.GetCreatorByFuzzy(keyword, idSearch)
 		if err != nil {
 			utils.HandleError(err, s, i)
 			return
@@ -235,8 +236,8 @@ func ErogsFuzzySearchMusic(s *discordgo.Session, i *discordgo.InteractionCreate)
 		utils.HandleError(err, s, i)
 		return
 	}
-
-	res, err = erogs.GetMusicByFuzzy(keyword)
+	idSearch, _ := regexp.MatchString(`^e\d+$`, keyword)
+	res, err = erogs.GetMusicByFuzzy(keyword, idSearch)
 	if err != nil {
 		utils.HandleError(err, s, i)
 		return
@@ -408,7 +409,8 @@ func ErogsFuzzySearchGame(s *discordgo.Session, i *discordgo.InteractionCreate) 
 		return
 	}
 
-	res, err = erogs.GetGameByFuzzy(keyword)
+	idSearch, _ := regexp.MatchString(`^e\d+$`, keyword)
+	res, err = erogs.GetGameByFuzzy(keyword, idSearch)
 	if err != nil {
 		utils.HandleError(err, s, i)
 		return

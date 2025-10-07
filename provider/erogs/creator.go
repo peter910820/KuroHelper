@@ -5,9 +5,12 @@ import (
 	"fmt"
 )
 
-func GetCreatorByFuzzy(search string) (*FuzzySearchCreatorResponse, error) {
-	searchJP := zhtwToJp(search)
-	sql, err := buildFuzzySearchCreatorSQL(search, searchJP)
+func GetCreatorByFuzzy(search string, idSearch bool) (*FuzzySearchCreatorResponse, error) {
+	searchJP := ""
+	if !idSearch {
+		searchJP = zhtwToJp(search)
+	}
+	sql, err := buildFuzzySearchCreatorSQL(search, searchJP, idSearch)
 	if err != nil {
 		return nil, err
 	}
