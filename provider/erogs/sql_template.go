@@ -96,46 +96,57 @@ func buildFuzzySearchMusicSQL(searchTW string, searchJP string) (string, error) 
 		return "", err
 	}
 	return fmt.Sprintf(`
-SELECT row_to_json(t)
-FROM (
+WITH filtered_music AS (
     SELECT 
         m.id AS music_id,
         m.name AS musicname,
         m.playtime,
         m.releasedate,
         ROUND(AVG(LEAST(ut.tokuten, 100))::numeric, 2) AS avg_tokuten,
-        COUNT(ut.uid) AS tokuten_count,
-        COALESCE(STRING_AGG(DISTINCT s_c.name, ','), '無') AS singer_name,
-        COALESCE(STRING_AGG(DISTINCT l_c.name, ','), '無') AS lyric_name,
-        COALESCE(STRING_AGG(DISTINCT a_c.name, ','), '無') AS arrangement_name,
-        COALESCE(STRING_AGG(DISTINCT comp_c.name, ','), '無') AS composition_name,
-        json_agg(DISTINCT jsonb_build_object('game_name', g.gamename, 'game_model', g.model ,'category', gm.category)) AS game_categories,
-        COALESCE(STRING_AGG(DISTINCT mi.name, ','), '') AS album_name
+        COUNT(DISTINCT ut.uid) AS tokuten_count
     FROM musiclist m
-    -- 歌手
-    LEFT JOIN singer s ON s.music = m.id
-    LEFT JOIN createrlist s_c ON s_c.id = s.creater
-    -- 作詞
-    LEFT JOIN lyrics l ON l.music = m.id
-    LEFT JOIN createrlist l_c ON l_c.id = l.creater
-    -- 編曲
-    LEFT JOIN arrangement a ON a.music = m.id
-    LEFT JOIN createrlist a_c ON a_c.id = a.creater
-    -- 作曲
-    LEFT JOIN composition comp ON comp.music = m.id
-    LEFT JOIN createrlist comp_c ON comp_c.id = comp.creater
-    -- 遊戲列表
-    LEFT JOIN game_music gm ON gm.music = m.id
-    LEFT JOIN gamelist g ON g.id = gm.game
-    -- 專輯
-    LEFT JOIN musicitem_music mim ON mim.music = m.id
-    LEFT JOIN musicitemlist mi ON mi.id = mim.musicitem
-    -- 評分
     LEFT JOIN usermusic_tokuten ut ON ut.music = m.id
     WHERE m.name ILIKE '%s' OR m.name ILIKE '%s'
     GROUP BY m.id, m.name, m.playtime, m.releasedate
     ORDER BY tokuten_count DESC NULLS LAST, avg_tokuten DESC NULLS LAST
     LIMIT 1
+)
+SELECT row_to_json(t)
+FROM (
+    SELECT 
+        m.music_id,
+        m.musicname,
+        m.playtime,
+        m.releasedate,
+        m.avg_tokuten,
+        m.tokuten_count,
+        COALESCE(STRING_AGG(DISTINCT s_c.name, ','), '無') AS singer_name,
+        COALESCE(STRING_AGG(DISTINCT l_c.name, ','), '無') AS lyric_name,
+        COALESCE(STRING_AGG(DISTINCT a_c.name, ','), '無') AS arrangement_name,
+        COALESCE(STRING_AGG(DISTINCT comp_c.name, ','), '無') AS composition_name,
+        json_agg(
+            DISTINCT jsonb_build_object(
+                'game_name', g.gamename,
+                'game_model', g.model,
+                'category', gm.category
+            )
+        ) AS game_categories,
+        COALESCE(STRING_AGG(DISTINCT mi.name, ','), '') AS album_name
+    FROM filtered_music m
+    LEFT JOIN singer s ON s.music = m.music_id
+    LEFT JOIN createrlist s_c ON s_c.id = s.creater
+    LEFT JOIN lyrics l ON l.music = m.music_id
+    LEFT JOIN createrlist l_c ON l_c.id = l.creater
+    LEFT JOIN arrangement a ON a.music = m.music_id
+    LEFT JOIN createrlist a_c ON a_c.id = a.creater
+    LEFT JOIN composition comp ON comp.music = m.music_id
+    LEFT JOIN createrlist comp_c ON comp_c.id = comp.creater
+    LEFT JOIN game_music gm ON gm.music = m.music_id
+    LEFT JOIN gamelist g ON g.id = gm.game
+    LEFT JOIN musicitem_music mim ON mim.music = m.music_id
+    LEFT JOIN musicitemlist mi ON mi.id = mim.musicitem
+    GROUP BY m.music_id, m.musicname, m.playtime, m.releasedate, m.avg_tokuten, m.tokuten_count
+    ORDER BY tokuten_count DESC NULLS LAST, avg_tokuten DESC NULLS LAST
 ) t;
 `, resultTW, resultJP), nil
 }
