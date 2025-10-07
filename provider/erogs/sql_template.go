@@ -85,6 +85,29 @@ FROM (
 ) AS c;`, resultTW, resultJP), nil
 }
 
+func buildFuzzySearchCreatorListSQL(searchTW string, searchJP string) (string, error) {
+	resultTW, err := buildSearchStringSQL(searchTW)
+	if err != nil {
+		return "", err
+	}
+
+	resultJP, err := buildSearchStringSQL(searchJP)
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf(`
+SELECT json_agg(row_to_json(c))
+FROM (
+    SELECT
+        cr.id,
+        cr.name
+    FROM createrlist cr
+    WHERE cr.name ILIKE '%s' OR cr.name ILIKE '%s'
+    LIMIT 200
+) AS c;
+`, resultTW, resultJP), nil
+}
+
 func buildFuzzySearchMusicSQL(searchTW string, searchJP string) (string, error) {
 	resultTW, err := buildSearchStringSQL(searchTW)
 	if err != nil {
