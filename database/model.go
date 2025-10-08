@@ -23,16 +23,16 @@ type (
 	User struct {
 		ID    string `gorm:"primaryKey"`
 		Name  string
-		Games []UserGame
+		Games []UserGameErogs
 	}
 
 	GameErogs struct {
 		ID      int    `gorm:"primaryKey"`
 		Title   string `gorm:"unique"`
-		Players []UserGame
+		Players []UserGameErogs
 	}
 
-	UserGame struct {
+	UserGameErogs struct {
 		PlayerID  string `gorm:"primaryKey"`
 		GameID    int    `gorm:"primaryKey"`
 		HasPlayed bool

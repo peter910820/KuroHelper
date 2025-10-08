@@ -168,3 +168,13 @@ func GetEnvInt(key string, def int) int {
 	}
 	return def
 }
+
+func GetUserID(i *discordgo.InteractionCreate) string {
+	var userID string
+	if i.Member != nil {
+		userID = i.Member.User.ID
+	} else {
+		userID = i.User.ID
+	}
+	return userID
+}
