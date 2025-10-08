@@ -752,14 +752,14 @@ func ErogsFuzzySearchBrand(s *discordgo.Session, i *discordgo.InteractionCreate,
 	if strings.TrimSpace(userID) != "" {
 		_, ok := cache.UserCache[userID]
 		if ok {
-			database.Dbs[os.Getenv("DB_NAME")].Preload("Game").Where("player_id = ?", userID).Find(&userGameErogs)
+			database.Dbs[os.Getenv("DB_NAME")].Where("user_id = ?", userID).Preload("GameErogs").Find(&userGameErogs)
 			// 利用位元運算壓縮狀態
 			for _, game := range userGameErogs {
 				if game.HasPlayed {
-					status[game.GameID] |= Played
+					status[game.GameErogsID] |= Played
 				}
 				if game.InWish {
-					status[game.GameID] |= Wish
+					status[game.GameErogsID] |= Wish
 				}
 			}
 		}

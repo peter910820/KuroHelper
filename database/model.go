@@ -25,7 +25,6 @@ type (
 		Name      string
 		CreatedAt time.Time `gorm:"autoCreateTime"`
 		UpdatedAt time.Time `gorm:"autoUpdateTime"`
-		GameErogs []UserGameErogs
 	}
 
 	GameErogs struct {
@@ -33,18 +32,33 @@ type (
 		Title     string    `gorm:"unique"`
 		CreatedAt time.Time `gorm:"autoCreateTime"`
 		UpdatedAt time.Time `gorm:"autoUpdateTime"`
-		Users     []UserGameErogs
+	}
+
+	BrandErogs struct {
+		ID        int       `gorm:"primaryKey"`
+		Name      string    `gorm:"unique"`
+		CreatedAt time.Time `gorm:"autoCreateTime"`
+		UpdatedAt time.Time `gorm:"autoUpdateTime"`
 	}
 
 	UserGameErogs struct {
-		PlayerID  string `gorm:"primaryKey"`
-		GameID    int    `gorm:"primaryKey"`
-		HasPlayed bool
-		InWish    bool
-		CreatedAt time.Time `gorm:"autoCreateTime"`
-		UpdatedAt time.Time `gorm:"autoUpdateTime"`
-		User      User      `gorm:"foreignKey:PlayerID;references:ID"`
-		Game      GameErogs `gorm:"foreignKey:GameID;references:ID"`
+		UserID      string `gorm:"primaryKey"`
+		GameErogsID int    `gorm:"primaryKey"`
+		HasPlayed   bool
+		InWish      bool
+		CreatedAt   time.Time `gorm:"autoCreateTime"`
+		UpdatedAt   time.Time `gorm:"autoUpdateTime"`
+
+		GameErogs *GameErogs `gorm:"foreignKey:GameErogsID;references:ID"` // 單向 preload
+	}
+
+	GameErogsBrandErogs struct {
+		GameErogsID  int       `gorm:"primaryKey"`
+		BrandErogsID int       `gorm:"primaryKey"`
+		CreatedAt    time.Time `gorm:"autoCreateTime"`
+		UpdatedAt    time.Time `gorm:"autoUpdateTime"`
+
+		BrandErogs *BrandErogs `gorm:"foreignKey:BrandErogsID;references:ID"` // 單向 preload
 	}
 )
 
