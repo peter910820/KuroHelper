@@ -26,7 +26,7 @@ type (
 		Games []UserGame
 	}
 
-	Game struct {
+	GameErogs struct {
 		ID      int    `gorm:"primaryKey"`
 		Title   string `gorm:"unique"`
 		Players []UserGame
@@ -37,8 +37,8 @@ type (
 		GameID    int    `gorm:"primaryKey"`
 		HasPlayed bool
 		InWish    bool
-		User      User `gorm:"foreignKey:PlayerID;references:ID"`
-		Game      Game `gorm:"foreignKey:GameID;references:ID"`
+		User      User      `gorm:"foreignKey:PlayerID;references:ID"`
+		Game      GameErogs `gorm:"foreignKey:GameID;references:ID"`
 	}
 )
 
