@@ -27,8 +27,6 @@ func onInteractionApplicationCommand(s *discordgo.Session, i *discordgo.Interact
 		go handlers.VndbSearchGameByID(s, i)
 	case "查詢公司品牌":
 		go handlers.FuzzySearchBrand(s, i, nil)
-	// case "vndb模糊查詢創作家":
-	// 	go handlers.VndbFuzzySearchStaff(s, i, nil)
 	case "查詢創作者":
 		go handlers.FuzzySearchCreator(s, i, nil)
 	case "查詢音樂":
