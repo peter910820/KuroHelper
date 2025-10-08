@@ -27,9 +27,9 @@ type (
 	}
 
 	GameErogs struct {
-		ID      int    `gorm:"primaryKey"`
-		Title   string `gorm:"unique"`
-		Players []UserGameErogs
+		ID    int    `gorm:"primaryKey"`
+		Title string `gorm:"unique"`
+		Users []UserGameErogs
 	}
 
 	UserGameErogs struct {
