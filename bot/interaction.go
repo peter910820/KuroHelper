@@ -7,7 +7,6 @@ import (
 	"github.com/bwmarrin/discordgo"
 
 	"kurohelper/handlers"
-	"kurohelper/utils"
 )
 
 func OnInteraction(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -35,6 +34,8 @@ func onInteractionApplicationCommand(s *discordgo.Session, i *discordgo.Interact
 		go handlers.FuzzySearchGame(s, i, nil)
 	case "隨機遊戲":
 		go handlers.RandomGameHandler(s, i)
+	case "加已玩":
+		go handlers.AddHasPlayedHandler(s, i, nil)
 	case "清除快取":
 		go handlers.CleanCache(s, i)
 	}
@@ -44,8 +45,11 @@ func onInteractionMessageComponent(s *discordgo.Session, i *discordgo.Interactio
 	cid := strings.SplitN(i.MessageComponentData().CustomID, "::", 4)
 	value, err := strconv.Atoi(cid[3])
 	if err != nil {
-		utils.HandleError(err, s, i)
-		return
+		if cid[3] == "true" {
+			value = 1
+		} else {
+			value = 0
+		}
 	}
 	cidStruct := handlers.CustomID{
 		ID:          cid[1],
@@ -67,5 +71,7 @@ func onInteractionMessageComponent(s *discordgo.Session, i *discordgo.Interactio
 		go handlers.ErogsFuzzySearchMusicList(s, i, &cidStruct)
 	case "查詢創作者列表":
 		go handlers.ErogsFuzzySearchCreatorList(s, i, &cidStruct)
+	case "加已玩":
+		go handlers.AddHasPlayedHandler(s, i, &cidStruct)
 	}
 }

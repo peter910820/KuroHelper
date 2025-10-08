@@ -199,5 +199,17 @@ func erogsCommands() []*discordgo.ApplicationCommand {
 				},
 			},
 		},
+		{
+			Name:        "加已玩",
+			Description: "把遊戲加到已玩(ErogameScape)",
+			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "keyword",
+					Description: "關鍵字",
+					Required:    true,
+				},
+			},
+		},
 	}
 }

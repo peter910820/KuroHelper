@@ -24,3 +24,11 @@ func MakePageComponent(label string, commandName string, id string, value int) *
 		CustomID: fmt.Sprintf("%s::%s::Page::%d", commandName, id, value),
 	}
 }
+
+func MakeAddHasPlayedComponent(label string, commandName string, id int, value bool) *discordgo.Button {
+	return &discordgo.Button{
+		Label:    label,
+		Style:    discordgo.PrimaryButton,
+		CustomID: fmt.Sprintf("%s::%d::_::%t", commandName, id, value),
+	}
+}
