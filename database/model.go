@@ -19,6 +19,29 @@ type (
 	}
 )
 
+type (
+	User struct {
+		ID    string `gorm:"primaryKey"`
+		Name  string
+		Games []UserGame
+	}
+
+	Game struct {
+		ID      int    `gorm:"primaryKey"`
+		Title   string `gorm:"unique"`
+		Players []UserGame
+	}
+
+	UserGame struct {
+		PlayerID  string `gorm:"primaryKey"`
+		GameID    int    `gorm:"primaryKey"`
+		HasPlayed bool
+		InWish    bool
+		User      User `gorm:"foreignKey:PlayerID;references:ID"`
+		Game      Game `gorm:"foreignKey:GameID;references:ID"`
+	}
+)
+
 func (ZhtwToJp) TableName() string {
 	return "zhtw_to_jp"
 }
