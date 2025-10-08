@@ -21,15 +21,19 @@ type (
 
 type (
 	User struct {
-		ID    string `gorm:"primaryKey"`
-		Name  string
-		Games []UserGameErogs
+		ID        string `gorm:"primaryKey"`
+		Name      string
+		CreatedAt time.Time `gorm:"autoCreateTime"`
+		UpdatedAt time.Time `gorm:"autoUpdateTime"`
+		GameErogs []UserGameErogs
 	}
 
 	GameErogs struct {
-		ID    int    `gorm:"primaryKey"`
-		Title string `gorm:"unique"`
-		Users []UserGameErogs
+		ID        int       `gorm:"primaryKey"`
+		Title     string    `gorm:"unique"`
+		CreatedAt time.Time `gorm:"autoCreateTime"`
+		UpdatedAt time.Time `gorm:"autoUpdateTime"`
+		Users     []UserGameErogs
 	}
 
 	UserGameErogs struct {
@@ -37,6 +41,8 @@ type (
 		GameID    int    `gorm:"primaryKey"`
 		HasPlayed bool
 		InWish    bool
+		CreatedAt time.Time `gorm:"autoCreateTime"`
+		UpdatedAt time.Time `gorm:"autoUpdateTime"`
 		User      User      `gorm:"foreignKey:PlayerID;references:ID"`
 		Game      GameErogs `gorm:"foreignKey:GameID;references:ID"`
 	}
