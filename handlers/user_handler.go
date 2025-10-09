@@ -72,8 +72,8 @@ func AddHasPlayedHandler(s *discordgo.Session, i *discordgo.InteractionCreate, c
 		return
 	}
 
-	messageComponent := []discordgo.MessageComponent{utils.MakeAddHasPlayedComponent("✅", i.ApplicationCommandData().Name, res.ID, true)}
-	messageComponent = append(messageComponent, utils.MakeAddHasPlayedComponent("❌", i.ApplicationCommandData().Name, res.ID, false))
+	messageComponent := []discordgo.MessageComponent{utils.MakeAddHasPlayedComponent("✅", utils.AddHasPlayedArgs{GameID: res.ID, BrandID: 0, ConfirmMark: true}, i)}
+	messageComponent = append(messageComponent, utils.MakeAddHasPlayedComponent("❌", utils.AddHasPlayedArgs{GameID: res.ID, BrandID: 0, ConfirmMark: false}, i))
 	actionsRow := utils.MakeActionsRow(messageComponent)
 
 	embed := &discordgo.MessageEmbed{
