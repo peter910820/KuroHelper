@@ -28,7 +28,7 @@ type (
 	}
 
 	GameErogs struct {
-		ID           int `gorm:"primaryKey"`
+		ID           int `gorm:"primaryKey;autoIncrement:false"`
 		BrandErogsID int
 		Title        string    `gorm:"unique"` // 遊戲名稱(批評空間)
 		CreatedAt    time.Time `gorm:"autoCreateTime"`
@@ -38,7 +38,7 @@ type (
 	}
 
 	BrandErogs struct {
-		ID        int       `gorm:"primaryKey"`
+		ID        int       `gorm:"primaryKey;autoIncrement:false"`
 		Name      string    `gorm:"unique"`
 		CreatedAt time.Time `gorm:"autoCreateTime"`
 		UpdatedAt time.Time `gorm:"autoUpdateTime"`
@@ -46,7 +46,7 @@ type (
 
 	UserGameErogs struct {
 		UserID      string `gorm:"primaryKey"`
-		GameErogsID int    `gorm:"primaryKey"`
+		GameErogsID int    `gorm:"primaryKey;autoIncrement:false"`
 		HasPlayed   bool
 		InWish      bool
 		CreatedAt   time.Time `gorm:"autoCreateTime"`
