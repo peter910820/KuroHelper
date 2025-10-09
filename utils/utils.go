@@ -178,3 +178,12 @@ func GetUserID(i *discordgo.InteractionCreate) string {
 	}
 	return userID
 }
+
+func GetUsername(i *discordgo.InteractionCreate) string {
+	if i.Member != nil && i.Member.User != nil {
+		return i.Member.User.Username
+	} else if i.User != nil {
+		return i.User.Username
+	}
+	return ""
+}
