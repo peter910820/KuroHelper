@@ -21,10 +21,10 @@ func Migration(dbName string, db *gorm.DB) {
 		db.AutoMigrate(&SeiyaCorrespond{})
 		db.AutoMigrate(
 			&User{},
-			&GameErogs{},
 			&BrandErogs{},
+			&GameErogs{},
 			&UserGameErogs{},
-			&GameErogsBrandErogs{})
+		)
 	default:
 		logrus.Fatal("error in migration function")
 	}

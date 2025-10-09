@@ -28,10 +28,13 @@ type (
 	}
 
 	GameErogs struct {
-		ID        int       `gorm:"primaryKey"`
-		Title     string    `gorm:"unique"`
-		CreatedAt time.Time `gorm:"autoCreateTime"`
-		UpdatedAt time.Time `gorm:"autoUpdateTime"`
+		ID           int `gorm:"primaryKey"`
+		BrandErogsID int
+		Title        string    `gorm:"unique"` // 遊戲名稱(批評空間)
+		CreatedAt    time.Time `gorm:"autoCreateTime"`
+		UpdatedAt    time.Time `gorm:"autoUpdateTime"`
+
+		BrandErogs *BrandErogs `gorm:"foreignKey:BrandErogsID;references:ID"` // 單向 preload
 	}
 
 	BrandErogs struct {
@@ -50,15 +53,6 @@ type (
 		UpdatedAt   time.Time `gorm:"autoUpdateTime"`
 
 		GameErogs *GameErogs `gorm:"foreignKey:GameErogsID;references:ID"` // 單向 preload
-	}
-
-	GameErogsBrandErogs struct {
-		GameErogsID  int       `gorm:"primaryKey"`
-		BrandErogsID int       `gorm:"primaryKey"`
-		CreatedAt    time.Time `gorm:"autoCreateTime"`
-		UpdatedAt    time.Time `gorm:"autoUpdateTime"`
-
-		BrandErogs *BrandErogs `gorm:"foreignKey:BrandErogsID;references:ID"` // 單向 preload
 	}
 )
 
