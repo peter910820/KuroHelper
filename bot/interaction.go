@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/sirupsen/logrus"
 
 	"kurohelper/handlers"
 	"kurohelper/utils"
@@ -27,8 +28,6 @@ func onInteractionApplicationCommand(s *discordgo.Session, i *discordgo.Interact
 		go handlers.VndbSearchGameByID(s, i)
 	case "查詢公司品牌":
 		go handlers.FuzzySearchBrand(s, i, nil)
-	// case "vndb模糊查詢創作家":
-	// 	go handlers.VndbFuzzySearchStaff(s, i, nil)
 	case "查詢創作者":
 		go handlers.FuzzySearchCreator(s, i, nil)
 	case "查詢音樂":
@@ -37,6 +36,8 @@ func onInteractionApplicationCommand(s *discordgo.Session, i *discordgo.Interact
 		go handlers.FuzzySearchGame(s, i, nil)
 	case "隨機遊戲":
 		go handlers.RandomGameHandler(s, i)
+	case "加已玩":
+		go handlers.AddHasPlayedHandler(s, i, nil)
 	case "清除快取":
 		go handlers.CleanCache(s, i)
 	case "查詢角色":
@@ -45,11 +46,19 @@ func onInteractionApplicationCommand(s *discordgo.Session, i *discordgo.Interact
 }
 
 func onInteractionMessageComponent(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	newCID := strings.Split(i.MessageComponentData().CustomID, "|")
+	if len(newCID) > 1 {
+		newOnInteractionMessageComponent(s, i, newCID)
+		return
+	}
 	cid := strings.SplitN(i.MessageComponentData().CustomID, "::", 4)
 	value, err := strconv.Atoi(cid[3])
 	if err != nil {
-		utils.HandleError(err, s, i)
-		return
+		if cid[3] == "true" {
+			value = 1
+		} else {
+			value = 0
+		}
 	}
 	cidStruct := handlers.CustomID{
 		ID:          cid[1],
@@ -73,5 +82,27 @@ func onInteractionMessageComponent(s *discordgo.Session, i *discordgo.Interactio
 		go handlers.ErogsFuzzySearchCreatorList(s, i, &cidStruct)
 	case "查詢角色列表":
 		go handlers.ErogsFuzzySearchCharacterList(s, i, &cidStruct)
+	}
+}
+
+func newOnInteractionMessageComponent(s *discordgo.Session, i *discordgo.InteractionCreate, newCID []string) {
+	value, err := strconv.Atoi(newCID[1])
+	if err != nil {
+		logrus.Fatal(err)
+	}
+
+	b, err := strconv.ParseBool(newCID[3])
+	if err != nil {
+		logrus.Fatal(err)
+	}
+
+	CIDType := utils.CustomIDType(value)
+	switch CIDType {
+	// case CustomIDTypeAddWish:
+	case utils.CustomIDTypeAddHasPlayed:
+		// 加已玩
+		go handlers.AddHasPlayedHandler(s, i, &utils.NewCustomID[utils.AddHasPlayedArgs]{CommandName: newCID[0], Value: utils.AddHasPlayedArgs{CacheID: newCID[2], ConfirmMark: b}})
+	default:
+		logrus.Fatal(err)
 	}
 }
