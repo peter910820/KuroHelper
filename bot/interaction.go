@@ -75,7 +75,7 @@ func onInteractionMessageComponent(s *discordgo.Session, i *discordgo.Interactio
 	case "查詢創作者":
 		go handlers.ErogsFuzzySearchCreator(s, i, &cidStruct)
 	case "查詢遊戲列表":
-		go handlers.ErogsFuzzySearchGameList(s, i, &cidStruct)
+		go handlers.FuzzySearchGame(s, i, &cidStruct)
 	case "查詢音樂列表":
 		go handlers.ErogsFuzzySearchMusicList(s, i, &cidStruct)
 	case "查詢創作者列表":
