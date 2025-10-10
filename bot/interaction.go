@@ -40,6 +40,8 @@ func onInteractionApplicationCommand(s *discordgo.Session, i *discordgo.Interact
 		go handlers.AddHasPlayedHandler(s, i, nil)
 	case "清除快取":
 		go handlers.CleanCache(s, i)
+	case "查詢角色":
+		go handlers.FuzzySearchCharacter(s, i, nil)
 	}
 }
 
@@ -78,6 +80,8 @@ func onInteractionMessageComponent(s *discordgo.Session, i *discordgo.Interactio
 		go handlers.ErogsFuzzySearchMusicList(s, i, &cidStruct)
 	case "查詢創作者列表":
 		go handlers.ErogsFuzzySearchCreatorList(s, i, &cidStruct)
+	case "查詢角色列表":
+		go handlers.ErogsFuzzySearchCharacterList(s, i, &cidStruct)
 	}
 }
 
