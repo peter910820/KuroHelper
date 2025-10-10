@@ -46,6 +46,7 @@ type GameCategory struct {
 
 type FuzzySearchGameResponse struct {
 	ID                               int              `json:"id"`
+	BrandID                          int              `json:"brandid"`
 	BrandName                        string           `json:"brandname"`
 	Gamename                         string           `json:"gamename"`
 	SellDay                          string           `json:"sellday"`
