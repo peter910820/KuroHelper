@@ -1,0 +1,39 @@
+name: Lint Commit
+
+on:
+  push:
+    branches:
+      - main
+      - feature/*
+      - enhancement/*
+      - bugfix/*
+      - hotfix/*
+      - release/*
+      # - test/*
+      - refactor/*
+      - ci/*
+      - style/*
+      - docs/*
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  lint-commit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: '1.24'
+
+      - name: Lint commits
+        run: go run ./tools/check_commit.go
+        env:
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
+          GITHUB_HEAD_REF: ${{ github.event.pull_request.head.ref || '' }}

@@ -14,7 +14,7 @@ func main() {
 	headBranch := os.Getenv("GITHUB_HEAD_REF")
 
 	var cmd *exec.Cmd
-	if eventName == "pull_request" {
+	if eventName == "pull_request" && headBranch != "" {
 		cmd = exec.Command("git", "log", "--pretty=format:%s", "origin/"+headBranch)
 	} else {
 		cmd = exec.Command("git", "log", "--pretty=format:%s", "-1", "HEAD")
