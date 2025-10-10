@@ -201,6 +201,7 @@ func erogsCommands() []*discordgo.ApplicationCommand {
 		},
 		{
 			Name:        "加已玩",
+			Description: "把遊戲加到已玩(ErogameScape)",
 			Options: []*discordgo.ApplicationCommandOption{
 				{
 					Type:        discordgo.ApplicationCommandOptionString,
@@ -209,7 +210,8 @@ func erogsCommands() []*discordgo.ApplicationCommand {
 					Required:    true,
 				},
 			},
-      {
+		},
+		{
 			Name:        "查詢角色",
 			Description: "根據關鍵字查詢角色資料(ErogameScape)",
 			Options: []*discordgo.ApplicationCommandOption{
