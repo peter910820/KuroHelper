@@ -15,8 +15,9 @@ on:
       - style/*
       - docs/*
   pull_request:
-    branches: [ "main" ]
-
+    branches:
+      - main
+      
 jobs:
   notify-discord:
     runs-on: ubuntu-latest

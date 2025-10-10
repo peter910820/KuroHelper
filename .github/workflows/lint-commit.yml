@@ -15,39 +15,25 @@ on:
       - style/*
       - docs/*
   pull_request:
-    branches: [ "main" ]
+    branches:
+      - main
 
 jobs:
-
-  lint_commit:
+  lint-commit:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
 
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
           go-version: '1.24'
 
-      - name: Checkout Push
-        if: github.event_name == 'push'
-        uses: actions/checkout@v5
-
-      - name: Lint commits for Push
-        if: github.event_name == 'push'
+      - name: Lint commits
         run: go run ./tools/check_commit.go
         env:
           GITHUB_EVENT_NAME: ${{ github.event_name }}
-
-      - name: Checkout PR
-        if: github.event_name == 'pull_request'
-        uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
-
-      - name: Lint commits for PR
-        if: github.event_name == 'pull_request'
-        run: go run ./tools/check_commit.go
-        env:
-          GITHUB_EVENT_NAME: ${{ github.event_name }}
-          GITHUB_HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          GITHUB_HEAD_REF: ${{ github.event.pull_request.head.ref || '' }}
