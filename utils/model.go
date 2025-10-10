@@ -25,15 +25,12 @@ type (
 	}
 
 	AddWishArgs struct {
-		GameID      int
-		BrandID     int
-		UserID      int
+		CacheID     string
 		ConfirmMark bool
 	}
 
 	AddHasPlayedArgs struct {
-		GameID      int
-		BrandID     int
+		CacheID     string
 		ConfirmMark bool
 	}
 )

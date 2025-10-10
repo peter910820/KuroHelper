@@ -30,7 +30,7 @@ type (
 	GameErogs struct {
 		ID           int `gorm:"primaryKey;autoIncrement:false"`
 		BrandErogsID int
-		Title        string    `gorm:"unique"` // 遊戲名稱(批評空間)
+		Name         string    `gorm:"unique"` // 遊戲名稱(批評空間)
 		CreatedAt    time.Time `gorm:"autoCreateTime"`
 		UpdatedAt    time.Time `gorm:"autoUpdateTime"`
 

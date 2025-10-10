@@ -5,8 +5,10 @@ import (
 	"strings"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/sirupsen/logrus"
 
 	"kurohelper/handlers"
+	"kurohelper/utils"
 )
 
 func OnInteraction(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -42,6 +44,11 @@ func onInteractionApplicationCommand(s *discordgo.Session, i *discordgo.Interact
 }
 
 func onInteractionMessageComponent(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	newCID := strings.Split(i.MessageComponentData().CustomID, "|")
+	if len(newCID) > 1 {
+		newOnInteractionMessageComponent(s, i, newCID)
+		return
+	}
 	cid := strings.SplitN(i.MessageComponentData().CustomID, "::", 4)
 	value, err := strconv.Atoi(cid[3])
 	if err != nil {
@@ -71,7 +78,27 @@ func onInteractionMessageComponent(s *discordgo.Session, i *discordgo.Interactio
 		go handlers.ErogsFuzzySearchMusicList(s, i, &cidStruct)
 	case "查詢創作者列表":
 		go handlers.ErogsFuzzySearchCreatorList(s, i, &cidStruct)
-	case "加已玩":
-		go handlers.AddHasPlayedHandler(s, i, &cidStruct)
+	}
+}
+
+func newOnInteractionMessageComponent(s *discordgo.Session, i *discordgo.InteractionCreate, newCID []string) {
+	value, err := strconv.Atoi(newCID[1])
+	if err != nil {
+		logrus.Fatal(err)
+	}
+
+	b, err := strconv.ParseBool(newCID[3])
+	if err != nil {
+		logrus.Fatal(err)
+	}
+
+	CIDType := utils.CustomIDType(value)
+	switch CIDType {
+	// case CustomIDTypeAddWish:
+	case utils.CustomIDTypeAddHasPlayed:
+		// 加已玩
+		go handlers.AddHasPlayedHandler(s, i, &utils.NewCustomID[utils.AddHasPlayedArgs]{CommandName: newCID[0], Value: utils.AddHasPlayedArgs{CacheID: newCID[2], ConfirmMark: b}})
+	default:
+		logrus.Fatal(err)
 	}
 }

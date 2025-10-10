@@ -29,6 +29,6 @@ func MakeAddHasPlayedComponent(label string, data AddHasPlayedArgs, i *discordgo
 	return &discordgo.Button{
 		Label:    label,
 		Style:    discordgo.PrimaryButton,
-		CustomID: fmt.Sprintf("%s|%d|%d|%d|%t", i.ApplicationCommandData().Name, CustomIDTypeAddHasPlayed, data.GameID, data.BrandID, data.ConfirmMark),
+		CustomID: fmt.Sprintf("%s|%d|%s|%t", i.ApplicationCommandData().Name, CustomIDTypeAddHasPlayed, data.CacheID, data.ConfirmMark),
 	}
 }

@@ -2,55 +2,89 @@ package handlers
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"regexp"
-	"strconv"
 	"strings"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
+	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
+	"kurohelper/cache"
 	"kurohelper/database"
 	"kurohelper/provider/erogs"
 	"kurohelper/utils"
 )
 
-func AddHasPlayedHandler(s *discordgo.Session, i *discordgo.InteractionCreate, cid *CustomID) {
+func AddHasPlayedHandler(s *discordgo.Session, i *discordgo.InteractionCreate, cid *utils.NewCustomID[utils.AddHasPlayedArgs]) {
 	if cid != nil {
+		if !cid.Value.ConfirmMark {
+			embed := &discordgo.MessageEmbed{
+				Title: "操作已取消",
+				Color: 0x7BA23F,
+			}
+			utils.EditEmbedRespond(s, i, embed, nil)
+			return
+		}
+		// get cache
+		cacheValue, err := cache.Get(cid.Value.CacheID)
+		if err != nil {
+			utils.HandleError(err, s, i)
+			return
+		}
+		resValue := cacheValue.(erogs.FuzzySearchGameResponse)
+		res := &resValue
+
 		userID := utils.GetUserID(i)
-		if strings.TrimSpace(userID) != "" {
-			// 先假設使用者跟games都存在
+		userName := utils.GetUsername(i)
+		if strings.TrimSpace(userID) != "" && strings.TrimSpace(userName) != "" {
+			var user database.User
+			var gameErogs database.GameErogs
+			var brandErogs database.BrandErogs
+			err := database.Dbs[os.Getenv("DB_NAME")].Transaction(func(tx *gorm.DB) error {
+				// 1. 確保 User 存在
+				if err := tx.Where("id = ?", userID).FirstOrCreate(&user, database.User{ID: userID, Name: userName}).Error; err != nil {
+					return err
+				}
 
-			i, err := strconv.Atoi(cid.ID)
+				// 2. 確保 Brand 存在
+				if err := tx.Where("id = ?", res.BrandID).FirstOrCreate(&brandErogs, database.BrandErogs{ID: res.BrandID, Name: res.BrandName}).Error; err != nil {
+					return err
+				}
+
+				// 3. 確保 Game 存在
+				if err := tx.Where("id = ?", res.ID).FirstOrCreate(&gameErogs, database.GameErogs{ID: res.ID, Name: res.Gamename, BrandErogsID: res.BrandID}).Error; err != nil {
+					return err
+				}
+
+				// 4. 建立 UserGame
+				ug := database.UserGameErogs{UserID: user.ID, GameErogsID: res.ID, HasPlayed: true, InWish: false}
+				if err := tx.Clauses(clause.OnConflict{DoNothing: true}).Create(&ug).Error; err != nil {
+					return err
+				}
+
+				return nil // commit
+			})
 			if err != nil {
-				logrus.Fatalf("Translate failed: %v", err)
-			}
-			userGameErogs := database.UserGameErogs{
-				UserID:      userID,
-				GameErogsID: i,
-				HasPlayed:   true,
-				InWish:      false,
+				logrus.Fatal(err)
 			}
 
-			database.Dbs[os.Getenv("DB_NAME")].Clauses(clause.OnConflict{
-				Columns: []clause.Column{
-					{Name: "user_id"},
-					{Name: "game_erogs_id"},
-				}, // composite primary key
-				DoNothing: true,
-			}).Create(&userGameErogs)
-			if err != nil {
-				log.Fatalf("failed to insert user game: %v", err)
+			embed := &discordgo.MessageEmbed{
+				Title: "加入成功！",
+				Color: 0x7BA23F,
 			}
+			utils.EditEmbedRespond(s, i, embed, nil)
+			return
+		} else {
+			embed := &discordgo.MessageEmbed{
+				Title: "找不到使用者！",
+				Color: 0x7BA23F,
+			}
+			utils.EditEmbedRespond(s, i, embed, nil)
+			return
 		}
-		embed := &discordgo.MessageEmbed{
-			Title: "加入成功！",
-			Color: 0x7BA23F,
-		}
-		utils.EditEmbedRespond(s, i, embed, nil)
-		return
 	}
 
 	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
@@ -72,8 +106,11 @@ func AddHasPlayedHandler(s *discordgo.Session, i *discordgo.InteractionCreate, c
 		return
 	}
 
-	messageComponent := []discordgo.MessageComponent{utils.MakeAddHasPlayedComponent("✅", utils.AddHasPlayedArgs{GameID: res.ID, BrandID: 0, ConfirmMark: true}, i)}
-	messageComponent = append(messageComponent, utils.MakeAddHasPlayedComponent("❌", utils.AddHasPlayedArgs{GameID: res.ID, BrandID: 0, ConfirmMark: false}, i))
+	idStr := uuid.New().String()
+	cache.Set(idStr, *res)
+
+	messageComponent := []discordgo.MessageComponent{utils.MakeAddHasPlayedComponent("✅", utils.AddHasPlayedArgs{CacheID: idStr, ConfirmMark: true}, i)}
+	messageComponent = append(messageComponent, utils.MakeAddHasPlayedComponent("❌", utils.AddHasPlayedArgs{CacheID: idStr, ConfirmMark: false}, i))
 	actionsRow := utils.MakeActionsRow(messageComponent)
 
 	embed := &discordgo.MessageEmbed{
