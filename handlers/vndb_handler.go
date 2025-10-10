@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 
@@ -9,7 +8,6 @@ import (
 	"github.com/google/uuid"
 
 	"kurohelper/cache"
-	kurohelpererrors "kurohelper/errors"
 	"kurohelper/provider/vndb"
 	"kurohelper/utils"
 )
@@ -210,13 +208,13 @@ func VndbFuzzySearchBrand(s *discordgo.Session, i *discordgo.InteractionCreate, 
 			return
 		}
 
-		companyType, err := utils.GetOptions(i, "type")
-		if err != nil && errors.Is(err, kurohelpererrors.ErrOptionTranslateFail) {
-			utils.HandleError(err, s, i)
-			return
-		}
+		// companyType, err := utils.GetOptions(i, "type")
+		// if err != nil && errors.Is(err, kurohelpererrors.ErrOptionTranslateFail) {
+		// 	utils.HandleError(err, s, i)
+		// 	return
+		// }
 
-		res, err = vndb.GetProducerByFuzzy(keyword, companyType)
+		res, err = vndb.GetProducerByFuzzy(keyword, "")
 		if err != nil {
 			utils.HandleError(err, s, i)
 			return
