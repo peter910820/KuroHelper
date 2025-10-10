@@ -72,3 +72,19 @@ func FuzzySearchCreator(s *discordgo.Session, i *discordgo.InteractionCreate, ci
 		ErogsFuzzySearchCreatorList(s, i, cid)
 	}
 }
+
+func FuzzySearchCharacter(s *discordgo.Session, i *discordgo.InteractionCreate, cid *CustomID) {
+	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseDeferredChannelMessageWithSource,
+	})
+	opt, err := utils.GetOptions(i, "列表搜尋")
+	if err != nil && errors.Is(err, kurohelpererrors.ErrOptionTranslateFail) {
+		utils.HandleError(err, s, i)
+		return
+	}
+	if opt == "" {
+		ErogsFuzzySearchCharacter(s, i)
+	} else {
+		ErogsFuzzySearchCharacterList(s, i, cid)
+	}
+}

@@ -239,5 +239,29 @@ func erogsCommands() []*discordgo.ApplicationCommand {
 				},
 			},
 		},
+		{
+			Name:        "查詢角色",
+			Description: "根據關鍵字查詢角色資料(ErogameScape)",
+			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "keyword",
+					Description: "關鍵字",
+					Required:    true,
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "列表搜尋",
+					Description: "是否啟用列表搜尋",
+					Required:    false,
+					Choices: []*discordgo.ApplicationCommandOptionChoice{
+						{
+							Name:  "啟用",
+							Value: "1",
+						},
+					},
+				},
+			},
+		},
 	}
 }

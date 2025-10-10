@@ -46,6 +46,7 @@ type GameCategory struct {
 
 type FuzzySearchGameResponse struct {
 	ID                               int              `json:"id"`
+	BrandID                          int              `json:"brandid"`
 	BrandName                        string           `json:"brandname"`
 	Gamename                         string           `json:"gamename"`
 	SellDay                          string           `json:"sellday"`
@@ -105,4 +106,25 @@ type FuzzySearchListResponse struct {
 	ID       int    `json:"id"`
 	Name     string `json:"name"`
 	Category string `json:"category"`
+	Model    string `json:"model"`
+}
+
+type FuzzySearchCharacterResponse struct {
+	ID            int    `json:"id"`
+	CharacterName string `json:"name"`
+	Sex           string `json:"sex"`
+	BloodType     string `json:"bloodtype"`
+	Birthday      string `json:"birthday"`
+	GameName      string `json:"gamename"`
+	URL           string `json:"url"`
+	FormalExplain string `json:"formal_explanation"`
+	Age           string `json:"age"`
+	Bust          string `json:"bust"`
+	Waist         string `json:"waist"`
+	Hip           string `json:"hip"`
+	Height        string `json:"height"`
+	Weight        string `json:"weight"`
+	Cup           string `json:"cup"`
+	Role          int    `json:"role"`
+	CreatorName   string `json:"creater_name"`
 }
