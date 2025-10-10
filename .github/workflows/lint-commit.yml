@@ -19,19 +19,19 @@ on:
 
 jobs:
 
-  lint_commits:
+  lint_commit:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Set up Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v6
         with:
           go-version: '1.24'
 
       - name: Checkout Push
         if: github.event_name == 'push'
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Lint commits for Push
         if: github.event_name == 'push'
@@ -41,7 +41,7 @@ jobs:
 
       - name: Checkout PR
         if: github.event_name == 'pull_request'
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
