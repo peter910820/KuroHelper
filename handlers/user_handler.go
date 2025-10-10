@@ -71,6 +71,10 @@ func AddHasPlayedHandler(s *discordgo.Session, i *discordgo.InteractionCreate, c
 				logrus.Fatal(err)
 			}
 
+			if _, ok := cache.UserCache[userID]; !ok {
+				cache.UserCache[userID] = struct{}{}
+			}
+
 			embed := &discordgo.MessageEmbed{
 				Title: "加入成功！",
 				Color: 0x7BA23F,
