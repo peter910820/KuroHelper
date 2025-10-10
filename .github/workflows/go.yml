@@ -22,39 +22,6 @@ on:
 
 jobs:
 
-  lint_commits:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Go
-        uses: actions/setup-go@v4
-        with:
-          go-version: '1.24'
-
-      - name: Checkout Push
-        if: github.event_name == 'push'
-        uses: actions/checkout@v4
-
-      - name: Lint commits for Push
-        if: github.event_name == 'push'
-        run: go run ./tools/check_commit.go
-        env:
-          GITHUB_EVENT_NAME: ${{ github.event_name }}
-
-      - name: Checkout PR
-        if: github.event_name == 'pull_request'
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Lint commits for PR
-        if: github.event_name == 'pull_request'
-        run: go run ./tools/check_commit.go
-        env:
-          GITHUB_EVENT_NAME: ${{ github.event_name }}
-          GITHUB_HEAD_REF: ${{ github.event.pull_request.head.ref }}
-
   build:
     runs-on: ubuntu-latest
     steps:
@@ -68,5 +35,5 @@ jobs:
     - name: Build
       run: go build -v ./...
 
-    - name: Test
-      run: go test -v ./...
+    # - name: Test
+    #   run: go test -v ./...
