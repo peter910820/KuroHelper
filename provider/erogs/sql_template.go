@@ -256,6 +256,7 @@ WITH filtered_games AS (
 SELECT row_to_json(t)
 FROM (
     SELECT g.id,
+           b.id AS brandid,
            b.brandname,
            g.gamename,
            g.sellday,

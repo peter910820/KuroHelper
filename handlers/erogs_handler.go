@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"fmt"
+	"os"
 	"regexp"
 	"sort"
 	"strconv"
@@ -11,10 +12,16 @@ import (
 	"github.com/google/uuid"
 
 	"kurohelper/cache"
+	"kurohelper/database"
 	"kurohelper/provider/erogs"
 	"kurohelper/provider/seiya"
 	"kurohelper/provider/vndb"
 	"kurohelper/utils"
+)
+
+const (
+	Played = 1 << iota
+	Wish
 )
 
 func ErogsFuzzySearchCreator(s *discordgo.Session, i *discordgo.InteractionCreate, cid *CustomID) {
@@ -738,9 +745,37 @@ func ErogsFuzzySearchBrand(s *discordgo.Session, i *discordgo.InteractionCreate,
 
 	actionsRow := utils.MakeActionsRow(messageComponent)
 
+	// 處理資料庫
+	var userGameErogs []database.UserGameErogs
+	status := make(map[int]byte)
+	userID := utils.GetUserID(i)
+	if strings.TrimSpace(userID) != "" {
+		_, ok := cache.UserCache[userID]
+		if ok {
+			database.Dbs[os.Getenv("DB_NAME")].Where("user_id = ?", userID).Preload("GameErogs").Find(&userGameErogs)
+			// 利用位元運算壓縮狀態
+			for _, game := range userGameErogs {
+				if game.HasPlayed {
+					status[game.GameErogsID] |= Played
+				}
+				if game.InWish {
+					status[game.GameErogsID] |= Wish
+				}
+			}
+		}
+	}
+
 	gameData := make([]string, 0, len(res.GameList))
 	for _, g := range res.GameList {
-		gameData = append(gameData, fmt.Sprintf("%s　%d(%d)　**%s** (%s)", g.SellDay, g.Median, g.Count2, g.GameName, g.Model))
+		var prefix string
+		flags := status[g.ID]
+		if flags&Played != 0 {
+			prefix += "✅"
+		}
+		if flags&Wish != 0 {
+			prefix += "❤️"
+		}
+		gameData = append(gameData, fmt.Sprintf("%s%s　%d(%d)　**%s** (%s)", prefix, g.SellDay, g.Median, g.Count2, g.GameName, g.Model))
 	}
 
 	if res.Lost {

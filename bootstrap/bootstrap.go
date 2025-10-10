@@ -51,4 +51,6 @@ func Init() {
 	if err != nil {
 		logrus.Fatal(err)
 	}
+
+	cache.InitUser()
 }
