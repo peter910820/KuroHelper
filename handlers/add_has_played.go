@@ -19,6 +19,13 @@ import (
 )
 
 func AddHasPlayed(s *discordgo.Session, i *discordgo.InteractionCreate, cid *utils.NewCID) {
+	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseDeferredChannelMessageWithSource,
+		Data: &discordgo.InteractionResponseData{
+			Flags: discordgo.MessageFlagsEphemeral,
+		},
+	})
+
 	if cid != nil {
 		addWishCID := utils.AddWishCID{
 			NewCID: *cid,
@@ -35,7 +42,7 @@ func AddHasPlayed(s *discordgo.Session, i *discordgo.InteractionCreate, cid *uti
 				Title: "操作已取消",
 				Color: 0x7BA23F,
 			}
-			utils.EditEmbedRespond(s, i, embed, nil)
+			utils.InteractionEmbedRespondForSelf(s, i, embed, nil, true)
 			return
 		}
 		// get cache
@@ -89,21 +96,17 @@ func AddHasPlayed(s *discordgo.Session, i *discordgo.InteractionCreate, cid *uti
 				Title: "加入成功！",
 				Color: 0x7BA23F,
 			}
-			utils.EditEmbedRespond(s, i, embed, nil)
+			utils.InteractionEmbedRespondForSelf(s, i, embed, nil, true)
 			return
 		} else {
 			embed := &discordgo.MessageEmbed{
 				Title: "找不到使用者！",
 				Color: 0x7BA23F,
 			}
-			utils.EditEmbedRespond(s, i, embed, nil)
+			utils.InteractionEmbedRespondForSelf(s, i, embed, nil, true)
 			return
 		}
 	}
-
-	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseDeferredChannelMessageWithSource,
-	})
 
 	var res *erogs.FuzzySearchGameResponse
 
@@ -125,7 +128,7 @@ func AddHasPlayed(s *discordgo.Session, i *discordgo.InteractionCreate, cid *uti
 
 	cidCommandName := utils.MakeCIDCommandName(i.ApplicationCommandData().Name, false, "")
 	messageComponent := []discordgo.MessageComponent{utils.MakeCIDAddHasPlayedComponent("✅", idStr, true, cidCommandName)}
-	messageComponent = append(messageComponent, utils.MakeCIDAddHasPlayedComponent("❌", idStr, false, cidCommandName))
+	// messageComponent = append(messageComponent, utils.MakeCIDAddHasPlayedComponent("❌", idStr, false, cidCommandName))
 	actionsRow := utils.MakeActionsRow(messageComponent)
 
 	embed := &discordgo.MessageEmbed{
@@ -151,5 +154,5 @@ func AddHasPlayed(s *discordgo.Session, i *discordgo.InteractionCreate, cid *uti
 			URL: res.BannerUrl,
 		},
 	}
-	utils.InteractionEmbedRespond(s, i, embed, actionsRow, true)
+	utils.InteractionEmbedRespondForSelf(s, i, embed, actionsRow, true)
 }

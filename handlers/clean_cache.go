@@ -16,5 +16,5 @@ func CleanCache(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		Description: "刪除快取成功",
 	}
 
-	utils.InteractionEmbedRespondForSelf(s, i, embed, false)
+	utils.InteractionEmbedRespondForSelf(s, i, embed, nil, false)
 }

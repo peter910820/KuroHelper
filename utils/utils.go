@@ -57,10 +57,17 @@ func InteractionEmbedRespond(s *discordgo.Session, i *discordgo.InteractionCreat
 // 管理員專用版本
 //
 // editFlag參數為有無需要修改因為defer而產生的interaction訊息(機器人正在思考...)
-func InteractionEmbedRespondForSelf(s *discordgo.Session, i *discordgo.InteractionCreate, embed *discordgo.MessageEmbed, editFlag bool) {
+func InteractionEmbedRespondForSelf(s *discordgo.Session, i *discordgo.InteractionCreate, embed *discordgo.MessageEmbed, components *discordgo.ActionsRow, editFlag bool) {
+	var comps []discordgo.MessageComponent
+	if components != nil {
+		comps = []discordgo.MessageComponent{*components}
+	} else {
+		comps = []discordgo.MessageComponent{}
+	}
 	if editFlag {
 		_, err := s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
-			Embeds: &[]*discordgo.MessageEmbed{embed},
+			Embeds:     &[]*discordgo.MessageEmbed{embed},
+			Components: &comps,
 		})
 		if err != nil {
 			logrus.Error(err)
@@ -70,8 +77,9 @@ func InteractionEmbedRespondForSelf(s *discordgo.Session, i *discordgo.Interacti
 		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
-				Embeds: []*discordgo.MessageEmbed{embed},
-				Flags:  discordgo.MessageFlagsEphemeral,
+				Embeds:     []*discordgo.MessageEmbed{embed},
+				Components: comps,
+				Flags:      discordgo.MessageFlagsEphemeral,
 			},
 		})
 	}
