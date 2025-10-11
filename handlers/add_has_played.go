@@ -123,8 +123,9 @@ func AddHasPlayed(s *discordgo.Session, i *discordgo.InteractionCreate, cid *uti
 	idStr := uuid.New().String()
 	cache.Set(idStr, *res)
 
-	messageComponent := []discordgo.MessageComponent{utils.MakeCIDAddHasPlayedComponent("✅", utils.AddHasPlayedArgs{CacheID: idStr, ConfirmMark: true}, i)}
-	messageComponent = append(messageComponent, utils.MakeCIDAddHasPlayedComponent("❌", utils.AddHasPlayedArgs{CacheID: idStr, ConfirmMark: false}, i))
+	cidCommandName := utils.MakeCIDCommandName(i.ApplicationCommandData().Name, false, "")
+	messageComponent := []discordgo.MessageComponent{utils.MakeCIDAddHasPlayedComponent("✅", idStr, true, cidCommandName)}
+	messageComponent = append(messageComponent, utils.MakeCIDAddHasPlayedComponent("❌", idStr, false, cidCommandName))
 	actionsRow := utils.MakeActionsRow(messageComponent)
 
 	embed := &discordgo.MessageEmbed{

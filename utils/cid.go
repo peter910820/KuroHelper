@@ -133,10 +133,10 @@ func MakeCIDPageComponent(label string, id string, value int, commandName Custom
 }
 
 // 建立事件為AddHasPlayed的CID
-func MakeCIDAddHasPlayedComponent(label string, data AddHasPlayedArgs, i *discordgo.InteractionCreate) *discordgo.Button {
+func MakeCIDAddHasPlayedComponent(label string, id string, confirmMark bool, commandName CustomIDCommandName) *discordgo.Button {
 	return &discordgo.Button{
 		Label:    label,
 		Style:    discordgo.PrimaryButton,
-		CustomID: fmt.Sprintf("%s|%d|%s|%t", i.ApplicationCommandData().Name, CustomIDTypeAddHasPlayed, data.CacheID, data.ConfirmMark),
+		CustomID: fmt.Sprintf("%s|%d|%s|%t", string(commandName), CustomIDTypeAddHasPlayed, id, confirmMark),
 	}
 }
