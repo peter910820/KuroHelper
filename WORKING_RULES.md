@@ -1,4 +1,4 @@
-# 工作規範
+# WORKING_RULES
 
 ## Commit
 
