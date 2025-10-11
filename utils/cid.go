@@ -63,7 +63,7 @@ func (cid PageCID) GetPageIndex() (int, error) {
 	return value, nil
 }
 
-func (cid AddWishCID) GetPageIndex() (bool, error) {
+func (cid AddWishCID) GetConfirmMark() (bool, error) {
 
 	value, err := strconv.ParseBool([]string(cid.NewCID)[3])
 	if err != nil {
@@ -72,7 +72,7 @@ func (cid AddWishCID) GetPageIndex() (bool, error) {
 	return value, nil
 }
 
-func (cid AddHasPlayedCID) GetPageIndex() (bool, error) {
+func (cid AddHasPlayedCID) GetConfirmMark() (bool, error) {
 
 	value, err := strconv.ParseBool([]string(cid.NewCID)[3])
 	if err != nil {

@@ -18,9 +18,19 @@ import (
 	"kurohelper/utils"
 )
 
-func AddHasPlayed(s *discordgo.Session, i *discordgo.InteractionCreate, cid *utils.NewCustomID[utils.AddHasPlayedArgs]) {
+func AddHasPlayed(s *discordgo.Session, i *discordgo.InteractionCreate, cid utils.NewCID) {
 	if cid != nil {
-		if !cid.Value.ConfirmMark {
+		addWishCID := utils.AddWishCID{
+			NewCID: cid,
+		}
+
+		confirmMark, err := addWishCID.GetConfirmMark()
+		if err != nil {
+			utils.HandleError(err, s, i)
+			return
+		}
+
+		if !confirmMark {
 			embed := &discordgo.MessageEmbed{
 				Title: "操作已取消",
 				Color: 0x7BA23F,
@@ -29,7 +39,7 @@ func AddHasPlayed(s *discordgo.Session, i *discordgo.InteractionCreate, cid *uti
 			return
 		}
 		// get cache
-		cacheValue, err := cache.Get(cid.Value.CacheID)
+		cacheValue, err := cache.Get(addWishCID.GetCacheID())
 		if err != nil {
 			utils.HandleError(err, s, i)
 			return

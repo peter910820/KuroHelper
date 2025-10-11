@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/bwmarrin/discordgo"
-	"github.com/sirupsen/logrus"
 
 	"kurohelper/handlers"
 	"kurohelper/utils"
@@ -48,7 +47,7 @@ func onInteractionApplicationCommand(s *discordgo.Session, i *discordgo.Interact
 func onInteractionMessageComponent(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	newCID := strings.Split(i.MessageComponentData().CustomID, "|")
 	if len(newCID) > 1 {
-		newOnInteractionMessageComponent(s, i, newCID)
+		newOnInteractionMessageComponent(s, i, utils.NewCID(newCID))
 		return
 	}
 	cid := strings.SplitN(i.MessageComponentData().CustomID, "::", 4)
@@ -85,24 +84,12 @@ func onInteractionMessageComponent(s *discordgo.Session, i *discordgo.Interactio
 	}
 }
 
-func newOnInteractionMessageComponent(s *discordgo.Session, i *discordgo.InteractionCreate, newCID []string) {
-	value, err := strconv.Atoi(newCID[1])
-	if err != nil {
-		logrus.Fatal(err)
-	}
-
-	b, err := strconv.ParseBool(newCID[3])
-	if err != nil {
-		logrus.Fatal(err)
-	}
-
-	CIDType := utils.CustomIDType(value)
-	switch CIDType {
+func newOnInteractionMessageComponent(s *discordgo.Session, i *discordgo.InteractionCreate, newCID utils.NewCID) {
+	switch newCID.GetCommandName() {
 	// case CustomIDTypeAddWish:
-	case utils.CustomIDTypeAddHasPlayed:
-		// 加已玩
-		go handlers.AddHasPlayed(s, i, &utils.NewCustomID[utils.AddHasPlayedArgs]{CommandName: newCID[0], Value: utils.AddHasPlayedArgs{CacheID: newCID[2], ConfirmMark: b}})
-	default:
-		logrus.Fatal(err)
+	case "加已玩":
+		go handlers.AddHasPlayed(s, i, newCID)
+		// default:
+		// 	logrus.Fatal(err)
 	}
 }
