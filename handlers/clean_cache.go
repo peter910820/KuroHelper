@@ -7,6 +7,7 @@ import (
 	"kurohelper/utils"
 )
 
+// 清除快取Handler
 func CleanCache(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	cache.Clean()
 

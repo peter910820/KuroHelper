@@ -18,6 +18,7 @@ import (
 	"kurohelper/utils"
 )
 
+// 查詢公司品牌Handler
 func SearchBrand(s *discordgo.Session, i *discordgo.InteractionCreate, cid *utils.NewCID) {
 	// 長時間查詢
 	if cid == nil {
@@ -46,6 +47,7 @@ func SearchBrand(s *discordgo.Session, i *discordgo.InteractionCreate, cid *util
 	}
 }
 
+// erogs查詢公司品牌處理
 func erogsSearchBrand(s *discordgo.Session, i *discordgo.InteractionCreate, cid *utils.NewCID) {
 	var res *erogs.FuzzySearchBrandResponse
 	var messageComponent []discordgo.MessageComponent
@@ -187,6 +189,7 @@ func erogsSearchBrand(s *discordgo.Session, i *discordgo.InteractionCreate, cid 
 
 }
 
+// vndb查詢公司品牌處理
 func vndbSearchBrand(s *discordgo.Session, i *discordgo.InteractionCreate, cid *utils.NewCID) {
 	var res *vndb.ProducerSearchResponse
 	var messageComponent []discordgo.MessageComponent

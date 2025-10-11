@@ -7,6 +7,7 @@ import (
 	"kurohelper/utils"
 )
 
+// 隨機遊戲Handler
 func RandomGame(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	// 長時間查詢
 	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{

@@ -19,6 +19,7 @@ func OnInteraction(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 }
 
+// 事件是InteractionApplicationCommand(使用斜線命令)的處理
 func onInteractionApplicationCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	switch i.ApplicationCommandData().Name {
 	case "vndb統計資料":
@@ -44,6 +45,7 @@ func onInteractionApplicationCommand(s *discordgo.Session, i *discordgo.Interact
 	}
 }
 
+// 事件是InteractionMessageComponent(點擊按鈕)的處理
 func onInteractionMessageComponent(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	cidStringSlice := strings.Split(i.MessageComponentData().CustomID, "|")
 	// 安全檢查，確保CID建立邏輯有誤的話不會出問題

@@ -18,6 +18,7 @@ import (
 	"kurohelper/utils"
 )
 
+// 查詢遊戲Handler
 func SearchGame(s *discordgo.Session, i *discordgo.InteractionCreate, cid *utils.NewCID) {
 	// 長時間查詢
 	if cid == nil {
@@ -46,6 +47,7 @@ func SearchGame(s *discordgo.Session, i *discordgo.InteractionCreate, cid *utils
 	}
 }
 
+// erogs查詢遊戲處理
 func erogsSearchGame(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseDeferredChannelMessageWithSource,
@@ -246,6 +248,7 @@ func erogsSearchGame(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	utils.InteractionEmbedRespond(s, i, embed, nil, true)
 }
 
+// erogs查詢遊戲列表搜尋處理
 func erogsSearchGameList(s *discordgo.Session, i *discordgo.InteractionCreate, cid *utils.NewCID) {
 	var res *[]erogs.FuzzySearchListResponse
 	var messageComponent []discordgo.MessageComponent

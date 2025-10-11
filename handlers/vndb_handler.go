@@ -10,6 +10,7 @@ import (
 	"kurohelper/utils"
 )
 
+// vndb統計資料Handler
 func VndbStats(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	r, err := vndb.GetStats()
 	if err != nil {
@@ -56,6 +57,7 @@ func VndbStats(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	utils.InteractionEmbedRespond(s, i, embed, nil, false)
 }
 
+// 查詢指定遊戲Handler
 func VndbSearchGameByID(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	// 長時間查詢
 	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{

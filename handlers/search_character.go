@@ -16,6 +16,7 @@ import (
 	"kurohelper/utils"
 )
 
+// 查詢角色Handler
 func SearchCharacter(s *discordgo.Session, i *discordgo.InteractionCreate, cid *utils.NewCID) {
 	// 長時間查詢
 	if cid == nil {
@@ -44,6 +45,7 @@ func SearchCharacter(s *discordgo.Session, i *discordgo.InteractionCreate, cid *
 	}
 }
 
+// erogs查詢角色處理
 func erogsSearchCharacter(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseDeferredChannelMessageWithSource,
@@ -126,6 +128,7 @@ func erogsSearchCharacter(s *discordgo.Session, i *discordgo.InteractionCreate) 
 	utils.InteractionEmbedRespond(s, i, embed, nil, true)
 }
 
+// erogs查詢角色列表搜尋處理
 func erogsSearchCharacterList(s *discordgo.Session, i *discordgo.InteractionCreate, cid *utils.NewCID) {
 	var res *[]erogs.FuzzySearchListResponse
 	var messageComponent []discordgo.MessageComponent

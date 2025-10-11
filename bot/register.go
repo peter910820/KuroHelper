@@ -7,6 +7,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// 註冊命令
 func RegisterCommand(s *discordgo.Session) {
 	var guildCmds []*discordgo.ApplicationCommand
 	var globalCmds []*discordgo.ApplicationCommand
@@ -33,7 +34,7 @@ func RegisterCommand(s *discordgo.Session) {
 
 }
 
-// 群組專用管理指令，要使用群組內部整合管理複寫權限，預設是全部可見
+// 群組專用管理指令，要使用群組內部整合管理複寫權限，預設是全部可見(私有)
 func managementCommands() []*discordgo.ApplicationCommand {
 	return []*discordgo.ApplicationCommand{
 		{
@@ -43,6 +44,7 @@ func managementCommands() []*discordgo.ApplicationCommand {
 	}
 }
 
+// 主要專用指令(全域)
 func galgameCommands() []*discordgo.ApplicationCommand {
 	return []*discordgo.ApplicationCommand{
 		{
@@ -184,6 +186,7 @@ func galgameCommands() []*discordgo.ApplicationCommand {
 	}
 }
 
+// vndb專用指令(全域)
 func vndbCommands() []*discordgo.ApplicationCommand {
 	return []*discordgo.ApplicationCommand{
 		{

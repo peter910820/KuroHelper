@@ -18,6 +18,7 @@ import (
 	"kurohelper/utils"
 )
 
+// 加已玩Handler
 func AddHasPlayed(s *discordgo.Session, i *discordgo.InteractionCreate, cid *utils.NewCID) {
 	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseDeferredChannelMessageWithSource,

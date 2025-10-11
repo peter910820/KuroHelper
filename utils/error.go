@@ -9,6 +9,7 @@ import (
 	kurohelpererrors "kurohelper/errors"
 )
 
+// 錯誤統一處理方法
 func HandleError(err error, s *discordgo.Session, i *discordgo.InteractionCreate) {
 	logrus.Error(err)
 	switch {

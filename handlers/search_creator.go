@@ -17,6 +17,7 @@ import (
 	"kurohelper/utils"
 )
 
+// 查詢創作者Handler
 func SearchCreator(s *discordgo.Session, i *discordgo.InteractionCreate, cid *utils.NewCID) {
 	// 長時間查詢
 	if cid == nil {
@@ -45,6 +46,7 @@ func SearchCreator(s *discordgo.Session, i *discordgo.InteractionCreate, cid *ut
 	}
 }
 
+// erogs查詢創作者處理
 func erogsSearchCreator(s *discordgo.Session, i *discordgo.InteractionCreate, cid *utils.NewCID) {
 	var res *erogs.FuzzySearchCreatorResponse
 	var messageComponent []discordgo.MessageComponent
@@ -180,6 +182,7 @@ func erogsSearchCreator(s *discordgo.Session, i *discordgo.InteractionCreate, ci
 
 }
 
+// erogs查詢創作者列表搜尋處理
 func erogsSearchCreatorList(s *discordgo.Session, i *discordgo.InteractionCreate, cid *utils.NewCID) {
 	var res *[]erogs.FuzzySearchListResponse
 	var messageComponent []discordgo.MessageComponent
