@@ -18,7 +18,7 @@ import (
 	"kurohelper/utils"
 )
 
-func AddHasPlayedHandler(s *discordgo.Session, i *discordgo.InteractionCreate, cid *utils.NewCustomID[utils.AddHasPlayedArgs]) {
+func AddHasPlayed(s *discordgo.Session, i *discordgo.InteractionCreate, cid *utils.NewCustomID[utils.AddHasPlayedArgs]) {
 	if cid != nil {
 		if !cid.Value.ConfirmMark {
 			embed := &discordgo.MessageEmbed{

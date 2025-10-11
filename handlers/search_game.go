@@ -18,29 +18,31 @@ import (
 	"kurohelper/utils"
 )
 
-func FuzzySearchGame(s *discordgo.Session, i *discordgo.InteractionCreate, cid *CustomID) {
-	if i.Type == discordgo.InteractionApplicationCommand {
+func SearchGame(s *discordgo.Session, i *discordgo.InteractionCreate, cid *CustomID) {
+	// 長時間查詢
+	if cid == nil {
 		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseDeferredChannelMessageWithSource,
 		})
+	}
 
+	if i.Type == discordgo.InteractionApplicationCommand {
 		opt, err := utils.GetOptions(i, "列表搜尋")
 		if err != nil && errors.Is(err, kurohelpererrors.ErrOptionTranslateFail) {
 			utils.HandleError(err, s, i)
 			return
 		}
 		if opt == "" {
-			erogsFuzzySearchGame(s, i)
+			erogsSearchGame(s, i)
 		} else {
-			erogsFuzzySearchGameList(s, i, cid)
+			erogsSearchGameList(s, i, cid)
 		}
 	} else {
-		erogsFuzzySearchGameList(s, i, cid)
+		erogsSearchGameList(s, i, cid)
 	}
-
 }
 
-func erogsFuzzySearchGame(s *discordgo.Session, i *discordgo.InteractionCreate) {
+func erogsSearchGame(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseDeferredChannelMessageWithSource,
 	})
@@ -240,7 +242,7 @@ func erogsFuzzySearchGame(s *discordgo.Session, i *discordgo.InteractionCreate) 
 	utils.InteractionEmbedRespond(s, i, embed, nil, true)
 }
 
-func erogsFuzzySearchGameList(s *discordgo.Session, i *discordgo.InteractionCreate, cid *CustomID) {
+func erogsSearchGameList(s *discordgo.Session, i *discordgo.InteractionCreate, cid *CustomID) {
 	var res *[]erogs.FuzzySearchListResponse
 	var messageComponent []discordgo.MessageComponent
 	var hasMore bool

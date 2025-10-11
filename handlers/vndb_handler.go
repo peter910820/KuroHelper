@@ -5,9 +5,7 @@ import (
 	"strings"
 
 	"github.com/bwmarrin/discordgo"
-	"github.com/google/uuid"
 
-	"kurohelper/cache"
 	"kurohelper/provider/vndb"
 	"kurohelper/utils"
 )
@@ -193,117 +191,4 @@ func VndbSearchGameByID(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		},
 	}
 	utils.InteractionEmbedRespond(s, i, embed, nil, true)
-}
-
-func VndbFuzzySearchBrand(s *discordgo.Session, i *discordgo.InteractionCreate, cid *CustomID) {
-	var res *vndb.ProducerSearchResponse
-	var messageComponent []discordgo.MessageComponent
-	var hasMore bool
-
-	// 第一次查詢
-	if cid == nil {
-		keyword, err := utils.GetOptions(i, "keyword")
-		if err != nil {
-			utils.HandleError(err, s, i)
-			return
-		}
-
-		// companyType, err := utils.GetOptions(i, "type")
-		// if err != nil && errors.Is(err, kurohelpererrors.ErrOptionTranslateFail) {
-		// 	utils.HandleError(err, s, i)
-		// 	return
-		// }
-
-		res, err = vndb.GetProducerByFuzzy(keyword, "")
-		if err != nil {
-			utils.HandleError(err, s, i)
-			return
-		}
-
-		idStr := uuid.New().String()
-		cache.Set(idStr, *res)
-		hasMore = pagination(&(res.Vn.Results), 0, false)
-
-		if hasMore {
-			messageComponent = []discordgo.MessageComponent{utils.MakePageComponent("▶️", "查詢公司品牌(vndb)", idStr, 1)}
-		}
-	} else {
-		cacheValue, err := cache.Get(cid.ID)
-		if err != nil {
-			utils.HandleError(err, s, i)
-			return
-		}
-		resValue := cacheValue.(vndb.ProducerSearchResponse)
-		res = &resValue
-		// 資料分頁
-		hasMore = pagination(&(res.Vn.Results), cid.Value, true)
-		if hasMore {
-			if cid.Value == 0 {
-				messageComponent = []discordgo.MessageComponent{utils.MakePageComponent("▶️", cid.CommandName, cid.ID, 1)}
-			} else {
-				messageComponent = []discordgo.MessageComponent{utils.MakePageComponent("◀️", cid.CommandName, cid.ID, cid.Value-1)}
-				messageComponent = append(messageComponent, utils.MakePageComponent("▶️", cid.CommandName, cid.ID, cid.Value+1))
-			}
-		} else {
-			messageComponent = []discordgo.MessageComponent{utils.MakePageComponent("◀️", cid.CommandName, cid.ID, cid.Value-1)}
-		}
-	}
-
-	actionsRow := utils.MakeActionsRow(messageComponent)
-
-	/* 處理回傳結構 */
-
-	title := res.Producer.Results[0].Original
-	if len(res.Producer.Results[0].Aliases) != 0 {
-		allAlias := make([]string, 0, len(res.Producer.Results[0].Aliases))
-		allAlias = append(allAlias, res.Producer.Results[0].Aliases...)
-
-		if strings.TrimSpace(title) != "" {
-			title += fmt.Sprintf("%s(%s)", allAlias[0], strings.Join(allAlias[1:], "), ("))
-		} else {
-			if len(allAlias) > 1 {
-				title = fmt.Sprintf("%s(%s)", allAlias[0], strings.Join(allAlias[1:], "), ("))
-			} else {
-				title = allAlias[0]
-			}
-		}
-
-	}
-
-	if strings.TrimSpace(title) == "" {
-		title = res.Producer.Results[0].Name
-	}
-
-	gameData := make([]string, 0, len(res.Vn.Results))
-	for _, game := range res.Vn.Results {
-		if strings.TrimSpace(game.Alttitle) != "" {
-			gameData = append(gameData, fmt.Sprintf("%.1f/%.1f/%03d　%02d(H)/%03d　**%s**", game.Average, game.Rating, game.Votecount, game.LengthMinutes/60, game.LengthVotes, game.Alttitle))
-		} else {
-			gameData = append(gameData, fmt.Sprintf("%.1f/%.1f/%03d　%02d(H)/%03d　**%s**", game.Average, game.Rating, game.Votecount, game.LengthMinutes/60, game.LengthVotes, game.Title))
-		}
-	}
-
-	embed := &discordgo.MessageEmbed{
-		Title: title,
-		Color: 0x04108e,
-		Fields: []*discordgo.MessageEmbedField{
-			{
-				Name:   "品牌(公司)名稱",
-				Value:  title,
-				Inline: false,
-			},
-			{
-				Name:   "遊戲列表",
-				Value:  strings.Join(gameData, "\n"),
-				Inline: false,
-			},
-		},
-	}
-
-	if cid == nil {
-		utils.InteractionEmbedRespond(s, i, embed, actionsRow, true)
-	} else {
-		utils.EditEmbedRespond(s, i, embed, actionsRow)
-	}
-
 }

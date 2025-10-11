@@ -27,21 +27,21 @@ func onInteractionApplicationCommand(s *discordgo.Session, i *discordgo.Interact
 	case "查詢指定遊戲":
 		go handlers.VndbSearchGameByID(s, i)
 	case "查詢公司品牌":
-		go handlers.FuzzySearchBrand(s, i, nil)
+		go handlers.SearchBrand(s, i, nil, "")
 	case "查詢創作者":
-		go handlers.FuzzySearchCreator(s, i, nil)
+		go handlers.SearchCreator(s, i, nil)
 	case "查詢音樂":
-		go handlers.FuzzySearchMusic(s, i, nil)
+		go handlers.SearchMusic(s, i, nil)
 	case "查詢遊戲":
-		go handlers.FuzzySearchGame(s, i, nil)
+		go handlers.SearchGame(s, i, nil)
 	case "隨機遊戲":
-		go handlers.RandomGameHandler(s, i)
+		go handlers.RandomGame(s, i)
 	case "加已玩":
-		go handlers.AddHasPlayedHandler(s, i, nil)
+		go handlers.AddHasPlayed(s, i, nil)
 	case "清除快取":
 		go handlers.CleanCache(s, i)
 	case "查詢角色":
-		go handlers.FuzzySearchCharacter(s, i, nil)
+		go handlers.SearchCharacter(s, i, nil)
 	}
 }
 
@@ -69,19 +69,19 @@ func onInteractionMessageComponent(s *discordgo.Session, i *discordgo.Interactio
 
 	switch cidStruct.CommandName {
 	case "查詢公司品牌(vndb)":
-		go handlers.VndbFuzzySearchBrand(s, i, &cidStruct)
+		go handlers.SearchBrand(s, i, &cidStruct, "vndb")
 	case "查詢公司品牌(erogs)":
-		go handlers.ErogsFuzzySearchBrand(s, i, &cidStruct)
+		go handlers.SearchBrand(s, i, &cidStruct, "erogs")
 	case "查詢創作者":
-		go handlers.ErogsFuzzySearchCreator(s, i, &cidStruct)
+		go handlers.SearchCreator(s, i, &cidStruct)
 	case "查詢遊戲列表":
-		go handlers.FuzzySearchGame(s, i, &cidStruct)
+		go handlers.SearchGame(s, i, &cidStruct)
 	case "查詢音樂列表":
-		go handlers.ErogsFuzzySearchMusicList(s, i, &cidStruct)
+		go handlers.SearchMusic(s, i, &cidStruct)
 	case "查詢創作者列表":
-		go handlers.ErogsFuzzySearchCreatorList(s, i, &cidStruct)
+		go handlers.SearchCreator(s, i, &cidStruct)
 	case "查詢角色列表":
-		go handlers.ErogsFuzzySearchCharacterList(s, i, &cidStruct)
+		go handlers.SearchCharacter(s, i, &cidStruct)
 	}
 }
 
@@ -101,7 +101,7 @@ func newOnInteractionMessageComponent(s *discordgo.Session, i *discordgo.Interac
 	// case CustomIDTypeAddWish:
 	case utils.CustomIDTypeAddHasPlayed:
 		// 加已玩
-		go handlers.AddHasPlayedHandler(s, i, &utils.NewCustomID[utils.AddHasPlayedArgs]{CommandName: newCID[0], Value: utils.AddHasPlayedArgs{CacheID: newCID[2], ConfirmMark: b}})
+		go handlers.AddHasPlayed(s, i, &utils.NewCustomID[utils.AddHasPlayedArgs]{CommandName: newCID[0], Value: utils.AddHasPlayedArgs{CacheID: newCID[2], ConfirmMark: b}})
 	default:
 		logrus.Fatal(err)
 	}
