@@ -162,7 +162,8 @@ func erogsSearchMusicList(s *discordgo.Session, i *discordgo.InteractionCreate, 
 		hasMore = pagination(res, 0, false)
 
 		if hasMore {
-			messageComponent = []discordgo.MessageComponent{utils.MakeCIDPageComponent("▶️", idStr, 1, true, i.ApplicationCommandData().Name, "")}
+			cidCommandName := utils.MakeCIDCommandName(i.ApplicationCommandData().Name, true, "")
+			messageComponent = []discordgo.MessageComponent{utils.MakeCIDPageComponent("▶️", idStr, 1, cidCommandName)}
 		}
 	} else {
 		// 處理CID
@@ -187,15 +188,16 @@ func erogsSearchMusicList(s *discordgo.Session, i *discordgo.InteractionCreate, 
 			return
 		}
 		hasMore = pagination(res, pageIndex, true)
+		cidCommandName := utils.MakeCIDCommandName(cid.GetCommandName(), true, "")
 		if hasMore {
 			if pageIndex == 0 {
-				messageComponent = []discordgo.MessageComponent{utils.MakeCIDPageComponent("▶️", pageCID.GetCacheID(), 1, true, cid.GetCommandName(), "")}
+				messageComponent = []discordgo.MessageComponent{utils.MakeCIDPageComponent("▶️", pageCID.GetCacheID(), 1, cidCommandName)}
 			} else {
-				messageComponent = []discordgo.MessageComponent{utils.MakeCIDPageComponent("◀️", pageCID.GetCacheID(), pageIndex-1, true, cid.GetCommandName(), "")}
-				messageComponent = append(messageComponent, utils.MakeCIDPageComponent("▶️", pageCID.GetCacheID(), pageIndex+1, true, cid.GetCommandName(), ""))
+				messageComponent = []discordgo.MessageComponent{utils.MakeCIDPageComponent("◀️", pageCID.GetCacheID(), pageIndex-1, cidCommandName)}
+				messageComponent = append(messageComponent, utils.MakeCIDPageComponent("▶️", pageCID.GetCacheID(), pageIndex+1, cidCommandName))
 			}
 		} else {
-			messageComponent = []discordgo.MessageComponent{utils.MakeCIDPageComponent("◀️", pageCID.GetCacheID(), pageIndex-1, true, cid.GetCommandName(), "")}
+			messageComponent = []discordgo.MessageComponent{utils.MakeCIDPageComponent("◀️", pageCID.GetCacheID(), pageIndex-1, cidCommandName)}
 		}
 	}
 	actionsRow := utils.MakeActionsRow(messageComponent)

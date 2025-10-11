@@ -1,15 +1,20 @@
 package utils
 
 import (
+	"fmt"
 	kurohelpererrors "kurohelper/errors"
 	"strconv"
 	"strings"
+
+	"github.com/bwmarrin/discordgo"
 )
 
 type (
 	NewCID []string
 
 	CustomIDType int
+
+	CustomIDCommandName string
 )
 
 type (
@@ -106,4 +111,32 @@ func (cid AddHasPlayedCID) GetConfirmMark() (bool, error) {
 		return false, kurohelpererrors.ErrCIDGetParameterFailed
 	}
 	return value, nil
+}
+
+// 建立CID索引為0的字串(CommandName)
+func MakeCIDCommandName(commandName string, isList bool, provider string) CustomIDCommandName {
+	if isList {
+		return CustomIDCommandName(commandName + "/list/" + provider)
+	} else {
+		return CustomIDCommandName(commandName + "//" + provider)
+	}
+
+}
+
+// 建立事件為Page的CID
+func MakeCIDPageComponent(label string, id string, value int, commandName CustomIDCommandName) *discordgo.Button {
+	return &discordgo.Button{
+		Label:    label,
+		Style:    discordgo.PrimaryButton,
+		CustomID: fmt.Sprintf("%s|%d|%s|%d", string(commandName), CustomIDTypePage, id, value),
+	}
+}
+
+// 建立事件為AddHasPlayed的CID
+func MakeCIDAddHasPlayedComponent(label string, data AddHasPlayedArgs, i *discordgo.InteractionCreate) *discordgo.Button {
+	return &discordgo.Button{
+		Label:    label,
+		Style:    discordgo.PrimaryButton,
+		CustomID: fmt.Sprintf("%s|%d|%s|%t", i.ApplicationCommandData().Name, CustomIDTypeAddHasPlayed, data.CacheID, data.ConfirmMark),
+	}
 }

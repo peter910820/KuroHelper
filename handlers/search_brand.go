@@ -84,7 +84,8 @@ func erogsSearchBrand(s *discordgo.Session, i *discordgo.InteractionCreate, cid 
 		hasMore = pagination(&(res.GameList), 0, false)
 
 		if hasMore {
-			messageComponent = []discordgo.MessageComponent{utils.MakeCIDPageComponent("▶️", idStr, 1, false, i.ApplicationCommandData().Name, "erogs")}
+			cidCommandName := utils.MakeCIDCommandName(i.ApplicationCommandData().Name, false, "erogs")
+			messageComponent = []discordgo.MessageComponent{utils.MakeCIDPageComponent("▶️", idStr, 1, cidCommandName)}
 		}
 	} else {
 		// 處理CID
@@ -106,15 +107,16 @@ func erogsSearchBrand(s *discordgo.Session, i *discordgo.InteractionCreate, cid 
 		}
 		count = len(res.GameList)
 		hasMore = pagination(&(res.GameList), pageIndex, true)
+		cidCommandName := utils.MakeCIDCommandName(cid.GetCommandName(), false, "erogs")
 		if hasMore {
 			if pageIndex == 0 {
-				messageComponent = []discordgo.MessageComponent{utils.MakeCIDPageComponent("▶️", pageCID.GetCacheID(), 1, false, cid.GetCommandName(), "erogs")}
+				messageComponent = []discordgo.MessageComponent{utils.MakeCIDPageComponent("▶️", pageCID.GetCacheID(), 1, cidCommandName)}
 			} else {
-				messageComponent = []discordgo.MessageComponent{utils.MakeCIDPageComponent("◀️", pageCID.GetCacheID(), pageIndex-1, false, cid.GetCommandName(), "erogs")}
-				messageComponent = append(messageComponent, utils.MakeCIDPageComponent("▶️", pageCID.GetCacheID(), pageIndex+1, false, cid.GetCommandName(), "erogs"))
+				messageComponent = []discordgo.MessageComponent{utils.MakeCIDPageComponent("◀️", pageCID.GetCacheID(), pageIndex-1, cidCommandName)}
+				messageComponent = append(messageComponent, utils.MakeCIDPageComponent("▶️", pageCID.GetCacheID(), pageIndex+1, cidCommandName))
 			}
 		} else {
-			messageComponent = []discordgo.MessageComponent{utils.MakeCIDPageComponent("◀️", pageCID.GetCacheID(), pageIndex-1, false, cid.GetCommandName(), "erogs")}
+			messageComponent = []discordgo.MessageComponent{utils.MakeCIDPageComponent("◀️", pageCID.GetCacheID(), pageIndex-1, cidCommandName)}
 		}
 	}
 
@@ -215,7 +217,8 @@ func vndbSearchBrand(s *discordgo.Session, i *discordgo.InteractionCreate, cid *
 		hasMore = pagination(&(res.Vn.Results), 0, false)
 
 		if hasMore {
-			messageComponent = []discordgo.MessageComponent{utils.MakeCIDPageComponent("▶️", idStr, 1, false, i.ApplicationCommandData().Name, "vndb")}
+			cidCommandName := utils.MakeCIDCommandName(i.ApplicationCommandData().Name, false, "vndb")
+			messageComponent = []discordgo.MessageComponent{utils.MakeCIDPageComponent("▶️", idStr, 1, cidCommandName)}
 		}
 	} else {
 		// 處理CID
@@ -236,15 +239,16 @@ func vndbSearchBrand(s *discordgo.Session, i *discordgo.InteractionCreate, cid *
 			return
 		}
 		hasMore = pagination(&(res.Vn.Results), pageIndex, true)
+		cidCommandName := utils.MakeCIDCommandName(cid.GetCommandName(), false, "vndb")
 		if hasMore {
 			if pageIndex == 0 {
-				messageComponent = []discordgo.MessageComponent{utils.MakeCIDPageComponent("▶️", pageCID.GetCacheID(), 1, false, cid.GetCommandName(), "vndb")}
+				messageComponent = []discordgo.MessageComponent{utils.MakeCIDPageComponent("▶️", pageCID.GetCacheID(), 1, cidCommandName)}
 			} else {
-				messageComponent = []discordgo.MessageComponent{utils.MakeCIDPageComponent("◀️", pageCID.GetCacheID(), pageIndex-1, false, cid.GetCommandName(), "vndb")}
-				messageComponent = append(messageComponent, utils.MakeCIDPageComponent("▶️", pageCID.GetCacheID(), pageIndex+1, false, cid.GetCommandName(), "vndb"))
+				messageComponent = []discordgo.MessageComponent{utils.MakeCIDPageComponent("◀️", pageCID.GetCacheID(), pageIndex-1, cidCommandName)}
+				messageComponent = append(messageComponent, utils.MakeCIDPageComponent("▶️", pageCID.GetCacheID(), pageIndex+1, cidCommandName))
 			}
 		} else {
-			messageComponent = []discordgo.MessageComponent{utils.MakeCIDPageComponent("◀️", pageCID.GetCacheID(), pageIndex-1, false, cid.GetCommandName(), "vndb")}
+			messageComponent = []discordgo.MessageComponent{utils.MakeCIDPageComponent("◀️", pageCID.GetCacheID(), pageIndex-1, cidCommandName)}
 		}
 	}
 
