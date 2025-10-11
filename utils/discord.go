@@ -1,9 +1,6 @@
 package utils
 
 import (
-	"os"
-	"strconv"
-
 	"github.com/bwmarrin/discordgo"
 	"github.com/sirupsen/logrus"
 
@@ -161,22 +158,19 @@ func GetOptions(i *discordgo.InteractionCreate, name string) (string, error) {
 	return "", kurohelpererrors.ErrOptionNotFound
 }
 
-func IsEnglish(r rune) bool {
-	if (r < 'A' || r > 'Z') && (r < 'a' || r > 'z') {
-		return false
-	}
-	return true
-}
-
-func GetEnvInt(key string, def int) int {
-	if val := os.Getenv(key); val != "" {
-		if v, err := strconv.Atoi(val); err == nil {
-			return v
+// Use discordgo.MessageComponent slice to make ActionsRow
+func MakeActionsRow(messageComponent []discordgo.MessageComponent) *discordgo.ActionsRow {
+	if len(messageComponent) != 0 {
+		return &discordgo.ActionsRow{
+			Components: messageComponent,
 		}
+	} else {
+		return nil
 	}
-	return def
+
 }
 
+// get user discord ID
 func GetUserID(i *discordgo.InteractionCreate) string {
 	var userID string
 	if i.Member != nil {
@@ -187,6 +181,7 @@ func GetUserID(i *discordgo.InteractionCreate) string {
 	return userID
 }
 
+// get user discord name
 func GetUsername(i *discordgo.InteractionCreate) string {
 	if i.Member != nil && i.Member.User != nil {
 		return i.Member.User.Username

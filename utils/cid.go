@@ -2,11 +2,12 @@ package utils
 
 import (
 	"fmt"
-	kurohelpererrors "kurohelper/errors"
 	"strconv"
 	"strings"
 
 	"github.com/bwmarrin/discordgo"
+
+	kurohelpererrors "kurohelper/errors"
 )
 
 type (
@@ -89,6 +90,7 @@ func (cid NewCID) GetCacheID() string {
 	return cid[2]
 }
 
+// 取得PageCID的頁面索引
 func (cid PageCID) GetPageIndex() (int, error) {
 	value, err := strconv.Atoi([]string(cid.NewCID)[3])
 	if err != nil {
@@ -97,6 +99,7 @@ func (cid PageCID) GetPageIndex() (int, error) {
 	return value, nil
 }
 
+// 取得AddWishCID的確認記號(目前不使用)
 func (cid AddWishCID) GetConfirmMark() (bool, error) {
 	value, err := strconv.ParseBool([]string(cid.NewCID)[3])
 	if err != nil {
@@ -105,6 +108,7 @@ func (cid AddWishCID) GetConfirmMark() (bool, error) {
 	return value, nil
 }
 
+// 取得AddHasPlayedCID的確認記號(目前不使用)
 func (cid AddHasPlayedCID) GetConfirmMark() (bool, error) {
 	value, err := strconv.ParseBool([]string(cid.NewCID)[3])
 	if err != nil {
