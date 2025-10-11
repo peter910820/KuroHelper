@@ -3,6 +3,7 @@ package utils
 import (
 	kurohelpererrors "kurohelper/errors"
 	"strconv"
+	"strings"
 )
 
 type (
@@ -38,7 +39,23 @@ const (
 
 // 獲取CID中的CommandName欄位
 func (cid NewCID) GetCommandName() string {
-	return []string(cid)[0]
+	return strings.Split([]string(cid)[0], "/")[0]
+}
+
+// 獲取CID中的CommandName欄位，並確認是否是列表行為
+//
+// 這邊是安全行為，如果是沒有列表行為的狀況這邊會單純回傳False
+func (cid NewCID) GetCommandNameIsList() bool {
+	commandName := strings.Split([]string(cid)[0], "/")
+	if len(commandName) == 1 {
+		return false
+	} else {
+		if commandName[1] == "list" {
+			return true
+		} else {
+			return false
+		}
+	}
 }
 
 // 獲取CID類型
@@ -64,7 +81,6 @@ func (cid PageCID) GetPageIndex() (int, error) {
 }
 
 func (cid AddWishCID) GetConfirmMark() (bool, error) {
-
 	value, err := strconv.ParseBool([]string(cid.NewCID)[3])
 	if err != nil {
 		return false, kurohelpererrors.ErrCIDGetParameterFailed
@@ -73,7 +89,6 @@ func (cid AddWishCID) GetConfirmMark() (bool, error) {
 }
 
 func (cid AddHasPlayedCID) GetConfirmMark() (bool, error) {
-
 	value, err := strconv.ParseBool([]string(cid.NewCID)[3])
 	if err != nil {
 		return false, kurohelpererrors.ErrCIDGetParameterFailed

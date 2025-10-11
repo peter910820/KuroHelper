@@ -17,7 +17,7 @@ import (
 	"kurohelper/utils"
 )
 
-func SearchCreator(s *discordgo.Session, i *discordgo.InteractionCreate, cid *CustomID) {
+func SearchCreator(s *discordgo.Session, i *discordgo.InteractionCreate, cid *utils.NewCID) {
 	// 長時間查詢
 	if cid == nil {
 		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
@@ -37,16 +37,21 @@ func SearchCreator(s *discordgo.Session, i *discordgo.InteractionCreate, cid *Cu
 			erogsSearchCreatorList(s, i, cid)
 		}
 	} else {
-		erogsSearchCreatorList(s, i, cid)
+		if !cid.GetCommandNameIsList() {
+			erogsSearchCreator(s, i, cid)
+		} else {
+			erogsSearchCreatorList(s, i, cid)
+		}
 	}
 }
 
-func erogsSearchCreator(s *discordgo.Session, i *discordgo.InteractionCreate, cid *CustomID) {
+func erogsSearchCreator(s *discordgo.Session, i *discordgo.InteractionCreate, cid *utils.NewCID) {
 	var res *erogs.FuzzySearchCreatorResponse
 	var messageComponent []discordgo.MessageComponent
 	var hasMore bool
 	var count int
 	var countInner int
+	var pageIndex int
 
 	if cid == nil {
 		keyword, err := utils.GetOptions(i, "keyword")
@@ -77,10 +82,14 @@ func erogsSearchCreator(s *discordgo.Session, i *discordgo.InteractionCreate, ci
 		hasMore = pagination(&(res.Games), 0, false)
 
 		if hasMore {
-			messageComponent = []discordgo.MessageComponent{utils.MakePageComponent("▶️", i.ApplicationCommandData().Name, idStr, 1)}
+			messageComponent = []discordgo.MessageComponent{utils.MakeCIDPageComponent("▶️", idStr, 1, false, i.ApplicationCommandData().Name)}
 		}
 	} else {
-		cacheValue, err := cache.Get(cid.ID)
+		// 處理CID
+		pageCID := utils.PageCID{
+			NewCID: *cid,
+		}
+		cacheValue, err := cache.Get(pageCID.GetCacheID())
 		if err != nil {
 			utils.HandleError(err, s, i)
 			return
@@ -99,16 +108,21 @@ func erogsSearchCreator(s *discordgo.Session, i *discordgo.InteractionCreate, ci
 		count = len(res.Games)
 
 		// 資料分頁
-		hasMore = pagination(&(res.Games), cid.Value, true)
+		pageIndex, err = pageCID.GetPageIndex()
+		if err != nil {
+			utils.HandleError(err, s, i)
+			return
+		}
+		hasMore = pagination(&(res.Games), pageIndex, true)
 		if hasMore {
-			if cid.Value == 0 {
-				messageComponent = []discordgo.MessageComponent{utils.MakePageComponent("▶️", cid.CommandName, cid.ID, 1)}
+			if pageIndex == 0 {
+				messageComponent = []discordgo.MessageComponent{utils.MakeCIDPageComponent("▶️", pageCID.GetCacheID(), 1, false, cid.GetCommandName())}
 			} else {
-				messageComponent = []discordgo.MessageComponent{utils.MakePageComponent("◀️", cid.CommandName, cid.ID, cid.Value-1)}
-				messageComponent = append(messageComponent, utils.MakePageComponent("▶️", cid.CommandName, cid.ID, cid.Value+1))
+				messageComponent = []discordgo.MessageComponent{utils.MakeCIDPageComponent("◀️", pageCID.GetCacheID(), pageIndex-1, false, cid.GetCommandName())}
+				messageComponent = append(messageComponent, utils.MakeCIDPageComponent("▶️", pageCID.GetCacheID(), pageIndex+1, false, cid.GetCommandName()))
 			}
 		} else {
-			messageComponent = []discordgo.MessageComponent{utils.MakePageComponent("◀️", cid.CommandName, cid.ID, cid.Value-1)}
+			messageComponent = []discordgo.MessageComponent{utils.MakeCIDPageComponent("◀️", pageCID.GetCacheID(), pageIndex-1, false, cid.GetCommandName())}
 		}
 	}
 
@@ -139,7 +153,7 @@ func erogsSearchCreator(s *discordgo.Session, i *discordgo.InteractionCreate, ci
 		if cid == nil {
 			gameData = append(gameData, fmt.Sprintf("%d. **%s**  (%s) / %d分 / %s", i+1, g.Gamename, strings.Join(shokushu, ", "), g.Median, g.SellDay))
 		} else {
-			gameData = append(gameData, fmt.Sprintf("%d. **%s**  (%s) / %d分 / %s", cid.Value*10+i+1, g.Gamename, strings.Join(shokushu, ", "), g.Median, g.SellDay))
+			gameData = append(gameData, fmt.Sprintf("%d. **%s**  (%s) / %d分 / %s", pageIndex*10+i+1, g.Gamename, strings.Join(shokushu, ", "), g.Median, g.SellDay))
 		}
 	}
 
@@ -164,11 +178,12 @@ func erogsSearchCreator(s *discordgo.Session, i *discordgo.InteractionCreate, ci
 
 }
 
-func erogsSearchCreatorList(s *discordgo.Session, i *discordgo.InteractionCreate, cid *CustomID) {
+func erogsSearchCreatorList(s *discordgo.Session, i *discordgo.InteractionCreate, cid *utils.NewCID) {
 	var res *[]erogs.FuzzySearchListResponse
 	var messageComponent []discordgo.MessageComponent
 	var hasMore bool
 	var count int
+	var pageIndex int
 	if cid == nil {
 		keyword, err := utils.GetOptions(i, "keyword")
 		if err != nil {
@@ -191,10 +206,14 @@ func erogsSearchCreatorList(s *discordgo.Session, i *discordgo.InteractionCreate
 		hasMore = pagination(res, 0, false)
 
 		if hasMore {
-			messageComponent = []discordgo.MessageComponent{utils.MakePageComponent("▶️", "查詢創作者列表", idStr, 1)}
+			messageComponent = []discordgo.MessageComponent{utils.MakeCIDPageComponent("▶️", idStr, 1, true, i.ApplicationCommandData().Name)}
 		}
 	} else {
-		cacheValue, err := cache.Get(cid.ID)
+		// 處理CID
+		pageCID := utils.PageCID{
+			NewCID: *cid,
+		}
+		cacheValue, err := cache.Get(pageCID.GetCacheID())
 		if err != nil {
 			utils.HandleError(err, s, i)
 			return
@@ -206,16 +225,21 @@ func erogsSearchCreatorList(s *discordgo.Session, i *discordgo.InteractionCreate
 		count = len(*res)
 
 		// 資料分頁
-		hasMore = pagination(res, cid.Value, true)
+		pageIndex, err = pageCID.GetPageIndex()
+		if err != nil {
+			utils.HandleError(err, s, i)
+			return
+		}
+		hasMore = pagination(res, pageIndex, true)
 		if hasMore {
-			if cid.Value == 0 {
-				messageComponent = []discordgo.MessageComponent{utils.MakePageComponent("▶️", cid.CommandName, cid.ID, 1)}
+			if pageIndex == 0 {
+				messageComponent = []discordgo.MessageComponent{utils.MakeCIDPageComponent("▶️", pageCID.GetCacheID(), 1, true, cid.GetCommandName())}
 			} else {
-				messageComponent = []discordgo.MessageComponent{utils.MakePageComponent("◀️", cid.CommandName, cid.ID, cid.Value-1)}
-				messageComponent = append(messageComponent, utils.MakePageComponent("▶️", cid.CommandName, cid.ID, cid.Value+1))
+				messageComponent = []discordgo.MessageComponent{utils.MakeCIDPageComponent("◀️", pageCID.GetCacheID(), pageIndex-1, true, cid.GetCommandName())}
+				messageComponent = append(messageComponent, utils.MakeCIDPageComponent("▶️", pageCID.GetCacheID(), pageIndex+1, true, cid.GetCommandName()))
 			}
 		} else {
-			messageComponent = []discordgo.MessageComponent{utils.MakePageComponent("◀️", cid.CommandName, cid.ID, cid.Value-1)}
+			messageComponent = []discordgo.MessageComponent{utils.MakeCIDPageComponent("◀️", pageCID.GetCacheID(), pageIndex-1, true, cid.GetCommandName())}
 		}
 	}
 	actionsRow := utils.MakeActionsRow(messageComponent)

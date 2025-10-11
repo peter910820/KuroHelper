@@ -18,10 +18,10 @@ import (
 	"kurohelper/utils"
 )
 
-func AddHasPlayed(s *discordgo.Session, i *discordgo.InteractionCreate, cid utils.NewCID) {
+func AddHasPlayed(s *discordgo.Session, i *discordgo.InteractionCreate, cid *utils.NewCID) {
 	if cid != nil {
 		addWishCID := utils.AddWishCID{
-			NewCID: cid,
+			NewCID: *cid,
 		}
 
 		confirmMark, err := addWishCID.GetConfirmMark()
@@ -123,8 +123,8 @@ func AddHasPlayed(s *discordgo.Session, i *discordgo.InteractionCreate, cid util
 	idStr := uuid.New().String()
 	cache.Set(idStr, *res)
 
-	messageComponent := []discordgo.MessageComponent{utils.MakeAddHasPlayedComponent("✅", utils.AddHasPlayedArgs{CacheID: idStr, ConfirmMark: true}, i)}
-	messageComponent = append(messageComponent, utils.MakeAddHasPlayedComponent("❌", utils.AddHasPlayedArgs{CacheID: idStr, ConfirmMark: false}, i))
+	messageComponent := []discordgo.MessageComponent{utils.MakeCIDAddHasPlayedComponent("✅", utils.AddHasPlayedArgs{CacheID: idStr, ConfirmMark: true}, i)}
+	messageComponent = append(messageComponent, utils.MakeCIDAddHasPlayedComponent("❌", utils.AddHasPlayedArgs{CacheID: idStr, ConfirmMark: false}, i))
 	actionsRow := utils.MakeActionsRow(messageComponent)
 
 	embed := &discordgo.MessageEmbed{

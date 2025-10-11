@@ -25,10 +25,22 @@ func MakePageComponent(label string, commandName string, id string, value int) *
 	}
 }
 
-func MakeAddHasPlayedComponent(label string, data AddHasPlayedArgs, i *discordgo.InteractionCreate) *discordgo.Button {
+func MakeCIDAddHasPlayedComponent(label string, data AddHasPlayedArgs, i *discordgo.InteractionCreate) *discordgo.Button {
 	return &discordgo.Button{
 		Label:    label,
 		Style:    discordgo.PrimaryButton,
 		CustomID: fmt.Sprintf("%s|%d|%s|%t", i.ApplicationCommandData().Name, CustomIDTypeAddHasPlayed, data.CacheID, data.ConfirmMark),
+	}
+}
+
+func MakeCIDPageComponent(label string, id string, value int, isList bool, commandName string) *discordgo.Button {
+	listString := ""
+	if isList {
+		listString = "list"
+	}
+	return &discordgo.Button{
+		Label:    label,
+		Style:    discordgo.PrimaryButton,
+		CustomID: fmt.Sprintf("%s|%d|%s|%d", commandName+"/"+listString, CustomIDTypePage, id, value),
 	}
 }

@@ -71,14 +71,10 @@ func onInteractionMessageComponent(s *discordgo.Session, i *discordgo.Interactio
 		go handlers.SearchBrand(s, i, &cidStruct, "vndb")
 	case "查詢公司品牌(erogs)":
 		go handlers.SearchBrand(s, i, &cidStruct, "erogs")
-	case "查詢創作者":
-		go handlers.SearchCreator(s, i, &cidStruct)
 	case "查詢遊戲列表":
 		go handlers.SearchGame(s, i, &cidStruct)
 	case "查詢音樂列表":
 		go handlers.SearchMusic(s, i, &cidStruct)
-	case "查詢創作者列表":
-		go handlers.SearchCreator(s, i, &cidStruct)
 	case "查詢角色列表":
 		go handlers.SearchCharacter(s, i, &cidStruct)
 	}
@@ -87,8 +83,10 @@ func onInteractionMessageComponent(s *discordgo.Session, i *discordgo.Interactio
 func newOnInteractionMessageComponent(s *discordgo.Session, i *discordgo.InteractionCreate, newCID utils.NewCID) {
 	switch newCID.GetCommandName() {
 	// case CustomIDTypeAddWish:
+	case "查詢創作者":
+		go handlers.SearchCreator(s, i, &newCID)
 	case "加已玩":
-		go handlers.AddHasPlayed(s, i, newCID)
+		go handlers.AddHasPlayed(s, i, &newCID)
 		// default:
 		// 	logrus.Fatal(err)
 	}
