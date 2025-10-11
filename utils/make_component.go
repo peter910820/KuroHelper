@@ -17,14 +17,6 @@ func MakeActionsRow(messageComponent []discordgo.MessageComponent) *discordgo.Ac
 
 }
 
-func MakePageComponent(label string, commandName string, id string, value int) *discordgo.Button {
-	return &discordgo.Button{
-		Label:    label,
-		Style:    discordgo.PrimaryButton,
-		CustomID: fmt.Sprintf("%s::%s::Page::%d", commandName, id, value),
-	}
-}
-
 func MakeCIDAddHasPlayedComponent(label string, data AddHasPlayedArgs, i *discordgo.InteractionCreate) *discordgo.Button {
 	return &discordgo.Button{
 		Label:    label,
@@ -33,7 +25,7 @@ func MakeCIDAddHasPlayedComponent(label string, data AddHasPlayedArgs, i *discor
 	}
 }
 
-func MakeCIDPageComponent(label string, id string, value int, isList bool, commandName string) *discordgo.Button {
+func MakeCIDPageComponent(label string, id string, value int, isList bool, commandName string, provider string) *discordgo.Button {
 	listString := ""
 	if isList {
 		listString = "list"
@@ -41,6 +33,6 @@ func MakeCIDPageComponent(label string, id string, value int, isList bool, comma
 	return &discordgo.Button{
 		Label:    label,
 		Style:    discordgo.PrimaryButton,
-		CustomID: fmt.Sprintf("%s|%d|%s|%d", commandName+"/"+listString, CustomIDTypePage, id, value),
+		CustomID: fmt.Sprintf("%s|%d|%s|%d", commandName+"/"+listString+"/"+provider, CustomIDTypePage, id, value),
 	}
 }

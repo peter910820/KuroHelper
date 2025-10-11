@@ -42,12 +42,12 @@ func (cid NewCID) GetCommandName() string {
 	return strings.Split([]string(cid)[0], "/")[0]
 }
 
-// 獲取CID中的CommandName欄位，並確認是否是列表行為
+// 獲取CID中的CommandName欄位，並回傳是否是列表行為
 //
 // 這邊是安全行為，如果是沒有列表行為的狀況這邊會單純回傳False
 func (cid NewCID) GetCommandNameIsList() bool {
 	commandName := strings.Split([]string(cid)[0], "/")
-	if len(commandName) == 1 {
+	if len(commandName) <= 1 {
 		return false
 	} else {
 		if commandName[1] == "list" {
@@ -55,6 +55,18 @@ func (cid NewCID) GetCommandNameIsList() bool {
 		} else {
 			return false
 		}
+	}
+}
+
+// 獲取CID中的CommandName欄位，並回傳供應商
+//
+// 這邊是安全行為，如果是沒有列表行為的狀況這邊會單純回傳空字串
+func (cid NewCID) GetCommandNameProvider() string {
+	commandName := strings.Split([]string(cid)[0], "/")
+	if len(commandName) <= 2 {
+		return ""
+	} else {
+		return commandName[2]
 	}
 }
 

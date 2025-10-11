@@ -18,7 +18,7 @@ import (
 	"kurohelper/utils"
 )
 
-func SearchBrand(s *discordgo.Session, i *discordgo.InteractionCreate, cid *CustomID, db string) {
+func SearchBrand(s *discordgo.Session, i *discordgo.InteractionCreate, cid *utils.NewCID) {
 	// 長時間查詢
 	if cid == nil {
 		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
@@ -38,7 +38,7 @@ func SearchBrand(s *discordgo.Session, i *discordgo.InteractionCreate, cid *Cust
 			vndbSearchBrand(s, i, cid)
 		}
 	} else {
-		if db == "erogs" {
+		if cid.GetCommandNameProvider() == "erogs" {
 			erogsSearchBrand(s, i, cid)
 		} else {
 			vndbSearchBrand(s, i, cid)
@@ -46,12 +46,12 @@ func SearchBrand(s *discordgo.Session, i *discordgo.InteractionCreate, cid *Cust
 	}
 }
 
-func erogsSearchBrand(s *discordgo.Session, i *discordgo.InteractionCreate, cid *CustomID) {
+func erogsSearchBrand(s *discordgo.Session, i *discordgo.InteractionCreate, cid *utils.NewCID) {
 	var res *erogs.FuzzySearchBrandResponse
 	var messageComponent []discordgo.MessageComponent
 	var hasMore bool
 	var count int
-
+	var pageIndex int
 	if cid == nil {
 		keyword, err := utils.GetOptions(i, "keyword")
 		if err != nil {
@@ -84,27 +84,37 @@ func erogsSearchBrand(s *discordgo.Session, i *discordgo.InteractionCreate, cid 
 		hasMore = pagination(&(res.GameList), 0, false)
 
 		if hasMore {
-			messageComponent = []discordgo.MessageComponent{utils.MakePageComponent("▶️", "查詢公司品牌(erogs)", idStr, 1)}
+			messageComponent = []discordgo.MessageComponent{utils.MakeCIDPageComponent("▶️", idStr, 1, false, i.ApplicationCommandData().Name, "erogs")}
 		}
 	} else {
-		cacheValue, err := cache.Get(cid.ID)
+		// 處理CID
+		pageCID := utils.PageCID{
+			NewCID: *cid,
+		}
+		cacheValue, err := cache.Get(pageCID.GetCacheID())
 		if err != nil {
 			utils.HandleError(err, s, i)
 			return
 		}
 		resValue := cacheValue.(erogs.FuzzySearchBrandResponse)
 		res = &resValue
+		// 資料分頁
+		pageIndex, err = pageCID.GetPageIndex()
+		if err != nil {
+			utils.HandleError(err, s, i)
+			return
+		}
 		count = len(res.GameList)
-		hasMore = pagination(&(res.GameList), cid.Value, true)
+		hasMore = pagination(&(res.GameList), pageIndex, true)
 		if hasMore {
-			if cid.Value == 0 {
-				messageComponent = []discordgo.MessageComponent{utils.MakePageComponent("▶️", cid.CommandName, cid.ID, 1)}
+			if pageIndex == 0 {
+				messageComponent = []discordgo.MessageComponent{utils.MakeCIDPageComponent("▶️", pageCID.GetCacheID(), 1, false, cid.GetCommandName(), "erogs")}
 			} else {
-				messageComponent = []discordgo.MessageComponent{utils.MakePageComponent("◀️", cid.CommandName, cid.ID, cid.Value-1)}
-				messageComponent = append(messageComponent, utils.MakePageComponent("▶️", cid.CommandName, cid.ID, cid.Value+1))
+				messageComponent = []discordgo.MessageComponent{utils.MakeCIDPageComponent("◀️", pageCID.GetCacheID(), pageIndex-1, false, cid.GetCommandName(), "erogs")}
+				messageComponent = append(messageComponent, utils.MakeCIDPageComponent("▶️", pageCID.GetCacheID(), pageIndex+1, false, cid.GetCommandName(), "erogs"))
 			}
 		} else {
-			messageComponent = []discordgo.MessageComponent{utils.MakePageComponent("◀️", cid.CommandName, cid.ID, cid.Value-1)}
+			messageComponent = []discordgo.MessageComponent{utils.MakeCIDPageComponent("◀️", pageCID.GetCacheID(), pageIndex-1, false, cid.GetCommandName(), "erogs")}
 		}
 	}
 
@@ -175,11 +185,11 @@ func erogsSearchBrand(s *discordgo.Session, i *discordgo.InteractionCreate, cid 
 
 }
 
-func vndbSearchBrand(s *discordgo.Session, i *discordgo.InteractionCreate, cid *CustomID) {
+func vndbSearchBrand(s *discordgo.Session, i *discordgo.InteractionCreate, cid *utils.NewCID) {
 	var res *vndb.ProducerSearchResponse
 	var messageComponent []discordgo.MessageComponent
 	var hasMore bool
-
+	var pageIndex int
 	// 第一次查詢
 	if cid == nil {
 		keyword, err := utils.GetOptions(i, "keyword")
@@ -205,10 +215,14 @@ func vndbSearchBrand(s *discordgo.Session, i *discordgo.InteractionCreate, cid *
 		hasMore = pagination(&(res.Vn.Results), 0, false)
 
 		if hasMore {
-			messageComponent = []discordgo.MessageComponent{utils.MakePageComponent("▶️", "查詢公司品牌(vndb)", idStr, 1)}
+			messageComponent = []discordgo.MessageComponent{utils.MakeCIDPageComponent("▶️", idStr, 1, false, i.ApplicationCommandData().Name, "vndb")}
 		}
 	} else {
-		cacheValue, err := cache.Get(cid.ID)
+		// 處理CID
+		pageCID := utils.PageCID{
+			NewCID: *cid,
+		}
+		cacheValue, err := cache.Get(pageCID.GetCacheID())
 		if err != nil {
 			utils.HandleError(err, s, i)
 			return
@@ -216,23 +230,27 @@ func vndbSearchBrand(s *discordgo.Session, i *discordgo.InteractionCreate, cid *
 		resValue := cacheValue.(vndb.ProducerSearchResponse)
 		res = &resValue
 		// 資料分頁
-		hasMore = pagination(&(res.Vn.Results), cid.Value, true)
+		pageIndex, err = pageCID.GetPageIndex()
+		if err != nil {
+			utils.HandleError(err, s, i)
+			return
+		}
+		hasMore = pagination(&(res.Vn.Results), pageIndex, true)
 		if hasMore {
-			if cid.Value == 0 {
-				messageComponent = []discordgo.MessageComponent{utils.MakePageComponent("▶️", cid.CommandName, cid.ID, 1)}
+			if pageIndex == 0 {
+				messageComponent = []discordgo.MessageComponent{utils.MakeCIDPageComponent("▶️", pageCID.GetCacheID(), 1, false, cid.GetCommandName(), "vndb")}
 			} else {
-				messageComponent = []discordgo.MessageComponent{utils.MakePageComponent("◀️", cid.CommandName, cid.ID, cid.Value-1)}
-				messageComponent = append(messageComponent, utils.MakePageComponent("▶️", cid.CommandName, cid.ID, cid.Value+1))
+				messageComponent = []discordgo.MessageComponent{utils.MakeCIDPageComponent("◀️", pageCID.GetCacheID(), pageIndex-1, false, cid.GetCommandName(), "vndb")}
+				messageComponent = append(messageComponent, utils.MakeCIDPageComponent("▶️", pageCID.GetCacheID(), pageIndex+1, false, cid.GetCommandName(), "vndb"))
 			}
 		} else {
-			messageComponent = []discordgo.MessageComponent{utils.MakePageComponent("◀️", cid.CommandName, cid.ID, cid.Value-1)}
+			messageComponent = []discordgo.MessageComponent{utils.MakeCIDPageComponent("◀️", pageCID.GetCacheID(), pageIndex-1, false, cid.GetCommandName(), "vndb")}
 		}
 	}
 
 	actionsRow := utils.MakeActionsRow(messageComponent)
 
 	/* 處理回傳結構 */
-
 	title := res.Producer.Results[0].Original
 	if len(res.Producer.Results[0].Aliases) != 0 {
 		allAlias := make([]string, 0, len(res.Producer.Results[0].Aliases))
