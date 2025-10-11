@@ -134,9 +134,9 @@ func erogsSearchCreator(s *discordgo.Session, i *discordgo.InteractionCreate, ci
 	if res.TwitterUsername != "" {
 		link += fmt.Sprintf("[Twitter](https://x.com/%s) ", res.TwitterUsername)
 	}
-	if res.Blog != "" {
-		link += fmt.Sprintf("[Blog](%s) ", res.Blog)
-	}
+	// if res.Blog != "" {
+	// 	link += fmt.Sprintf("[Blog](%s) ", res.Blog)
+	// }
 	if res.Pixiv != nil {
 		link += fmt.Sprintf("[Pixiv](https://www.pixiv.net/users/%d) ", *res.Pixiv)
 	}
