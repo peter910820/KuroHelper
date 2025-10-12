@@ -1,5 +1,10 @@
 package handlers
 
+const (
+	Played = 1 << iota
+	Wish
+)
+
 // 資料分頁
 func pagination[T any](result *[]T, page int, useCache bool) bool {
 	resultLen := len(*result)

@@ -19,3 +19,11 @@ var (
 	//ymgal invalid access token(401)
 	ErrYmgalInvalidAccessToken = errors.New("ymgal: invalid access token or other 401 error")
 )
+
+// CustomID(CID) error
+var (
+	// cid wrong format
+	ErrCIDWrongFormat = errors.New("cid: wrong format")
+	// cid get parameter failed
+	ErrCIDGetParameterFailed = errors.New("cid: get parameter failed")
+)

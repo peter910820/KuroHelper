@@ -1,7 +1,5 @@
 package utils
 
-type CustomIDType int
-
 type (
 	CustomIDArgs interface {
 		PageArgs | SortArgs | AddWishArgs | AddHasPlayedArgs
@@ -33,11 +31,4 @@ type (
 		CacheID     string
 		ConfirmMark bool
 	}
-)
-
-const (
-	CustomIDTypePage CustomIDType = iota + 1
-	CustomIDTypeSort
-	CustomIDTypeAddWish
-	CustomIDTypeAddHasPlayed
 )

@@ -7,12 +7,13 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// 註冊命令
 func RegisterCommand(s *discordgo.Session) {
 	var guildCmds []*discordgo.ApplicationCommand
 	var globalCmds []*discordgo.ApplicationCommand
 	guildCmds = append(guildCmds, managementCommands()...)
+	globalCmds = append(globalCmds, galgameCommands()...)
 	globalCmds = append(globalCmds, vndbCommands()...)
-	globalCmds = append(globalCmds, erogsCommands()...)
 
 	// guild commands
 	// main mangement group ID
@@ -33,7 +34,7 @@ func RegisterCommand(s *discordgo.Session) {
 
 }
 
-// 群組專用管理指令，要使用群組內部整合管理複寫權限，預設是全部可見
+// 群組專用管理指令，要使用群組內部整合管理複寫權限，預設是全部可見(私有)
 func managementCommands() []*discordgo.ApplicationCommand {
 	return []*discordgo.ApplicationCommand{
 		{
@@ -43,65 +44,8 @@ func managementCommands() []*discordgo.ApplicationCommand {
 	}
 }
 
-func vndbCommands() []*discordgo.ApplicationCommand {
-	return []*discordgo.ApplicationCommand{
-		{
-			Name:        "vndb統計資料",
-			Description: "取得VNDB統計資料(VNDB)",
-		},
-		{
-			Name:        "查詢指定遊戲",
-			Description: "根據VNDB ID查詢指定遊戲資料(VNDB)",
-			Options: []*discordgo.ApplicationCommandOption{
-				{
-					Type:        discordgo.ApplicationCommandOptionString,
-					Name:        "brandid",
-					Description: "VNDB ID",
-					Required:    true,
-				},
-			},
-		},
-		{
-			Name:        "查詢公司品牌",
-			Description: "根據關鍵字查詢公司品牌資料(VNDB)",
-			Options: []*discordgo.ApplicationCommandOption{
-				{
-					Type:        discordgo.ApplicationCommandOptionString,
-					Name:        "keyword",
-					Description: "關鍵字",
-					Required:    true,
-				},
-				{
-					Type:        discordgo.ApplicationCommandOptionString,
-					Name:        "type",
-					Description: "公司性質",
-					Required:    false,
-					Choices: []*discordgo.ApplicationCommandOptionChoice{
-						{
-							Name:  "公司",
-							Value: "company",
-						},
-						{
-							Name:  "個人",
-							Value: "individual",
-						},
-						{
-							Name:  "同人社團",
-							Value: "amateur",
-						},
-					},
-				},
-			},
-		},
-		{
-			Name:        "隨機遊戲",
-			Description: "隨機一部Galgame(ymgal)",
-		},
-	}
-}
-
-// 主要的Galgame搜尋來源，之後會整合指令變成可選搜尋來源，現在先分開
-func erogsCommands() []*discordgo.ApplicationCommand {
+// 主要專用指令(全域)
+func galgameCommands() []*discordgo.ApplicationCommand {
 	return []*discordgo.ApplicationCommand{
 		{
 			Name:        "查詢創作者",
@@ -232,6 +176,32 @@ func erogsCommands() []*discordgo.ApplicationCommand {
 							Value: "1",
 						},
 					},
+				},
+			},
+		},
+		{
+			Name:        "隨機遊戲",
+			Description: "隨機一部Galgame(ymgal)",
+		},
+	}
+}
+
+// vndb專用指令(全域)
+func vndbCommands() []*discordgo.ApplicationCommand {
+	return []*discordgo.ApplicationCommand{
+		{
+			Name:        "vndb統計資料",
+			Description: "取得VNDB統計資料(VNDB)",
+		},
+		{
+			Name:        "查詢指定遊戲",
+			Description: "根據VNDB ID查詢指定遊戲資料(VNDB)",
+			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "brandid",
+					Description: "VNDB ID",
+					Required:    true,
 				},
 			},
 		},

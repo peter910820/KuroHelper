@@ -18,18 +18,36 @@ import (
 	"kurohelper/utils"
 )
 
-func AddHasPlayedHandler(s *discordgo.Session, i *discordgo.InteractionCreate, cid *utils.NewCustomID[utils.AddHasPlayedArgs]) {
+// 加已玩Handler
+func AddHasPlayed(s *discordgo.Session, i *discordgo.InteractionCreate, cid *utils.NewCID) {
+	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseDeferredChannelMessageWithSource,
+		Data: &discordgo.InteractionResponseData{
+			Flags: discordgo.MessageFlagsEphemeral,
+		},
+	})
+
 	if cid != nil {
-		if !cid.Value.ConfirmMark {
+		addWishCID := utils.AddWishCID{
+			NewCID: *cid,
+		}
+
+		confirmMark, err := addWishCID.GetConfirmMark()
+		if err != nil {
+			utils.HandleError(err, s, i)
+			return
+		}
+
+		if !confirmMark {
 			embed := &discordgo.MessageEmbed{
 				Title: "操作已取消",
 				Color: 0x7BA23F,
 			}
-			utils.EditEmbedRespond(s, i, embed, nil)
+			utils.InteractionEmbedRespondForSelf(s, i, embed, nil, true)
 			return
 		}
 		// get cache
-		cacheValue, err := cache.Get(cid.Value.CacheID)
+		cacheValue, err := cache.Get(addWishCID.GetCacheID())
 		if err != nil {
 			utils.HandleError(err, s, i)
 			return
@@ -79,21 +97,17 @@ func AddHasPlayedHandler(s *discordgo.Session, i *discordgo.InteractionCreate, c
 				Title: "加入成功！",
 				Color: 0x7BA23F,
 			}
-			utils.EditEmbedRespond(s, i, embed, nil)
+			utils.InteractionEmbedRespondForSelf(s, i, embed, nil, true)
 			return
 		} else {
 			embed := &discordgo.MessageEmbed{
 				Title: "找不到使用者！",
 				Color: 0x7BA23F,
 			}
-			utils.EditEmbedRespond(s, i, embed, nil)
+			utils.InteractionEmbedRespondForSelf(s, i, embed, nil, true)
 			return
 		}
 	}
-
-	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseDeferredChannelMessageWithSource,
-	})
 
 	var res *erogs.FuzzySearchGameResponse
 
@@ -113,8 +127,9 @@ func AddHasPlayedHandler(s *discordgo.Session, i *discordgo.InteractionCreate, c
 	idStr := uuid.New().String()
 	cache.Set(idStr, *res)
 
-	messageComponent := []discordgo.MessageComponent{utils.MakeAddHasPlayedComponent("✅", utils.AddHasPlayedArgs{CacheID: idStr, ConfirmMark: true}, i)}
-	messageComponent = append(messageComponent, utils.MakeAddHasPlayedComponent("❌", utils.AddHasPlayedArgs{CacheID: idStr, ConfirmMark: false}, i))
+	cidCommandName := utils.MakeCIDCommandName(i.ApplicationCommandData().Name, false, "")
+	messageComponent := []discordgo.MessageComponent{utils.MakeCIDAddHasPlayedComponent("✅", idStr, true, cidCommandName)}
+	// messageComponent = append(messageComponent, utils.MakeCIDAddHasPlayedComponent("❌", idStr, false, cidCommandName))
 	actionsRow := utils.MakeActionsRow(messageComponent)
 
 	embed := &discordgo.MessageEmbed{
@@ -140,5 +155,5 @@ func AddHasPlayedHandler(s *discordgo.Session, i *discordgo.InteractionCreate, c
 			URL: res.BannerUrl,
 		},
 	}
-	utils.InteractionEmbedRespond(s, i, embed, actionsRow, true)
+	utils.InteractionEmbedRespondForSelf(s, i, embed, actionsRow, true)
 }

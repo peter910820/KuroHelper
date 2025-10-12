@@ -9,6 +9,7 @@ import (
 	kurohelpererrors "kurohelper/errors"
 )
 
+// 錯誤統一處理方法
 func HandleError(err error, s *discordgo.Session, i *discordgo.InteractionCreate) {
 	logrus.Error(err)
 	switch {
@@ -16,6 +17,8 @@ func HandleError(err error, s *discordgo.Session, i *discordgo.InteractionCreate
 		InteractionEmbedErrorRespond(s, i, "速率限制，請過約1分鐘後再試", true)
 	case errors.Is(err, kurohelpererrors.ErrSearchNoContent):
 		InteractionEmbedErrorRespond(s, i, "找不到任何結果喔", true)
+	case errors.Is(err, kurohelpererrors.ErrCIDGetParameterFailed):
+		fallthrough
 	case errors.Is(err, kurohelpererrors.ErrCacheLost):
 		EmbedErrorRespond(s, i, "快取過期，請重新查詢")
 	case errors.Is(err, kurohelpererrors.ErrStatusCodeAbnormal):
