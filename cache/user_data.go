@@ -1,9 +1,8 @@
 package cache
 
 import (
-	"kurohelper/database"
-	"os"
-
+	kurohelperdb "github.com/peter910820/kurohelper-db"
+	"github.com/peter910820/kurohelper-db/models"
 	"github.com/sirupsen/logrus"
 )
 
@@ -15,8 +14,8 @@ var (
 //
 // 目的是檢查使用者的時候不用先檢查他是否在資料庫，可以直接決定要產生User紀錄還是直接抓出資料
 func InitUser() {
-	var entries []database.User
-	if err := database.Dbs[os.Getenv("DB_NAME")].Find(&entries).Error; err != nil {
+	var entries []models.User
+	if err := kurohelperdb.Dbs.Find(&entries).Error; err != nil {
 		logrus.Fatal(err)
 	}
 

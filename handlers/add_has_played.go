@@ -2,18 +2,19 @@ package handlers
 
 import (
 	"fmt"
-	"os"
 	"regexp"
 	"strings"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/google/uuid"
+	kurohelperdb "github.com/peter910820/kurohelper-db"
+	"github.com/peter910820/kurohelper-db/models"
 	"github.com/sirupsen/logrus"
+
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
 	"kurohelper/cache"
-	"kurohelper/database"
 	"kurohelper/provider/erogs"
 	"kurohelper/utils"
 )
@@ -58,27 +59,27 @@ func AddHasPlayed(s *discordgo.Session, i *discordgo.InteractionCreate, cid *uti
 		userID := utils.GetUserID(i)
 		userName := utils.GetUsername(i)
 		if strings.TrimSpace(userID) != "" && strings.TrimSpace(userName) != "" {
-			var user database.User
-			var gameErogs database.GameErogs
-			var brandErogs database.BrandErogs
-			err := database.Dbs[os.Getenv("DB_NAME")].Transaction(func(tx *gorm.DB) error {
+			var user models.User
+			var gameErogs models.GameErogs
+			var brandErogs models.BrandErogs
+			err := kurohelperdb.Dbs.Transaction(func(tx *gorm.DB) error {
 				// 1. 確保 User 存在
-				if err := tx.Where("id = ?", userID).FirstOrCreate(&user, database.User{ID: userID, Name: userName}).Error; err != nil {
+				if err := tx.Where("id = ?", userID).FirstOrCreate(&user, models.User{ID: userID, Name: userName}).Error; err != nil {
 					return err
 				}
 
 				// 2. 確保 Brand 存在
-				if err := tx.Where("id = ?", res.BrandID).FirstOrCreate(&brandErogs, database.BrandErogs{ID: res.BrandID, Name: res.BrandName}).Error; err != nil {
+				if err := tx.Where("id = ?", res.BrandID).FirstOrCreate(&brandErogs, models.BrandErogs{ID: res.BrandID, Name: res.BrandName}).Error; err != nil {
 					return err
 				}
 
 				// 3. 確保 Game 存在
-				if err := tx.Where("id = ?", res.ID).FirstOrCreate(&gameErogs, database.GameErogs{ID: res.ID, Name: res.Gamename, BrandErogsID: res.BrandID}).Error; err != nil {
+				if err := tx.Where("id = ?", res.ID).FirstOrCreate(&gameErogs, models.GameErogs{ID: res.ID, Name: res.Gamename, BrandErogsID: res.BrandID}).Error; err != nil {
 					return err
 				}
 
 				// 4. 建立 UserGame
-				ug := database.UserGameErogs{UserID: user.ID, GameErogsID: res.ID, HasPlayed: true, InWish: false}
+				ug := models.UserGameErogs{UserID: user.ID, GameErogsID: res.ID, HasPlayed: true, InWish: false}
 				if err := tx.Clauses(clause.OnConflict{DoNothing: true}).Create(&ug).Error; err != nil {
 					return err
 				}

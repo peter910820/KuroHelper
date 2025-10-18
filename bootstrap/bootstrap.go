@@ -1,14 +1,18 @@
 package bootstrap
 
 import (
+	"os"
+
 	"github.com/joho/godotenv"
 	"github.com/sirupsen/logrus"
 
 	"kurohelper/cache"
-	"kurohelper/database"
 	"kurohelper/provider/erogs"
 	"kurohelper/provider/seiya"
 	"kurohelper/provider/ymgal"
+
+	kurohelperdb "github.com/peter910820/kurohelper-db"
+	"github.com/peter910820/kurohelper-db/models"
 )
 
 // 啟動函式
@@ -25,12 +29,15 @@ func Init() {
 		logrus.Fatal(err)
 	}
 
-	// init migration
-	for i := range 1 {
-		dbName, db := database.InitDsn(i)
-		database.Dbs[dbName] = db
-		database.Migration(dbName, database.Dbs[dbName])
+	config := models.Config{
+		DBOwner:    os.Getenv("DB_OWNER"),
+		DBPassword: os.Getenv("DB_PASSWORD"),
+		DBName:     os.Getenv("DB_NAME"),
+		DBPort:     os.Getenv("DB_PORT"),
 	}
+
+	kurohelperdb.InitDsn(config)
+	kurohelperdb.Migration() // 選填
 
 	// init ZhtwToJp var
 	cache.InitZhtwToJp()
