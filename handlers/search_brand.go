@@ -3,15 +3,15 @@ package handlers
 import (
 	"errors"
 	"fmt"
-	"os"
 	"sort"
 	"strings"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/google/uuid"
+	kurohelperdb "github.com/peter910820/kurohelper-db"
+	"github.com/peter910820/kurohelper-db/models"
 
 	"kurohelper/cache"
-	"kurohelper/database"
 	kurohelpererrors "kurohelper/errors"
 	"kurohelper/provider/erogs"
 	"kurohelper/provider/vndb"
@@ -125,13 +125,13 @@ func erogsSearchBrand(s *discordgo.Session, i *discordgo.InteractionCreate, cid 
 	actionsRow := utils.MakeActionsRow(messageComponent)
 
 	// 處理資料庫
-	var userGameErogs []database.UserGameErogs
+	var userGameErogs []models.UserGameErogs
 	status := make(map[int]byte)
 	userID := utils.GetUserID(i)
 	if strings.TrimSpace(userID) != "" {
 		_, ok := cache.UserCache[userID]
 		if ok {
-			database.Dbs[os.Getenv("DB_NAME")].Where("user_id = ?", userID).Preload("GameErogs").Find(&userGameErogs)
+			kurohelperdb.Dbs.Where("user_id = ?", userID).Preload("GameErogs").Find(&userGameErogs)
 			// 利用位元運算壓縮狀態
 			for _, game := range userGameErogs {
 				if game.HasPlayed {
