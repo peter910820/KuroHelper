@@ -33,3 +33,6 @@ debug/
 # Editor/IDE
 # .idea/
 # .vscode/
+
+# build script
+build.bat
