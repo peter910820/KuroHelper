@@ -5,6 +5,7 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/sirupsen/logrus"
+	"gorm.io/gorm"
 
 	kurohelpererrors "kurohelper/errors"
 )
@@ -13,6 +14,8 @@ import (
 func HandleError(err error, s *discordgo.Session, i *discordgo.InteractionCreate) {
 	logrus.Error(err)
 	switch {
+	case errors.Is(err, gorm.ErrRecordNotFound):
+		InteractionEmbedErrorRespond(s, i, "使用者尚未建檔", true)
 	case errors.Is(err, kurohelpererrors.ErrRateLimit):
 		InteractionEmbedErrorRespond(s, i, "速率限制，請過約1分鐘後再試", true)
 	case errors.Is(err, kurohelpererrors.ErrSearchNoContent):
