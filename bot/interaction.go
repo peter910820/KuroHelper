@@ -42,6 +42,8 @@ func onInteractionApplicationCommand(s *discordgo.Session, i *discordgo.Interact
 		go handlers.CleanCache(s, i)
 	case "隨機遊戲":
 		go handlers.RandomGame(s, i)
+	case "個人資料":
+		go handlers.GetUserinfo(s, i)
 	}
 }
 

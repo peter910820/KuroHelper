@@ -189,6 +189,10 @@ func galgameCommands() []*discordgo.ApplicationCommand {
 			Name:        "隨機遊戲",
 			Description: "隨機一部Galgame(ymgal)",
 		},
+		{
+			Name:        "個人資料",
+			Description: "取得自己的個人資料(KuroHelper)",
+		},
 	}
 }
 
