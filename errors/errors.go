@@ -27,3 +27,11 @@ var (
 	// cid get parameter failed
 	ErrCIDGetParameterFailed = errors.New("cid: get parameter failed")
 )
+
+// Utils error
+var (
+	// wrong time.Time format
+	ErrTimeWrongFormat = errors.New("time: wrong format")
+	// date exceeds tomorrow error
+	ErrDateExceedsTomorrow = errors.New("time: date exceeds tomorrow")
+)

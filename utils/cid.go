@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/bwmarrin/discordgo"
 
@@ -108,13 +109,17 @@ func (cid AddWishCID) GetConfirmMark() (bool, error) {
 	return value, nil
 }
 
-// 取得AddHasPlayedCID的確認記號(目前不使用)
-func (cid AddHasPlayedCID) GetConfirmMark() (bool, error) {
-	value, err := strconv.ParseBool([]string(cid.NewCID)[3])
-	if err != nil {
-		return false, kurohelpererrors.ErrCIDGetParameterFailed
+// 取得AddHasPlayedCID的遊玩結束時間(非必填，沒有的話會是nil)
+func (cid AddHasPlayedCID) GetCompleteDate() (time.Time, error) {
+	if strings.TrimSpace([]string(cid.NewCID)[3]) == "" {
+		return time.Time{}, nil
 	}
-	return value, nil
+
+	t, err := time.Parse("20060102", []string(cid.NewCID)[3])
+	if err != nil {
+		return time.Time{}, kurohelpererrors.ErrCIDGetParameterFailed
+	}
+	return t, nil
 }
 
 // 建立CID索引為0的字串(CommandName)
@@ -137,10 +142,14 @@ func MakeCIDPageComponent(label string, id string, value int, commandName Custom
 }
 
 // 建立事件為AddHasPlayed的CID
-func MakeCIDAddHasPlayedComponent(label string, id string, confirmMark bool, commandName CustomIDCommandName) *discordgo.Button {
+func MakeCIDAddHasPlayedComponent(label string, id string, completDate time.Time, commandName CustomIDCommandName) *discordgo.Button {
+	var t string
+	if !completDate.IsZero() {
+		t = completDate.Format("20060102")
+	}
 	return &discordgo.Button{
 		Label:    label,
 		Style:    discordgo.PrimaryButton,
-		CustomID: fmt.Sprintf("%s|%d|%s|%t", string(commandName), CustomIDTypeAddHasPlayed, id, confirmMark),
+		CustomID: fmt.Sprintf("%s|%d|%s|%s", string(commandName), CustomIDTypeAddHasPlayed, id, t), // no completDate
 	}
 }
