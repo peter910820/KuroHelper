@@ -54,6 +54,7 @@ func AddHasPlayed(s *discordgo.Session, i *discordgo.InteractionCreate, cid *uti
 		userID := utils.GetUserID(i)
 		userName := utils.GetUsername(i)
 		if strings.TrimSpace(userID) != "" && strings.TrimSpace(userName) != "" {
+			var msg string
 			var user models.User
 			var gameErogs models.GameErogs
 			var brandErogs models.BrandErogs
@@ -76,13 +77,21 @@ func AddHasPlayed(s *discordgo.Session, i *discordgo.InteractionCreate, cid *uti
 				// 4. 建立 UserGame
 				if completeDate.IsZero() {
 					ug := models.UserGameErogs{UserID: user.ID, GameErogsID: res.ID, HasPlayed: true, InWish: false}
-					if err := tx.Clauses(clause.OnConflict{DoNothing: true}).Create(&ug).Error; err != nil {
-						return err
+					result := tx.Clauses(clause.OnConflict{DoNothing: true}).Create(&ug)
+					if result.Error != nil {
+						return result.Error
+					}
+					if result.RowsAffected == 0 {
+						msg = "資料已建立，本次動作無效"
 					}
 				} else {
 					ug := models.UserGameErogs{UserID: user.ID, GameErogsID: res.ID, HasPlayed: true, InWish: false, CompletedAt: &completeDate}
-					if err := tx.Clauses(clause.OnConflict{DoNothing: true}).Create(&ug).Error; err != nil {
-						return err
+					result := tx.Clauses(clause.OnConflict{DoNothing: true}).Create(&ug)
+					if result.Error != nil {
+						return result.Error
+					}
+					if result.RowsAffected == 0 {
+						msg = "資料已建立，本次動作無效"
 					}
 				}
 
@@ -96,8 +105,12 @@ func AddHasPlayed(s *discordgo.Session, i *discordgo.InteractionCreate, cid *uti
 				cache.UserCache[userID] = struct{}{}
 			}
 
+			if msg == "" {
+				msg = "加入成功！"
+			}
+
 			embed := &discordgo.MessageEmbed{
-				Title: "加入成功！",
+				Title: msg,
 				Color: 0x7BA23F,
 			}
 			utils.InteractionEmbedRespondForSelf(s, i, embed, nil, true)
