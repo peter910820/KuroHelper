@@ -153,6 +153,12 @@ func galgameCommands() []*discordgo.ApplicationCommand {
 					Description: "關鍵字",
 					Required:    true,
 				},
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "complete_date",
+					Description: "遊玩結束日期",
+					Required:    false,
+				},
 			},
 		},
 		{

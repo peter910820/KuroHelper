@@ -1,9 +1,11 @@
 package handlers
 
 import (
+	"errors"
 	"fmt"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/google/uuid"
@@ -15,6 +17,7 @@ import (
 	"gorm.io/gorm/clause"
 
 	"kurohelper/cache"
+	kurohelpererrors "kurohelper/errors"
 	"kurohelper/provider/erogs"
 	"kurohelper/utils"
 )
@@ -29,26 +32,18 @@ func AddHasPlayed(s *discordgo.Session, i *discordgo.InteractionCreate, cid *uti
 	})
 
 	if cid != nil {
-		addWishCID := utils.AddWishCID{
+		addHasPlayedCID := utils.AddHasPlayedCID{
 			NewCID: *cid,
 		}
 
-		confirmMark, err := addWishCID.GetConfirmMark()
+		completeDate, err := addHasPlayedCID.GetCompleteDate()
 		if err != nil {
 			utils.HandleError(err, s, i)
 			return
 		}
 
-		if !confirmMark {
-			embed := &discordgo.MessageEmbed{
-				Title: "操作已取消",
-				Color: 0x7BA23F,
-			}
-			utils.InteractionEmbedRespondForSelf(s, i, embed, nil, true)
-			return
-		}
 		// get cache
-		cacheValue, err := cache.Get(addWishCID.GetCacheID())
+		cacheValue, err := cache.Get(addHasPlayedCID.GetCacheID())
 		if err != nil {
 			utils.HandleError(err, s, i)
 			return
@@ -79,9 +74,16 @@ func AddHasPlayed(s *discordgo.Session, i *discordgo.InteractionCreate, cid *uti
 				}
 
 				// 4. 建立 UserGame
-				ug := models.UserGameErogs{UserID: user.ID, GameErogsID: res.ID, HasPlayed: true, InWish: false}
-				if err := tx.Clauses(clause.OnConflict{DoNothing: true}).Create(&ug).Error; err != nil {
-					return err
+				if completeDate.IsZero() {
+					ug := models.UserGameErogs{UserID: user.ID, GameErogsID: res.ID, HasPlayed: true, InWish: false}
+					if err := tx.Clauses(clause.OnConflict{DoNothing: true}).Create(&ug).Error; err != nil {
+						return err
+					}
+				} else {
+					ug := models.UserGameErogs{UserID: user.ID, GameErogsID: res.ID, HasPlayed: true, InWish: false, CompletedAt: &completeDate}
+					if err := tx.Clauses(clause.OnConflict{DoNothing: true}).Create(&ug).Error; err != nil {
+						return err
+					}
 				}
 
 				return nil // commit
@@ -118,6 +120,26 @@ func AddHasPlayed(s *discordgo.Session, i *discordgo.InteractionCreate, cid *uti
 		return
 	}
 
+	completeDate, err := utils.GetOptions(i, "complete_date")
+	if err != nil && !errors.Is(err, kurohelpererrors.ErrOptionNotFound) {
+		utils.HandleError(err, s, i)
+		return
+	}
+
+	var t time.Time
+	if completeDate != "" {
+		t, err = utils.ParseYYYYMMDD(completeDate)
+		if err != nil {
+			utils.HandleError(err, s, i)
+			return
+		}
+
+		if t.After(time.Now().AddDate(0, 0, 1)) {
+			utils.HandleError(err, s, i)
+			return
+		}
+	}
+
 	idSearch, _ := regexp.MatchString(`^e\d+$`, keyword)
 	res, err = erogs.GetGameByFuzzy(keyword, idSearch)
 	if err != nil {
@@ -129,8 +151,7 @@ func AddHasPlayed(s *discordgo.Session, i *discordgo.InteractionCreate, cid *uti
 	cache.Set(idStr, *res)
 
 	cidCommandName := utils.MakeCIDCommandName(i.ApplicationCommandData().Name, false, "")
-	messageComponent := []discordgo.MessageComponent{utils.MakeCIDAddHasPlayedComponent("✅", idStr, true, cidCommandName)}
-	// messageComponent = append(messageComponent, utils.MakeCIDAddHasPlayedComponent("❌", idStr, false, cidCommandName))
+	messageComponent := []discordgo.MessageComponent{utils.MakeCIDAddHasPlayedComponent("✅", idStr, t, cidCommandName)}
 	actionsRow := utils.MakeActionsRow(messageComponent)
 
 	embed := &discordgo.MessageEmbed{
