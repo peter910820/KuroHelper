@@ -37,7 +37,10 @@ func Init() {
 	}
 
 	kurohelperdb.InitDsn(config)
-	// kurohelperdb.Migration() // 選填
+	kurohelperdb.Migration() // 選填
+
+	// 將白名單存成快取
+	cache.InitAllowList()
 
 	// init ZhtwToJp var
 	cache.InitZhtwToJp()
