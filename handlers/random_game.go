@@ -3,6 +3,7 @@ package handlers
 import (
 	"github.com/bwmarrin/discordgo"
 
+	"kurohelper/cache"
 	"kurohelper/provider/ymgal"
 	"kurohelper/utils"
 )
@@ -25,12 +26,28 @@ func RandomGame(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		title += "/" + game[0].ChineseName
 	}
 
+	var image *discordgo.MessageEmbedImage
+	if i.GuildID != "" {
+		// guild
+		if _, ok := cache.GuildDiscordAllowList[i.GuildID]; ok {
+			image = &discordgo.MessageEmbedImage{
+				URL: "https://store.ymgal.games/" + game[0].MainImg,
+			}
+		}
+	} else {
+		// DM
+		userID := utils.GetUserID(i)
+		if _, ok := cache.GuildDiscordAllowList[userID]; ok {
+			image = &discordgo.MessageEmbedImage{
+				URL: "https://store.ymgal.games/" + game[0].MainImg,
+			}
+		}
+	}
+
 	embed := &discordgo.MessageEmbed{
 		Title: title,
 		Color: 0x261E47,
-		Image: &discordgo.MessageEmbedImage{
-			URL: "https://store.ymgal.games/" + game[0].MainImg,
-		},
+		Image: image,
 		Fields: []*discordgo.MessageEmbedField{
 			{
 				Name:   "發售日",

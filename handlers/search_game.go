@@ -166,6 +166,25 @@ func erogsSearchGame(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if vndbVotecount != 0 {
 		vndbData = fmt.Sprintf("%.1f/%d", vndbRating, vndbVotecount)
 	}
+
+	var image *discordgo.MessageEmbedImage
+	if i.GuildID != "" {
+		// guild
+		if _, ok := cache.GuildDiscordAllowList[i.GuildID]; ok {
+			image = &discordgo.MessageEmbedImage{
+				URL: res.BannerUrl,
+			}
+		}
+	} else {
+		// DM
+		userID := utils.GetUserID(i)
+		if _, ok := cache.GuildDiscordAllowList[userID]; ok {
+			image = &discordgo.MessageEmbedImage{
+				URL: res.BannerUrl,
+			}
+		}
+	}
+
 	embed := &discordgo.MessageEmbed{
 		Author: &discordgo.MessageEmbedAuthor{
 			Name: res.BrandName,
@@ -241,9 +260,7 @@ func erogsSearchGame(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				Inline: true,
 			},
 		},
-		Image: &discordgo.MessageEmbedImage{
-			URL: res.BannerUrl,
-		},
+		Image: image,
 	}
 	utils.InteractionEmbedRespond(s, i, embed, nil, true)
 }

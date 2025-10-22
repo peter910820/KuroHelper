@@ -167,6 +167,24 @@ func AddHasPlayed(s *discordgo.Session, i *discordgo.InteractionCreate, cid *uti
 	messageComponent := []discordgo.MessageComponent{utils.MakeCIDAddHasPlayedComponent("✅", idStr, t, cidCommandName)}
 	actionsRow := utils.MakeActionsRow(messageComponent)
 
+	var image *discordgo.MessageEmbedImage
+	if i.GuildID != "" {
+		// guild
+		if _, ok := cache.GuildDiscordAllowList[i.GuildID]; ok {
+			image = &discordgo.MessageEmbedImage{
+				URL: res.BannerUrl,
+			}
+		}
+	} else {
+		// DM
+		userID := utils.GetUserID(i)
+		if _, ok := cache.GuildDiscordAllowList[userID]; ok {
+			image = &discordgo.MessageEmbedImage{
+				URL: res.BannerUrl,
+			}
+		}
+	}
+
 	embed := &discordgo.MessageEmbed{
 		Author: &discordgo.MessageEmbedAuthor{
 			Name: res.BrandName,
@@ -186,9 +204,7 @@ func AddHasPlayed(s *discordgo.Session, i *discordgo.InteractionCreate, cid *uti
 				Inline: false,
 			},
 		},
-		Image: &discordgo.MessageEmbedImage{
-			URL: res.BannerUrl,
-		},
+		Image: image,
 	}
 	utils.InteractionEmbedRespondForSelf(s, i, embed, actionsRow, true)
 }
