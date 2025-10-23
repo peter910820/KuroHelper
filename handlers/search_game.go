@@ -166,6 +166,9 @@ func erogsSearchGame(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if vndbVotecount != 0 {
 		vndbData = fmt.Sprintf("%.1f/%d", vndbRating, vndbVotecount)
 	}
+
+	image := generateImage(i, res.BannerUrl)
+
 	embed := &discordgo.MessageEmbed{
 		Author: &discordgo.MessageEmbedAuthor{
 			Name: res.BrandName,
@@ -241,9 +244,7 @@ func erogsSearchGame(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				Inline: true,
 			},
 		},
-		Image: &discordgo.MessageEmbedImage{
-			URL: res.BannerUrl,
-		},
+		Image: image,
 	}
 	utils.InteractionEmbedRespond(s, i, embed, nil, true)
 }

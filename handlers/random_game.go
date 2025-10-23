@@ -25,12 +25,12 @@ func RandomGame(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		title += "/" + game[0].ChineseName
 	}
 
+	image := generateImage(i, "https://store.ymgal.games/"+game[0].MainImg)
+
 	embed := &discordgo.MessageEmbed{
 		Title: title,
 		Color: 0x261E47,
-		Image: &discordgo.MessageEmbedImage{
-			URL: "https://store.ymgal.games/" + game[0].MainImg,
-		},
+		Image: image,
 		Fields: []*discordgo.MessageEmbedField{
 			{
 				Name:   "發售日",
