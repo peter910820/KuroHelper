@@ -50,7 +50,14 @@ func GetGuideURL(keyword string) string {
 		return correspondURL
 	}
 
-	tokens := strings.Fields(strings.ToLower(keyword))
+	tokens := strings.FieldsFunc(strings.ToLower(keyword), func(r rune) bool {
+		switch r {
+		case ' ', '\t', '\n', '～', '-', '!', '！', '.':
+			return true
+		}
+		return false
+	})
+
 	var candidateGames []candidate
 
 	seiyaDataMu.RLock()
@@ -61,13 +68,6 @@ func GetGuideURL(keyword string) string {
 		leftWeight := 0
 		rightWeight := 0
 		for _, token := range tokens {
-			token = strings.Map(func(r rune) rune {
-				switch r {
-				case '-', '!', '！', '.', '～':
-					return -1 // delete rune
-				}
-				return r
-			}, token)
 			if strings.Contains(nameLower, token) {
 				_, ok := rightWeightMap[token]
 				if ok {
