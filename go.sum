@@ -45,6 +45,8 @@ github.com/peter910820/kurohelper-db v1.1.0 h1:t+eAFEENNGxNJ9kH9eiHZsPOq1X/Hgq8g
 github.com/peter910820/kurohelper-db v1.1.0/go.mod h1:ZaLmNq613BJnBvI27EK/UnbExG6NcVPlj+WZIuEs4MY=
 github.com/peter910820/kurohelper-db v1.2.0 h1:1JN/HZDHYWKfyUhBWleC2WT15vHrHz/cW/F1+zeJsao=
 github.com/peter910820/kurohelper-db v1.2.0/go.mod h1:ZaLmNq613BJnBvI27EK/UnbExG6NcVPlj+WZIuEs4MY=
+github.com/peter910820/kurohelper-db v1.4.0 h1:ZPlccQBDPwjrFFefAwRL3DKuF6oyzxKeNmekKzpJbIw=
+github.com/peter910820/kurohelper-db v1.4.0/go.mod h1:ZaLmNq613BJnBvI27EK/UnbExG6NcVPlj+WZIuEs4MY=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/rivo/uniseg v0.2.0 h1:S1pD9weZBuJdFmowNwbpi7BJ8TNftyUImj/0WQi72jY=
