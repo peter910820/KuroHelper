@@ -28,7 +28,7 @@ type (
 		NewCID
 	}
 
-	AddWishCID struct {
+	AddInWishCID struct {
 		NewCID
 	}
 
@@ -40,7 +40,7 @@ type (
 const (
 	CustomIDTypePage CustomIDType = iota + 1
 	CustomIDTypeSort
-	CustomIDTypeAddWish
+	CustomIDTypeAddInWish
 	CustomIDTypeAddHasPlayed
 )
 
@@ -100,15 +100,6 @@ func (cid PageCID) GetPageIndex() (int, error) {
 	return value, nil
 }
 
-// 取得AddWishCID的確認記號(目前不使用)
-func (cid AddWishCID) GetConfirmMark() (bool, error) {
-	value, err := strconv.ParseBool([]string(cid.NewCID)[3])
-	if err != nil {
-		return false, kurohelpererrors.ErrCIDGetParameterFailed
-	}
-	return value, nil
-}
-
 // 取得AddHasPlayedCID的遊玩結束時間(非必填，沒有的話會是nil)
 func (cid AddHasPlayedCID) GetCompleteDate() (time.Time, error) {
 	if strings.TrimSpace([]string(cid.NewCID)[3]) == "" {
@@ -150,6 +141,14 @@ func MakeCIDAddHasPlayedComponent(label string, id string, completDate time.Time
 	return &discordgo.Button{
 		Label:    label,
 		Style:    discordgo.PrimaryButton,
-		CustomID: fmt.Sprintf("%s|%d|%s|%s", string(commandName), CustomIDTypeAddHasPlayed, id, t), // no completDate
+		CustomID: fmt.Sprintf("%s|%d|%s|%s", string(commandName), CustomIDTypeAddHasPlayed, id, t),
+	}
+}
+
+func MakeCIDAddInWishComponent(label string, id string, commandName CustomIDCommandName) *discordgo.Button {
+	return &discordgo.Button{
+		Label:    label,
+		Style:    discordgo.PrimaryButton,
+		CustomID: fmt.Sprintf("%s|%d|%s", string(commandName), CustomIDTypeAddInWish, id),
 	}
 }

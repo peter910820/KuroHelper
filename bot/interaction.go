@@ -38,6 +38,8 @@ func onInteractionApplicationCommand(s *discordgo.Session, i *discordgo.Interact
 		go handlers.SearchCharacter(s, i, nil)
 	case "加已玩":
 		go handlers.AddHasPlayed(s, i, nil)
+	case "加收藏":
+		go handlers.AddInWish(s, i, nil)
 	case "清除快取":
 		go handlers.CleanCache(s, i)
 	case "隨機遊戲":
@@ -67,6 +69,8 @@ func onInteractionMessageComponent(s *discordgo.Session, i *discordgo.Interactio
 			go handlers.SearchCharacter(s, i, &cid)
 		case "加已玩":
 			go handlers.AddHasPlayed(s, i, &cid)
+		case "加收藏":
+			go handlers.AddInWish(s, i, &cid)
 		}
 	} else {
 		utils.HandleError(kurohelpererrors.ErrCIDWrongFormat, s, i)

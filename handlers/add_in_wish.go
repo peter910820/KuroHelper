@@ -16,13 +16,12 @@ import (
 	"gorm.io/gorm/clause"
 
 	"kurohelper/cache"
-	kurohelpererrors "kurohelper/errors"
 	"kurohelper/provider/erogs"
 	"kurohelper/utils"
 )
 
-// 加已玩Handler
-func AddHasPlayed(s *discordgo.Session, i *discordgo.InteractionCreate, cid *utils.NewCID) {
+// 加收藏Handler
+func AddInWish(s *discordgo.Session, i *discordgo.InteractionCreate, cid *utils.NewCID) {
 	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseDeferredChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
@@ -31,18 +30,12 @@ func AddHasPlayed(s *discordgo.Session, i *discordgo.InteractionCreate, cid *uti
 	})
 
 	if cid != nil {
-		addHasPlayedCID := utils.AddHasPlayedCID{
+		addInWishCID := utils.AddInWishCID{
 			NewCID: *cid,
 		}
 
-		completeDate, err := addHasPlayedCID.GetCompleteDate()
-		if err != nil {
-			utils.HandleError(err, s, i)
-			return
-		}
-
 		// get cache
-		cacheValue, err := cache.Get(addHasPlayedCID.GetCacheID())
+		cacheValue, err := cache.Get(addInWishCID.GetCacheID())
 		if err != nil {
 			utils.HandleError(err, s, i)
 			return
@@ -61,7 +54,7 @@ func AddHasPlayed(s *discordgo.Session, i *discordgo.InteractionCreate, cid *uti
 			if err != nil {
 				// 沒有資料 開始新建
 				if errors.Is(err, gorm.ErrRecordNotFound) {
-					err = addHasPlayedTransaction(userID, userName, completeDate, res)
+					err = addInWishTransaction(userID, userName, res)
 					if err != nil {
 						utils.HandleError(err, s, i)
 						return
@@ -70,15 +63,15 @@ func AddHasPlayed(s *discordgo.Session, i *discordgo.InteractionCreate, cid *uti
 					utils.HandleError(err, s, i)
 					return
 				}
-			} else if gameRecord.HasPlayed { // 有資料的狀況下，hasPlayed已被設定過
+			} else if gameRecord.InWish { // 有資料的狀況下，inWish已被設定過
 				embed := &discordgo.MessageEmbed{
 					Title: "資料已建立，本次動作無效",
-					Color: 0x7BA23F,
+					Color: 0x90B44B,
 				}
 				utils.InteractionEmbedRespondForSelf(s, i, embed, nil, true)
 				return
-			} else { // 有資料，hasPlayed還沒被設定過
-				err = addHasPlayedTransaction(userID, userName, completeDate, res)
+			} else { // 有資料，inWish還沒被設定過
+				err = addInWishTransaction(userID, userName, res)
 				if err != nil {
 					utils.HandleError(err, s, i)
 					return
@@ -95,14 +88,14 @@ func AddHasPlayed(s *discordgo.Session, i *discordgo.InteractionCreate, cid *uti
 
 			embed := &discordgo.MessageEmbed{
 				Title: msg,
-				Color: 0x7BA23F,
+				Color: 0x90B44B,
 			}
 			utils.InteractionEmbedRespondForSelf(s, i, embed, nil, true)
 			return
 		} else {
 			embed := &discordgo.MessageEmbed{
 				Title: "找不到使用者！",
-				Color: 0x7BA23F,
+				Color: 0x90B44B,
 			}
 			utils.InteractionEmbedRespondForSelf(s, i, embed, nil, true)
 			return
@@ -117,26 +110,6 @@ func AddHasPlayed(s *discordgo.Session, i *discordgo.InteractionCreate, cid *uti
 		return
 	}
 
-	completeDate, err := utils.GetOptions(i, "complete_date")
-	if err != nil && !errors.Is(err, kurohelpererrors.ErrOptionNotFound) {
-		utils.HandleError(err, s, i)
-		return
-	}
-
-	var t time.Time
-	if completeDate != "" {
-		t, err = utils.ParseYYYYMMDD(completeDate)
-		if err != nil {
-			utils.HandleError(err, s, i)
-			return
-		}
-
-		if t.After(time.Now().AddDate(0, 0, 1)) {
-			utils.HandleError(err, s, i)
-			return
-		}
-	}
-
 	idSearch, _ := regexp.MatchString(`^e\d+$`, keyword)
 	res, err = erogs.GetGameByFuzzy(keyword, idSearch)
 	if err != nil {
@@ -148,7 +121,7 @@ func AddHasPlayed(s *discordgo.Session, i *discordgo.InteractionCreate, cid *uti
 	cache.Set(idStr, *res)
 
 	cidCommandName := utils.MakeCIDCommandName(i.ApplicationCommandData().Name, false, "")
-	messageComponent := []discordgo.MessageComponent{utils.MakeCIDAddHasPlayedComponent("✅", idStr, t, cidCommandName)}
+	messageComponent := []discordgo.MessageComponent{utils.MakeCIDAddInWishComponent("✅", idStr, cidCommandName)}
 	actionsRow := utils.MakeActionsRow(messageComponent)
 
 	image := generateImage(i, res.BannerUrl)
@@ -159,7 +132,7 @@ func AddHasPlayed(s *discordgo.Session, i *discordgo.InteractionCreate, cid *uti
 		},
 		Title: fmt.Sprintf("**%s(%s)**", res.Gamename, res.SellDay),
 		URL:   res.Shoukai,
-		Color: 0x7BA23F,
+		Color: 0x90B44B,
 		Fields: []*discordgo.MessageEmbedField{
 			{
 				Name:   "發行機種",
@@ -168,7 +141,7 @@ func AddHasPlayed(s *discordgo.Session, i *discordgo.InteractionCreate, cid *uti
 			},
 			{
 				Name:   "確認",
-				Value:  "你確定要加入已玩嗎?",
+				Value:  "你確定要加入收藏嗎?",
 				Inline: false,
 			},
 		},
@@ -177,7 +150,7 @@ func AddHasPlayed(s *discordgo.Session, i *discordgo.InteractionCreate, cid *uti
 	utils.InteractionEmbedRespondForSelf(s, i, embed, actionsRow, true)
 }
 
-func addHasPlayedTransaction(userID string, userName string, completeDate time.Time, res *erogs.FuzzySearchGameResponse) error {
+func addInWishTransaction(userID string, userName string, res *erogs.FuzzySearchGameResponse) error {
 	var user models.User
 	var gameErogs models.GameErogs
 	var brandErogs models.BrandErogs
@@ -199,21 +172,13 @@ func addHasPlayedTransaction(userID string, userName string, completeDate time.T
 		}
 
 		// 4. 建立 UserGame
-		if completeDate.IsZero() {
-			ug := models.UserGameErogs{UserID: user.ID, GameErogsID: res.ID, HasPlayed: true, InWish: false, UpdatedAt: time.Now()}
-			result := tx.Clauses(clause.OnConflict{
-				Columns:   []clause.Column{{Name: "user_id"}, {Name: "game_erogs_id"}},
-				DoUpdates: clause.AssignmentColumns([]string{"has_played", "updated_at"}),
-			}).Create(&ug)
-			if result.Error != nil {
-				return result.Error
-			}
-		} else {
-			ug := models.UserGameErogs{UserID: user.ID, GameErogsID: res.ID, HasPlayed: true, InWish: false, CompletedAt: &completeDate}
-			result := tx.Clauses(clause.OnConflict{DoNothing: true}).Create(&ug)
-			if result.Error != nil {
-				return result.Error
-			}
+		ug := models.UserGameErogs{UserID: user.ID, GameErogsID: res.ID, HasPlayed: false, InWish: true, UpdatedAt: time.Now()}
+		result := tx.Clauses(clause.OnConflict{
+			Columns:   []clause.Column{{Name: "user_id"}, {Name: "game_erogs_id"}},
+			DoUpdates: clause.AssignmentColumns([]string{"in_wish", "updated_at"}),
+		}).Create(&ug)
+		if result.Error != nil {
+			return result.Error
 		}
 
 		return nil // commit
