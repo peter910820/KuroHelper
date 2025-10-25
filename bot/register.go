@@ -162,6 +162,18 @@ func galgameCommands() []*discordgo.ApplicationCommand {
 			},
 		},
 		{
+			Name:        "加收藏",
+			Description: "把遊戲加到收藏(ErogameScape)",
+			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "keyword",
+					Description: "關鍵字",
+					Required:    true,
+				},
+			},
+		},
+		{
 			Name:        "查詢角色",
 			Description: "根據關鍵字查詢角色資料(ErogameScape)",
 			Options: []*discordgo.ApplicationCommandOption{
@@ -205,7 +217,7 @@ func vndbCommands() []*discordgo.ApplicationCommand {
 		},
 		{
 			Name:        "查詢指定遊戲",
-			Description: "根據VNDB ID查詢指定遊戲資料(VNDB)",
+			Description: "根據VNDB ID查詢指定遊戲資料(VNDB)，此方法只允許輸入VNDB ID",
 			Options: []*discordgo.ApplicationCommandOption{
 				{
 					Type:        discordgo.ApplicationCommandOptionString,
