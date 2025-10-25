@@ -9,6 +9,9 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/google/uuid"
+	kurohelperdb "github.com/peter910820/kurohelper-db"
+	"github.com/peter910820/kurohelper-db/models"
+	"gorm.io/gorm"
 
 	"kurohelper/cache"
 	kurohelpererrors "kurohelper/errors"
@@ -67,6 +70,26 @@ func erogsSearchGame(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if err != nil {
 		utils.HandleError(err, s, i)
 		return
+	}
+
+	// 處理使用者資訊
+	userID := utils.GetUserID(i)
+	var userGameErogs models.UserGameErogs
+	var userData string
+	err = kurohelperdb.Dbs.Where("user_id = ? AND game_erogs_id = ?", userID, res.ID).First(&userGameErogs).Error
+	if err != nil {
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			utils.HandleError(err, s, i)
+			return
+		}
+	} else { // 有找到資料
+		if userGameErogs.HasPlayed {
+			userData += "✅"
+		}
+
+		if userGameErogs.InWish {
+			userData += "❤️"
+		}
 	}
 
 	vndbRating := 0.0
@@ -173,7 +196,7 @@ func erogsSearchGame(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		Author: &discordgo.MessageEmbedAuthor{
 			Name: res.BrandName,
 		},
-		Title:       fmt.Sprintf("**%s(%s)**", res.Gamename, res.SellDay),
+		Title:       fmt.Sprintf("%s**%s(%s)**", userData, res.Gamename, res.SellDay),
 		URL:         res.Shoukai,
 		Color:       junni,
 		Description: rank,
