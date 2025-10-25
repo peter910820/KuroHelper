@@ -217,7 +217,7 @@ func vndbCommands() []*discordgo.ApplicationCommand {
 		},
 		{
 			Name:        "查詢指定遊戲",
-			Description: "根據VNDB ID查詢指定遊戲資料(VNDB)",
+			Description: "根據VNDB ID查詢指定遊戲資料(VNDB)，此方法只允許輸入VNDB ID",
 			Options: []*discordgo.ApplicationCommandOption{
 				{
 					Type:        discordgo.ApplicationCommandOptionString,
