@@ -14,6 +14,7 @@ on:
       - ci/*
       - style/*
       - docs/*
+      - chore/*
   pull_request:
     branches:
       - main

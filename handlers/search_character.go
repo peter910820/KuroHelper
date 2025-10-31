@@ -9,6 +9,7 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/google/uuid"
+	"github.com/sirupsen/logrus"
 
 	"kurohelper/cache"
 	kurohelpererrors "kurohelper/errors"
@@ -63,6 +64,8 @@ func erogsSearchCharacter(s *discordgo.Session, i *discordgo.InteractionCreate) 
 		utils.HandleError(err, s, i)
 		return
 	}
+
+	logrus.Printf("erogs查詢角色: %s", keyword)
 
 	if res.Birthday == "公式情報なし" {
 		res.Birthday = "未收錄"

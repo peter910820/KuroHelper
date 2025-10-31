@@ -9,6 +9,7 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/google/uuid"
+	"github.com/sirupsen/logrus"
 
 	"kurohelper/cache"
 	kurohelpererrors "kurohelper/errors"
@@ -64,6 +65,8 @@ func erogsSearchMusic(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		utils.HandleError(err, s, i)
 		return
 	}
+
+	logrus.Printf("erogs查詢音樂: %s", keyword)
 
 	musicData := make([]string, 0, len(res.GameCategories))
 	for _, m := range res.GameCategories {

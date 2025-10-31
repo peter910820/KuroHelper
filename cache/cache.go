@@ -51,9 +51,12 @@ func Get(key string) (any, error) {
 func Clean() {
 	commonCacheMu.Lock()
 	defer commonCacheMu.Unlock()
+	count := 0
 	for k := range commonCache {
 		delete(commonCache, k)
+		count++
 	}
+	logrus.Printf("%d筆快取已被清除", count)
 }
 
 func InitZhtwToJp() {

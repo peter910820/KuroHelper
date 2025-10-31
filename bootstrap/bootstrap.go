@@ -16,7 +16,7 @@ import (
 )
 
 // 啟動函式
-func Init() {
+func Init(stopChan <-chan struct{}) {
 	// logrus settings
 	logrus.SetFormatter(&logrus.TextFormatter{
 		ForceColors:   true,
@@ -63,4 +63,7 @@ func Init() {
 	}
 
 	cache.InitUser()
+
+	// 掛載自動清除快取job
+	go cache.CleanCacheJob(60, stopChan)
 }

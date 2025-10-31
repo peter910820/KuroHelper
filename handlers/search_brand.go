@@ -10,6 +10,7 @@ import (
 	"github.com/google/uuid"
 	kurohelperdb "github.com/peter910820/kurohelper-db"
 	"github.com/peter910820/kurohelper-db/models"
+	"github.com/sirupsen/logrus"
 
 	"kurohelper/cache"
 	kurohelpererrors "kurohelper/errors"
@@ -60,6 +61,8 @@ func erogsSearchBrand(s *discordgo.Session, i *discordgo.InteractionCreate, cid 
 			utils.HandleError(err, s, i)
 			return
 		}
+
+		logrus.Printf("erogs查詢公司品牌: %s", keyword)
 
 		res, err = erogs.GetBrandByFuzzy(keyword)
 		if err != nil {
@@ -202,6 +205,8 @@ func vndbSearchBrand(s *discordgo.Session, i *discordgo.InteractionCreate, cid *
 			utils.HandleError(err, s, i)
 			return
 		}
+
+		logrus.Printf("vndb查詢公司品牌: %s", keyword)
 
 		// companyType, err := utils.GetOptions(i, "type")
 		// if err != nil && errors.Is(err, kurohelpererrors.ErrOptionTranslateFail) {
