@@ -13,7 +13,8 @@ import (
 
 func main() {
 	// 初始化專案作業
-	bootstrap.Init()
+	stopChan := make(chan struct{})
+	bootstrap.Init(stopChan)
 
 	token := os.Getenv("BOT_TOKEN")
 	kuroHelper, err := discordgo.New("Bot " + token)
@@ -37,5 +38,9 @@ func main() {
 	signal.Notify(c, os.Interrupt)
 	interruptSignal := <-c
 	logrus.Debug(interruptSignal)
+
+	// 關閉 jobs
+	close(stopChan)
+
 	kuroHelper.Close() // websocket disconnect
 }

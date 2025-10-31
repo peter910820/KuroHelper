@@ -16,7 +16,8 @@ import (
 
 func main() {
 	// 初始化專案作業
-	bootstrap.Init()
+	stopChan := make(chan struct{})
+	bootstrap.Init(stopChan)
 
 	token := os.Getenv("BOT_TOKEN")
 	kuroHelper, err := discordgo.New("Bot " + token)
@@ -69,6 +70,9 @@ func main() {
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 	interruptSignal := <-c
 	logrus.Debug(interruptSignal)
+
+	// 關閉 jobs
+	close(stopChan)
 
 	// 優雅關閉 Fiber server
 	if err := app.Shutdown(); err != nil {
