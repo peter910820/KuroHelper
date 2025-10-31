@@ -11,6 +11,7 @@ import (
 	"github.com/google/uuid"
 	kurohelperdb "github.com/peter910820/kurohelper-db"
 	"github.com/peter910820/kurohelper-db/models"
+	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 
 	"kurohelper/cache"
@@ -71,6 +72,8 @@ func erogsSearchGame(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		utils.HandleError(err, s, i)
 		return
 	}
+
+	logrus.Printf("erogs查詢遊戲: %s", keyword)
 
 	// 處理使用者資訊
 	userID := utils.GetUserID(i)

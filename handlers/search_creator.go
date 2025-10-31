@@ -10,6 +10,7 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/google/uuid"
+	"github.com/sirupsen/logrus"
 
 	"kurohelper/cache"
 	kurohelpererrors "kurohelper/errors"
@@ -67,6 +68,8 @@ func erogsSearchCreator(s *discordgo.Session, i *discordgo.InteractionCreate, ci
 			utils.HandleError(err, s, i)
 			return
 		}
+
+		logrus.Printf("erogs查詢創作者: %s", keyword)
 
 		idStr := uuid.New().String()
 		cache.Set(idStr, *res)
