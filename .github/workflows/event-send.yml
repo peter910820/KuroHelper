@@ -14,10 +14,11 @@ on:
       - ci/*
       - style/*
       - docs/*
+      - chore/*
   pull_request:
     branches:
       - main
-      
+
 jobs:
   notify-discord:
     runs-on: ubuntu-latest
@@ -53,4 +54,3 @@ jobs:
           -F "body=$COMMIT_BODY" \
           -F "branch=$COMMIT_BRANCH" \
           -F "event_name=$EVENT_NAME"
-
