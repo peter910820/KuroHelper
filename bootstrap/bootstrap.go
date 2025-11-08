@@ -65,5 +65,5 @@ func Init(stopChan <-chan struct{}) {
 	cache.InitUser()
 
 	// 掛載自動清除快取job
-	go cache.CleanCacheJob(60, stopChan)
+	go cache.CleanCacheJob(240, stopChan)
 }

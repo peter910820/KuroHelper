@@ -210,7 +210,10 @@ func addHasPlayedTransaction(userID string, userName string, completeDate time.T
 			}
 		} else {
 			ug := models.UserGameErogs{UserID: user.ID, GameErogsID: res.ID, HasPlayed: true, InWish: false, CompletedAt: &completeDate}
-			result := tx.Clauses(clause.OnConflict{DoNothing: true}).Create(&ug)
+			result := tx.Clauses(clause.OnConflict{
+				Columns:   []clause.Column{{Name: "user_id"}, {Name: "game_erogs_id"}},
+				DoUpdates: clause.AssignmentColumns([]string{"has_played", "updated_at", "completed_at"}),
+			}).Create(&ug)
 			if result.Error != nil {
 				return result.Error
 			}
