@@ -9,11 +9,9 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/google/uuid"
-	kurohelperdb "github.com/peter910820/kurohelper-db"
-	"github.com/peter910820/kurohelper-db/models"
+	kurohelperdb "github.com/peter910820/kurohelper-db/v2"
 
 	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
 
 	"kurohelper/cache"
 	kurohelpererrors "kurohelper/errors"
@@ -54,14 +52,24 @@ func AddHasPlayed(s *discordgo.Session, i *discordgo.InteractionCreate, cid *uti
 		userName := utils.GetUsername(i)
 		if strings.TrimSpace(userID) != "" && strings.TrimSpace(userName) != "" {
 			var msg string
-			var gameRecord models.UserGameErogs
 
 			// 先檢查該筆以及操作是不是已經執行過
-			err := kurohelperdb.Dbs.First(&gameRecord, "user_id = ? AND game_erogs_id = ?", userID, res.ID).Error
+			gameRecord, err := kurohelperdb.GetUserGameErogs(userID, res.ID)
 			if err != nil {
 				// 沒有資料 開始新建
 				if errors.Is(err, gorm.ErrRecordNotFound) {
-					err = addHasPlayedTransaction(userID, userName, completeDate, res)
+					apiModel := kurohelperdb.UpsertUserGameErogsTXInput{
+						UserID:         userID,
+						UserName:       userName,
+						ErogsBrandID:   res.BrandID,
+						ErogsBrandName: res.BrandName,
+						ErogsGameID:    res.ID,
+						ErogsGamename:  res.Gamename,
+						HasPlayed:      true,
+						InWish:         false,
+						CompleteDate:   completeDate,
+					}
+					err = kurohelperdb.UpsertUserGameErogsTransaction(apiModel)
 					if err != nil {
 						utils.HandleError(err, s, i)
 						return
@@ -78,7 +86,18 @@ func AddHasPlayed(s *discordgo.Session, i *discordgo.InteractionCreate, cid *uti
 				utils.InteractionEmbedRespondForSelf(s, i, embed, nil, true)
 				return
 			} else { // 有資料，hasPlayed還沒被設定過
-				err = addHasPlayedTransaction(userID, userName, completeDate, res)
+				apiModel := kurohelperdb.UpsertUserGameErogsTXInput{
+					UserID:         userID,
+					UserName:       userName,
+					ErogsBrandID:   res.BrandID,
+					ErogsBrandName: res.BrandName,
+					ErogsGameID:    res.ID,
+					ErogsGamename:  res.Gamename,
+					HasPlayed:      true,
+					InWish:         gameRecord.InWish,
+					CompleteDate:   completeDate,
+				}
+				err = kurohelperdb.UpsertUserGameErogsTransaction(apiModel)
 				if err != nil {
 					utils.HandleError(err, s, i)
 					return
@@ -175,55 +194,4 @@ func AddHasPlayed(s *discordgo.Session, i *discordgo.InteractionCreate, cid *uti
 		Image: image,
 	}
 	utils.InteractionEmbedRespondForSelf(s, i, embed, actionsRow, true)
-}
-
-func addHasPlayedTransaction(userID string, userName string, completeDate time.Time, res *erogs.FuzzySearchGameResponse) error {
-	var user models.User
-	var gameErogs models.GameErogs
-	var brandErogs models.BrandErogs
-
-	err := kurohelperdb.Dbs.Transaction(func(tx *gorm.DB) error {
-		// 1. 確保 User 存在
-		if err := tx.Where("id = ?", userID).FirstOrCreate(&user, models.User{ID: userID, Name: userName}).Error; err != nil {
-			return err
-		}
-
-		// 2. 確保 Brand 存在
-		if err := tx.Where("id = ?", res.BrandID).FirstOrCreate(&brandErogs, models.BrandErogs{ID: res.BrandID, Name: res.BrandName}).Error; err != nil {
-			return err
-		}
-
-		// 3. 確保 Game 存在
-		if err := tx.Where("id = ?", res.ID).FirstOrCreate(&gameErogs, models.GameErogs{ID: res.ID, Name: res.Gamename, BrandErogsID: res.BrandID}).Error; err != nil {
-			return err
-		}
-
-		// 4. 建立 UserGame
-		if completeDate.IsZero() {
-			ug := models.UserGameErogs{UserID: user.ID, GameErogsID: res.ID, HasPlayed: true, InWish: false, UpdatedAt: time.Now()}
-			result := tx.Clauses(clause.OnConflict{
-				Columns:   []clause.Column{{Name: "user_id"}, {Name: "game_erogs_id"}},
-				DoUpdates: clause.AssignmentColumns([]string{"has_played", "updated_at"}),
-			}).Create(&ug)
-			if result.Error != nil {
-				return result.Error
-			}
-		} else {
-			ug := models.UserGameErogs{UserID: user.ID, GameErogsID: res.ID, HasPlayed: true, InWish: false, CompletedAt: &completeDate}
-			result := tx.Clauses(clause.OnConflict{
-				Columns:   []clause.Column{{Name: "user_id"}, {Name: "game_erogs_id"}},
-				DoUpdates: clause.AssignmentColumns([]string{"has_played", "updated_at", "completed_at"}),
-			}).Create(&ug)
-			if result.Error != nil {
-				return result.Error
-			}
-		}
-
-		return nil // commit
-	})
-	if err != nil {
-		return err
-	}
-
-	return nil
 }

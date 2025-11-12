@@ -1,9 +1,9 @@
 package cache
 
 import (
-	kurohelperdb "github.com/peter910820/kurohelper-db"
-	"github.com/peter910820/kurohelper-db/repository"
 	"github.com/sirupsen/logrus"
+
+	kurohelperdb "github.com/peter910820/kurohelper-db/v2"
 )
 
 // 先不管資料庫其他參數(預留用)
@@ -13,12 +13,12 @@ var (
 )
 
 func InitAllowList() {
-	guildDiscordAllowList, err := repository.GetDiscordAllowListByKind(kurohelperdb.Dbs, "guild")
+	guildDiscordAllowList, err := kurohelperdb.GetDiscordAllowListByKind("guild")
 	if err != nil {
 		logrus.Fatal(err)
 	}
 
-	dmDiscordAllowList, err := repository.GetDiscordAllowListByKind(kurohelperdb.Dbs, "dm")
+	dmDiscordAllowList, err := kurohelperdb.GetDiscordAllowListByKind("dm")
 	if err != nil {
 		logrus.Fatal(err)
 	}

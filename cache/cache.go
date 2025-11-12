@@ -4,11 +4,11 @@ import (
 	"sync"
 	"time"
 
-	kurohelperdb "github.com/peter910820/kurohelper-db"
-	"github.com/peter910820/kurohelper-db/models"
 	"github.com/sirupsen/logrus"
 
 	kurohelpererrors "kurohelper/errors"
+
+	kurohelperdb "github.com/peter910820/kurohelper-db/v2"
 )
 
 // cache struct
@@ -60,8 +60,8 @@ func Clean() {
 }
 
 func InitZhtwToJp() {
-	var entries []models.ZhtwToJp
-	if err := kurohelperdb.Dbs.Find(&entries).Error; err != nil {
+	entries, err := kurohelperdb.GetAllZhtwToJp()
+	if err != nil {
 		logrus.Fatal(err)
 	}
 
@@ -79,8 +79,8 @@ func InitZhtwToJp() {
 }
 
 func InitSeiyaCorrespond() {
-	var entries []models.SeiyaCorrespond
-	if err := kurohelperdb.Dbs.Find(&entries).Error; err != nil {
+	entries, err := kurohelperdb.GetAllSeiyaCorrespond()
+	if err != nil {
 		logrus.Fatal(err)
 	}
 
