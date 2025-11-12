@@ -37,7 +37,7 @@ func Init(stopChan <-chan struct{}) {
 	}
 
 	kurohelperdb.InitDsn(config)
-	// kurohelperdb.Migration() // 選填
+	kurohelperdb.Migration()
 
 	// 將白名單存成快取
 	cache.InitAllowList()

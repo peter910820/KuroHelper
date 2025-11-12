@@ -13,6 +13,7 @@ import (
 
 	"kurohelper/cache"
 	kurohelpererrors "kurohelper/errors"
+	"kurohelper/provider/bangumi"
 	"kurohelper/provider/erogs"
 	"kurohelper/utils"
 )
@@ -27,15 +28,24 @@ func SearchCharacter(s *discordgo.Session, i *discordgo.InteractionCreate, cid *
 	}
 
 	if i.Type == discordgo.InteractionApplicationCommand {
-		opt, err := utils.GetOptions(i, "列表搜尋")
+		optList, err := utils.GetOptions(i, "列表搜尋")
+		optDB, err := utils.GetOptions(i, "查詢資料庫選項")
 		if err != nil && errors.Is(err, kurohelpererrors.ErrOptionTranslateFail) {
 			utils.HandleError(err, s, i)
 			return
 		}
-		if opt == "" {
-			erogsSearchCharacter(s, i)
+		if optDB == "1" || optDB == "" {
+			if optList == "" {
+				BangumiSearchCharacter(s, i)
+			} else {
+				erogsSearchCharacterList(s, i, cid)
+			}
 		} else {
-			erogsSearchCharacterList(s, i, cid)
+			if optList == "" {
+				erogsSearchCharacter(s, i)
+			} else {
+				erogsSearchCharacterList(s, i, cid)
+			}
 		}
 	} else {
 		if !cid.GetCommandNameIsList() {
@@ -220,4 +230,95 @@ func erogsSearchCharacterList(s *discordgo.Session, i *discordgo.InteractionCrea
 	} else {
 		utils.EditEmbedRespond(s, i, embed, actionsRow)
 	}
+}
+
+// Bangumi查詢角色處理
+func BangumiSearchCharacter(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseDeferredChannelMessageWithSource,
+	})
+
+	var res *bangumi.Character
+	keyword, err := utils.GetOptions(i, "keyword")
+	if err != nil {
+		utils.HandleError(err, s, i)
+		return
+	}
+	res, err = bangumi.GetCharacterByFuzzy(keyword)
+	if err != nil {
+		utils.HandleError(err, s, i)
+		return
+	}
+	logrus.Printf("Bangumi查詢角色: %s", keyword)
+	nameData := ""
+	if res.NameCN == "" {
+		nameData = res.Name
+	} else {
+		nameData = fmt.Sprintf("%s (%s)", res.Name, res.NameCN)
+	}
+	embed := &discordgo.MessageEmbed{
+		Title: nameData,
+		Color: 0xF8F8DF,
+		Image: &discordgo.MessageEmbedImage{
+			URL: res.Image,
+		},
+		Fields: []*discordgo.MessageEmbedField{
+			{
+				Name:   "別名",
+				Value:  strings.Join(res.Aliases, "/"),
+				Inline: false,
+			},
+			{
+				Name:   "性別",
+				Value:  res.Gender,
+				Inline: true,
+			},
+			{
+				Name:   "年齡",
+				Value:  res.Age,
+				Inline: true,
+			},
+			{
+				Name:   "身高/體重",
+				Value:  fmt.Sprintf("%s/%s", res.Height, res.Weight),
+				Inline: true,
+			},
+			{
+				Name:   "生日",
+				Value:  res.BirthDay,
+				Inline: true,
+			},
+			{
+				Name:   "血型",
+				Value:  res.BloodType,
+				Inline: true,
+			},
+			{
+				Name:   "三圍",
+				Value:  res.BWH,
+				Inline: true,
+			},
+			{
+				Name:   "角色敘述",
+				Value:  res.Summary,
+				Inline: false,
+			},
+			{
+				Name:   "CV",
+				Value:  strings.Join(res.CV, "/"),
+				Inline: false,
+			},
+			{
+				Name:   "登場於",
+				Value:  strings.Join(res.Game, "\n"),
+				Inline: true,
+			},
+			{
+				Name:   "其他",
+				Value:  strings.Join(res.Other, "\n"),
+				Inline: true,
+			},
+		},
+	}
+	utils.InteractionEmbedRespond(s, i, embed, nil, true)
 }
