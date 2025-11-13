@@ -5,9 +5,7 @@ import (
 	"strings"
 
 	"github.com/bwmarrin/discordgo"
-	kurohelperdb "github.com/peter910820/kurohelper-db"
-	"github.com/peter910820/kurohelper-db/models"
-	"github.com/peter910820/kurohelper-db/repository"
+	kurohelperdb "github.com/peter910820/kurohelper-db/v2"
 
 	"kurohelper/utils"
 )
@@ -28,31 +26,21 @@ func GetUserinfo(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	userName := utils.GetUsername(i)
 
 	// User資料
-	var user models.User
-	err := kurohelperdb.Dbs.First(&user, "id = ?", userID).Error
+	user, err := kurohelperdb.GetUser(userID)
 	if err != nil {
 		utils.HandleError(err, s, i)
 		return
 	}
 
 	// Game資料
-	userGames, err := repository.GetUserData(userID)
+	userGames, err := kurohelperdb.GetUserData(userID)
 	if err != nil {
 		utils.HandleError(err, s, i)
 		return
 	}
 
 	// Brand資料統計
-	var brandData []BrandCount
-	err = kurohelperdb.Dbs.
-		Table("user_game_erogs AS uge").
-		Select("b.id AS brand_id, b.name AS brand_name, COUNT(*) AS count").
-		Joins("JOIN game_erogs AS g ON uge.game_erogs_id = g.id").
-		Joins("JOIN brand_erogs AS b ON g.brand_erogs_id = b.id").
-		Where("uge.user_id = ? AND uge.has_played = ?", userID, true).
-		Group("b.id, b.name").
-		Order("count DESC").
-		Scan(&brandData).Error
+	brandData, err := kurohelperdb.BrandCount(userID, true, false)
 	if err != nil {
 		utils.HandleError(err, s, i)
 		return
@@ -60,8 +48,8 @@ func GetUserinfo(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	hasPlayedCount := 0
 	inWishCount := 0
-	listHasPlayed := make([]string, 0, 5)
-	listInWish := make([]string, 0, 5)
+	listHasPlayed := make([]string, 0, 10)
+	listInWish := make([]string, 0, 10)
 	for _, r := range userGames {
 		if r.HasPlayed {
 			hasPlayedCount++
@@ -119,7 +107,7 @@ func GetUserinfo(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	utils.InteractionEmbedRespond(s, i, embed, nil, true)
 }
 
-func getUserPlayRecordTime(r *models.UserGameErogs) string {
+func getUserPlayRecordTime(r *kurohelperdb.UserGameErogs) string {
 	if r.CompletedAt != nil {
 		return r.CompletedAt.Format("2006-01-02")
 	}

@@ -9,8 +9,7 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/google/uuid"
-	kurohelperdb "github.com/peter910820/kurohelper-db"
-	"github.com/peter910820/kurohelper-db/models"
+	kurohelperdb "github.com/peter910820/kurohelper-db/v2"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 
@@ -77,9 +76,8 @@ func erogsSearchGame(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	// 處理使用者資訊
 	userID := utils.GetUserID(i)
-	var userGameErogs models.UserGameErogs
 	var userData string
-	err = kurohelperdb.Dbs.Where("user_id = ? AND game_erogs_id = ?", userID, res.ID).First(&userGameErogs).Error
+	userGameErogs, err := kurohelperdb.GetUserGameErogs(userID, res.ID)
 	if err != nil {
 		if !errors.Is(err, gorm.ErrRecordNotFound) {
 			utils.HandleError(err, s, i)

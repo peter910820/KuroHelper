@@ -11,8 +11,7 @@ import (
 	"kurohelper/provider/seiya"
 	"kurohelper/provider/ymgal"
 
-	kurohelperdb "github.com/peter910820/kurohelper-db"
-	"github.com/peter910820/kurohelper-db/models"
+	kurohelperdb "github.com/peter910820/kurohelper-db/v2"
 )
 
 // 啟動函式
@@ -29,15 +28,18 @@ func Init(stopChan <-chan struct{}) {
 		logrus.Fatal(err)
 	}
 
-	config := models.Config{
+	config := kurohelperdb.Config{
 		DBOwner:    os.Getenv("DB_OWNER"),
 		DBPassword: os.Getenv("DB_PASSWORD"),
 		DBName:     os.Getenv("DB_NAME"),
 		DBPort:     os.Getenv("DB_PORT"),
 	}
 
-	kurohelperdb.InitDsn(config)
-	kurohelperdb.Migration()
+	err = kurohelperdb.InitDsn(config)
+	if err != nil {
+		logrus.Fatal(err)
+	}
+	// kurohelperdb.Migration() // 選填
 
 	// 將白名單存成快取
 	cache.InitAllowList()
@@ -63,7 +65,6 @@ func Init(stopChan <-chan struct{}) {
 	}
 
 	cache.InitUser()
-
 	// 掛載自動清除快取job
 	go cache.CleanCacheJob(240, stopChan)
 }

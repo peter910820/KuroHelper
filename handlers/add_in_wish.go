@@ -5,15 +5,12 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
-	"time"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/google/uuid"
-	kurohelperdb "github.com/peter910820/kurohelper-db"
-	"github.com/peter910820/kurohelper-db/models"
+	kurohelperdb "github.com/peter910820/kurohelper-db/v2"
 
 	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
 
 	"kurohelper/cache"
 	"kurohelper/provider/erogs"
@@ -47,14 +44,22 @@ func AddInWish(s *discordgo.Session, i *discordgo.InteractionCreate, cid *utils.
 		userName := utils.GetUsername(i)
 		if strings.TrimSpace(userID) != "" && strings.TrimSpace(userName) != "" {
 			var msg string
-			var gameRecord models.UserGameErogs
-
 			// 先檢查該筆以及操作是不是已經執行過
-			err := kurohelperdb.Dbs.First(&gameRecord, "user_id = ? AND game_erogs_id = ?", userID, res.ID).Error
+			gameRecord, err := kurohelperdb.GetUserGameErogs(userID, res.ID)
 			if err != nil {
 				// 沒有資料 開始新建
 				if errors.Is(err, gorm.ErrRecordNotFound) {
-					err = addInWishTransaction(userID, userName, res)
+					apiModel := kurohelperdb.UpsertUserGameErogsTXInput{
+						UserID:         userID,
+						UserName:       userName,
+						ErogsBrandID:   res.BrandID,
+						ErogsBrandName: res.BrandName,
+						ErogsGameID:    res.ID,
+						ErogsGamename:  res.Gamename,
+						HasPlayed:      false,
+						InWish:         true,
+					}
+					err = kurohelperdb.UpsertUserGameErogsTransaction(apiModel)
 					if err != nil {
 						utils.HandleError(err, s, i)
 						return
@@ -71,7 +76,17 @@ func AddInWish(s *discordgo.Session, i *discordgo.InteractionCreate, cid *utils.
 				utils.InteractionEmbedRespondForSelf(s, i, embed, nil, true)
 				return
 			} else { // 有資料，inWish還沒被設定過
-				err = addInWishTransaction(userID, userName, res)
+				apiModel := kurohelperdb.UpsertUserGameErogsTXInput{
+					UserID:         userID,
+					UserName:       userName,
+					ErogsBrandID:   res.BrandID,
+					ErogsBrandName: res.BrandName,
+					ErogsGameID:    res.ID,
+					ErogsGamename:  res.Gamename,
+					HasPlayed:      gameRecord.HasPlayed,
+					InWish:         true,
+				}
+				err = kurohelperdb.UpsertUserGameErogsTransaction(apiModel)
 				if err != nil {
 					utils.HandleError(err, s, i)
 					return
@@ -148,44 +163,4 @@ func AddInWish(s *discordgo.Session, i *discordgo.InteractionCreate, cid *utils.
 		Image: image,
 	}
 	utils.InteractionEmbedRespondForSelf(s, i, embed, actionsRow, true)
-}
-
-func addInWishTransaction(userID string, userName string, res *erogs.FuzzySearchGameResponse) error {
-	var user models.User
-	var gameErogs models.GameErogs
-	var brandErogs models.BrandErogs
-
-	err := kurohelperdb.Dbs.Transaction(func(tx *gorm.DB) error {
-		// 1. 確保 User 存在
-		if err := tx.Where("id = ?", userID).FirstOrCreate(&user, models.User{ID: userID, Name: userName}).Error; err != nil {
-			return err
-		}
-
-		// 2. 確保 Brand 存在
-		if err := tx.Where("id = ?", res.BrandID).FirstOrCreate(&brandErogs, models.BrandErogs{ID: res.BrandID, Name: res.BrandName}).Error; err != nil {
-			return err
-		}
-
-		// 3. 確保 Game 存在
-		if err := tx.Where("id = ?", res.ID).FirstOrCreate(&gameErogs, models.GameErogs{ID: res.ID, Name: res.Gamename, BrandErogsID: res.BrandID}).Error; err != nil {
-			return err
-		}
-
-		// 4. 建立 UserGame
-		ug := models.UserGameErogs{UserID: user.ID, GameErogsID: res.ID, HasPlayed: false, InWish: true, UpdatedAt: time.Now()}
-		result := tx.Clauses(clause.OnConflict{
-			Columns:   []clause.Column{{Name: "user_id"}, {Name: "game_erogs_id"}},
-			DoUpdates: clause.AssignmentColumns([]string{"in_wish", "updated_at"}),
-		}).Create(&ug)
-		if result.Error != nil {
-			return result.Error
-		}
-
-		return nil // commit
-	})
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
