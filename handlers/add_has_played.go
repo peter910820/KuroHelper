@@ -52,7 +52,6 @@ func AddHasPlayed(s *discordgo.Session, i *discordgo.InteractionCreate, cid *uti
 		userName := utils.GetUsername(i)
 		if strings.TrimSpace(userID) != "" && strings.TrimSpace(userName) != "" {
 			var msg string
-
 			// 先檢查該筆以及操作是不是已經執行過
 			gameRecord, err := kurohelperdb.GetUserGameErogs(userID, res.ID)
 			if err != nil {

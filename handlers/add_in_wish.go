@@ -44,8 +44,6 @@ func AddInWish(s *discordgo.Session, i *discordgo.InteractionCreate, cid *utils.
 		userName := utils.GetUsername(i)
 		if strings.TrimSpace(userID) != "" && strings.TrimSpace(userName) != "" {
 			var msg string
-			var gameRecord kurohelperdb.UserGameErogs
-
 			// 先檢查該筆以及操作是不是已經執行過
 			gameRecord, err := kurohelperdb.GetUserGameErogs(userID, res.ID)
 			if err != nil {
