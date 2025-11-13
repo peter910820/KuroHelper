@@ -18,6 +18,8 @@ var (
 
 	//ymgal invalid access token(401)
 	ErrYmgalInvalidAccessToken = errors.New("ymgal: invalid access token or other 401 error")
+	// trying to use bangumi character list search
+	ErrBangumiCharacterListSearchNotSupported = errors.New("bangumi: character list search is not currently supported")
 )
 
 // CustomID(CID) error
