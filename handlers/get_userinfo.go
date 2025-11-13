@@ -6,7 +6,6 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	kurohelperdb "github.com/peter910820/kurohelper-db/v2"
-	"github.com/sirupsen/logrus"
 
 	"kurohelper/utils"
 )
@@ -52,7 +51,6 @@ func GetUserinfo(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	listHasPlayed := make([]string, 0, 10)
 	listInWish := make([]string, 0, 10)
 	for _, r := range userGames {
-		logrus.Debugf("%+v", r)
 		if r.HasPlayed {
 			hasPlayedCount++
 			if hasPlayedCount <= 10 {
