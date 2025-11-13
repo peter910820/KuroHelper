@@ -185,22 +185,6 @@ func galgameCommands() []*discordgo.ApplicationCommand {
 				},
 				{
 					Type:        discordgo.ApplicationCommandOptionString,
-					Name:        "查詢資料庫選項",
-					Description: "選擇查詢的資料庫",
-					Required:    false,
-					Choices: []*discordgo.ApplicationCommandOptionChoice{
-						{
-							Name:  "Bangumi",
-							Value: "1",
-						},
-						{
-							Name:  "erogamescape",
-							Value: "2",
-						},
-					},
-				},
-				{
-					Type:        discordgo.ApplicationCommandOptionString,
 					Name:        "列表搜尋",
 					Description: "是否啟用列表搜尋",
 					Required:    false,
@@ -208,6 +192,22 @@ func galgameCommands() []*discordgo.ApplicationCommand {
 						{
 							Name:  "啟用",
 							Value: "1",
+						},
+					},
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "查詢資料庫選項",
+					Description: "選擇查詢的資料庫",
+					Required:    false,
+					Choices: []*discordgo.ApplicationCommandOptionChoice{
+						{
+							Name:  "erogamescape",
+							Value: "1",
+						},
+						{
+							Name:  "Bangumi",
+							Value: "2",
 						},
 					},
 				},

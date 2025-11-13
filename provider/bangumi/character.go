@@ -6,8 +6,6 @@ import (
 	kurohelpererrors "kurohelper/errors"
 	"os"
 	"sort"
-
-	"github.com/sirupsen/logrus"
 )
 
 func GetCharacterByFuzzy(keyword string) (*Character, error) {
@@ -26,7 +24,7 @@ func GetCharacterByFuzzy(keyword string) (*Character, error) {
 	if err != nil {
 		return nil, err
 	}
-	logrus.Printf("API Response: %s", string(r))
+
 	var res CharacterSearchResponse
 	err = json.Unmarshal(r, &res)
 	if err != nil {

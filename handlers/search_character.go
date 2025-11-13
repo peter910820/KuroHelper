@@ -36,15 +36,16 @@ func SearchCharacter(s *discordgo.Session, i *discordgo.InteractionCreate, cid *
 		}
 		if optDB == "1" || optDB == "" {
 			if optList == "" {
-				BangumiSearchCharacter(s, i)
+				erogsSearchCharacter(s, i)
 			} else {
 				erogsSearchCharacterList(s, i, cid)
 			}
 		} else {
 			if optList == "" {
-				erogsSearchCharacter(s, i)
+				BangumiSearchCharacter(s, i)
 			} else {
-				erogsSearchCharacterList(s, i, cid)
+				utils.HandleError(kurohelpererrors.ErrBangumiCharacterListSearchNotSupported, s, i)
+				return
 			}
 		}
 	} else {

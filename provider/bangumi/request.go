@@ -9,8 +9,6 @@ import (
 	"os"
 
 	kurohelpererrors "kurohelper/errors"
-
-	"github.com/sirupsen/logrus"
 )
 
 func sendPostRequest(apiRoute string, jsonBytes []byte) ([]byte, error) {
@@ -34,8 +32,6 @@ func sendPostRequest(apiRoute string, jsonBytes []byte) ([]byte, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		bodyBytes, _ := io.ReadAll(resp.Body)
-		logrus.Print(string(bodyBytes))
 		return nil, fmt.Errorf("%w %d", kurohelpererrors.ErrStatusCodeAbnormal, resp.StatusCode)
 	}
 
@@ -66,8 +62,6 @@ func sendGetRequest(apiRoute string) ([]byte, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		bodyBytes, _ := io.ReadAll(resp.Body)
-		logrus.Print(string(bodyBytes))
 		return nil, fmt.Errorf("%w %d", kurohelpererrors.ErrStatusCodeAbnormal, resp.StatusCode)
 	}
 
