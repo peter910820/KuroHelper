@@ -29,6 +29,10 @@ func SearchCharacter(s *discordgo.Session, i *discordgo.InteractionCreate, cid *
 
 	if i.Type == discordgo.InteractionApplicationCommand {
 		optList, err := utils.GetOptions(i, "列表搜尋")
+		if err != nil && errors.Is(err, kurohelpererrors.ErrOptionTranslateFail) {
+			utils.HandleError(err, s, i)
+			return
+		}
 		optDB, err := utils.GetOptions(i, "查詢資料庫選項")
 		if err != nil && errors.Is(err, kurohelpererrors.ErrOptionTranslateFail) {
 			utils.HandleError(err, s, i)

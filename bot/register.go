@@ -48,6 +48,10 @@ func managementCommands() []*discordgo.ApplicationCommand {
 func galgameCommands() []*discordgo.ApplicationCommand {
 	return []*discordgo.ApplicationCommand{
 		{
+			Name:        "幫助",
+			Description: "獲取機器人相關使用教學",
+		},
+		{
 			Name:        "查詢創作者",
 			Description: "根據關鍵字查詢創作者資料(ErogameScape)",
 			Options: []*discordgo.ApplicationCommandOption{
