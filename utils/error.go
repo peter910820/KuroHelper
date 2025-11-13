@@ -24,6 +24,8 @@ func HandleError(err error, s *discordgo.Session, i *discordgo.InteractionCreate
 		InteractionEmbedErrorRespond(s, i, "日期格式錯誤，格式為YYYYMMDD", true)
 	case errors.Is(err, kurohelpererrors.ErrDateExceedsTomorrow):
 		InteractionEmbedErrorRespond(s, i, "日期格式錯誤，完成日期不得超過今日加一天", true)
+	case errors.Is(err, kurohelpererrors.ErrBangumiCharacterListSearchNotSupported):
+		InteractionEmbedErrorRespond(s, i, "目前不支援對Bangumi使用角色列表搜尋", true)
 	case errors.Is(err, kurohelpererrors.ErrCIDGetParameterFailed):
 		fallthrough
 	case errors.Is(err, kurohelpererrors.ErrCacheLost):
