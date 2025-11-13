@@ -22,6 +22,8 @@ func OnInteraction(s *discordgo.Session, i *discordgo.InteractionCreate) {
 // 事件是InteractionApplicationCommand(使用斜線命令)的處理
 func onInteractionApplicationCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	switch i.ApplicationCommandData().Name {
+	case "幫助":
+		go handlers.Helper(s, i)
 	case "vndb統計資料":
 		go handlers.VndbStats(s, i)
 	case "查詢指定遊戲":
