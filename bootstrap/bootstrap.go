@@ -39,7 +39,7 @@ func Init(stopChan <-chan struct{}) {
 	if err != nil {
 		logrus.Fatal(err)
 	}
-	kurohelperdb.Migration() // 選填
+	// kurohelperdb.Migration() // 選填
 
 	// 將白名單存成快取
 	cache.InitAllowList()
