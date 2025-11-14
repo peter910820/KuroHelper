@@ -7,12 +7,12 @@ import (
 	"strings"
 )
 
-func GetCharacterByFuzzy(keyword string, idsearch bool) (*CharacterSearchResponse, error) {
+func GetCharacterByFuzzy(keyword string, isID bool) (*CharacterSearchResponse, error) {
 	reqCharacter := VndbCreate()
 	reqCharacterSort := "searchrank"
-	reqCharacter.Filters = []interface{}{"search", "=", keyword}
-	if idsearch {
-		reqCharacter.Filters = []interface{}{"id", "=", keyword}
+	reqCharacter.Filters = []any{"search", "=", keyword}
+	if isID {
+		reqCharacter.Filters = []any{"id", "=", keyword}
 		reqCharacterSort = ""
 	}
 
@@ -108,7 +108,7 @@ func ConvertBBCodeToMarkdown(text string) string {
 
 func GetCharacterListByFuzzy(keyword string) (*[]CharacterSearchResponse, error) {
 	reqCharacter := VndbCreate()
-	reqCharacter.Filters = []interface{}{"search", "=", keyword}
+	reqCharacter.Filters = []any{"search", "=", keyword}
 	reqCharacterSort := "searchrank"
 	reqCharacter.Sort = &reqCharacterSort
 	basicFields := "id, name, original"

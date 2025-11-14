@@ -7,11 +7,15 @@ import (
 	kurohelpererrors "kurohelper/errors"
 )
 
-func GetVnUseID(brandid string) (*BasicResponse[GetVnUseIDResponse], error) {
+func GetVn(keyword string, isID bool) (*BasicResponse[GetVnUseIDResponse], error) {
 	req := VndbCreate()
-
-	req.Filters = []interface{}{
-		"id", "=", brandid,
+	reqSort := "searchrank"
+	req.Filters = []any{"search", "=", keyword}
+	if isID {
+		req.Filters = []any{"id", "=", keyword}
+		reqSort = ""
+		reqResults := 1
+		req.Results = &reqResults
 	}
 
 	titleFields := "title, alttitle"
@@ -36,6 +40,7 @@ func GetVnUseID(brandid string) (*BasicResponse[GetVnUseIDResponse], error) {
 		relationsFields,
 	}
 
+	req.Sort = &reqSort
 	req.Fields = strings.Join(allFields, ", ")
 
 	jsonData, err := json.Marshal(req)
