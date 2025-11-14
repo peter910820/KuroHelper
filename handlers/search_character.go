@@ -15,6 +15,7 @@ import (
 	kurohelpererrors "kurohelper/errors"
 	"kurohelper/provider/bangumi"
 	"kurohelper/provider/erogs"
+	"kurohelper/provider/vndb"
 	"kurohelper/utils"
 )
 
@@ -38,25 +39,44 @@ func SearchCharacter(s *discordgo.Session, i *discordgo.InteractionCreate, cid *
 			utils.HandleError(err, s, i)
 			return
 		}
-		if optDB == "1" || optDB == "" {
+		switch optDB {
+		case "":
+			fallthrough
+		case "1":
+			if optList == "" {
+				vndbSearchCharacter(s, i)
+			} else {
+				return
+			}
+		case "2":
 			if optList == "" {
 				erogsSearchCharacter(s, i)
 			} else {
 				erogsSearchCharacterList(s, i, cid)
 			}
-		} else {
+		case "3":
 			if optList == "" {
-				BangumiSearchCharacter(s, i)
+				bangumiSearchCharacter(s, i)
 			} else {
 				utils.HandleError(kurohelpererrors.ErrBangumiCharacterListSearchNotSupported, s, i)
-				return
 			}
 		}
 	} else {
-		if !cid.GetCommandNameIsList() {
-			erogsSearchCharacter(s, i)
-		} else {
-			erogsSearchCharacterList(s, i, cid)
+		commandNameProvider := cid.GetCommandNameProvider()
+
+		switch commandNameProvider {
+		case "vndb":
+			if !cid.GetCommandNameIsList() {
+				erogsSearchCharacter(s, i)
+			} else {
+				erogsSearchCharacterList(s, i, cid)
+			}
+		case "erogs":
+			if !cid.GetCommandNameIsList() {
+				erogsSearchCharacter(s, i)
+			} else {
+				erogsSearchCharacterList(s, i, cid)
+			}
 		}
 	}
 }
@@ -175,7 +195,7 @@ func erogsSearchCharacterList(s *discordgo.Session, i *discordgo.InteractionCrea
 		hasMore = pagination(res, 0, false)
 
 		if hasMore {
-			cidCommandName := utils.MakeCIDCommandName(i.ApplicationCommandData().Name, true, "")
+			cidCommandName := utils.MakeCIDCommandName(i.ApplicationCommandData().Name, true, "erogs")
 			messageComponent = []discordgo.MessageComponent{utils.MakeCIDPageComponent("▶️", idStr, 1, cidCommandName)}
 		}
 	} else {
@@ -238,7 +258,7 @@ func erogsSearchCharacterList(s *discordgo.Session, i *discordgo.InteractionCrea
 }
 
 // Bangumi查詢角色處理
-func BangumiSearchCharacter(s *discordgo.Session, i *discordgo.InteractionCreate) {
+func bangumiSearchCharacter(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseDeferredChannelMessageWithSource,
 	})
@@ -321,6 +341,180 @@ func BangumiSearchCharacter(s *discordgo.Session, i *discordgo.InteractionCreate
 			{
 				Name:   "其他",
 				Value:  strings.Join(res.Other, "\n"),
+				Inline: true,
+			},
+		},
+	}
+	utils.InteractionEmbedRespond(s, i, embed, nil, true)
+}
+
+func vndbSearchCharacter(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseDeferredChannelMessageWithSource,
+	})
+
+	var res *vndb.CharacterSearchResponse
+	keyword, err := utils.GetOptions(i, "keyword")
+	if err != nil {
+		utils.HandleError(err, s, i)
+		return
+	}
+	logrus.Printf("vndb查詢角色: %s", keyword)
+	// idSearch, _ := regexp.MatchString(`^e\d+$`, keyword)
+	res, err = vndb.GetCharacterByFuzzy(keyword)
+	if err != nil {
+		utils.HandleError(err, s, i)
+		return
+	}
+	nameData := ""
+	heightData := ""
+	weightData := ""
+	BWHData := ""
+	ageData := ""
+	birthDayData := ""
+	sexData := ""
+	genderData := ""
+	vnData := make([]string, 0, len(res.VNs))
+	if res.Original != "" {
+		nameData = fmt.Sprintf("%s (%s)", res.Original, res.Name)
+	} else {
+		nameData = res.Name
+	}
+	if len(res.Aliases) == 0 {
+		res.Aliases = []string{"未收錄"}
+	}
+	if res.Description == "" {
+		res.Description = "未收錄"
+	}
+	if res.BloodType == "" {
+		res.BloodType = "未收錄"
+	}
+	if res.Height == 0 {
+		heightData = "未收錄"
+	} else {
+		heightData = strconv.Itoa(res.Height) + "cm"
+	}
+	if res.Weight == 0 {
+		weightData = "未收錄"
+	} else {
+		weightData = strconv.Itoa(res.Weight) + "kg"
+	}
+	if res.Bust == 0 && res.Waist == 0 && res.Hips == 0 {
+		BWHData = "未收錄"
+	} else {
+		BWHData = fmt.Sprintf("%d/%d/%d", res.Bust, res.Waist, res.Hips)
+	}
+	if res.Cup == "" {
+		res.Cup = "未收錄"
+	}
+	if res.Age == nil {
+		ageData = "未收錄"
+	} else {
+		ageData = strconv.Itoa(*res.Age)
+	}
+	if res.Birthday == [2]int{} {
+		birthDayData = "未收錄"
+	} else {
+		birthDayData = fmt.Sprintf("%d月%d號", res.Birthday[0], res.Birthday[1])
+	}
+	if res.Sex == [2]string{} {
+		sexData = "未收錄"
+	} else if res.Sex[0] != res.Sex[1] {
+		sexData = fmt.Sprintf("%s/||%s||", vndb.Sex[res.Sex[0]], vndb.Sex[res.Sex[1]])
+	} else {
+		sexData = vndb.Sex[res.Sex[0]]
+	}
+	if res.Gender == [2]string{} {
+		genderData = "未收錄"
+	} else if res.Gender[0] != res.Gender[1] {
+		genderData = fmt.Sprintf("%s/||%s||", vndb.Gender[res.Gender[0]], vndb.Gender[res.Gender[1]])
+	} else {
+		genderData = vndb.Gender[res.Gender[0]]
+	}
+
+	if len(res.VNs) == 0 {
+		vnData = append(vnData, "未收錄")
+	} else {
+		for _, vn := range res.VNs {
+			titleData := ""
+			for _, title := range vn.Titles {
+				if title.Main {
+					titleData = title.Title
+					break
+				}
+			}
+			if titleData == "" {
+				titleData = vn.Title
+			}
+			if vn.Spoiler == 0 {
+				vnData = append(vnData, fmt.Sprintf("%s (%s)", titleData, vndb.Role[vn.Role]))
+			} else {
+				vnData = append(vnData, fmt.Sprintf("||%s (%s)||", titleData, vndb.Role[vn.Role]))
+			}
+		}
+	}
+
+	res.Description = vndb.ConvertBBCodeToMarkdown(res.Description)
+	embed := &discordgo.MessageEmbed{
+		Title: nameData,
+		Color: 0xF8F8DF,
+		Image: &discordgo.MessageEmbedImage{
+			URL: res.Image.URL,
+		},
+		Fields: []*discordgo.MessageEmbedField{
+			{
+				Name:   "別名",
+				Value:  strings.Join(res.Aliases, "/"),
+				Inline: true,
+			},
+			{
+				Name:   "CV",
+				Value:  strings.Join(res.Vas, "/"),
+				Inline: true,
+			},
+			{
+				Name:   "生日",
+				Value:  birthDayData,
+				Inline: true,
+			},
+			{
+				Name:   "生理性別",
+				Value:  sexData,
+				Inline: true,
+			},
+			{
+				Name:   "性別認同",
+				Value:  genderData,
+				Inline: true,
+			},
+			{
+				Name:   "身高/體重",
+				Value:  fmt.Sprintf("%s/%s", heightData, weightData),
+				Inline: true,
+			},
+			{
+				Name:   "年齡",
+				Value:  ageData,
+				Inline: true,
+			},
+			{
+				Name:   "血型",
+				Value:  res.BloodType,
+				Inline: true,
+			},
+			{
+				Name:   "三圍",
+				Value:  BWHData,
+				Inline: true,
+			},
+			{
+				Name:   "角色敘述",
+				Value:  res.Description,
+				Inline: false,
+			},
+			{
+				Name:   "登場於",
+				Value:  strings.Join(vnData, "\n"),
 				Inline: true,
 			},
 		},
