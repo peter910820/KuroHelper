@@ -3,10 +3,11 @@ package erogs
 import (
 	"encoding/json"
 	"fmt"
+	"kurohelper/cache"
 )
 
 func GetBrandByFuzzy(search string) (*FuzzySearchBrandResponse, error) {
-	searchJP := zhtwToJp(search)
+	searchJP := cache.ZhTwToJp(search)
 	sql, err := buildFuzzySearchBrandSQL(search, searchJP)
 	if err != nil {
 		return nil, err

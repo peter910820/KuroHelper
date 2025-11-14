@@ -3,12 +3,13 @@ package erogs
 import (
 	"encoding/json"
 	"fmt"
+	"kurohelper/cache"
 )
 
 func GetCreatorByFuzzy(search string, idSearch bool) (*FuzzySearchCreatorResponse, error) {
 	searchJP := ""
 	if !idSearch {
-		searchJP = zhtwToJp(search)
+		searchJP = cache.ZhTwToJp(search)
 	}
 	sql, err := buildFuzzySearchCreatorSQL(search, searchJP, idSearch)
 	if err != nil {
@@ -30,7 +31,7 @@ func GetCreatorByFuzzy(search string, idSearch bool) (*FuzzySearchCreatorRespons
 }
 
 func GetCreatorListByFuzzy(search string) (*[]FuzzySearchListResponse, error) {
-	searchJP := zhtwToJp(search)
+	searchJP := cache.ZhTwToJp(search)
 	sql, err := buildFuzzySearchCreatorListSQL(search, searchJP)
 	if err != nil {
 		return nil, err

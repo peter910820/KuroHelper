@@ -47,10 +47,11 @@ type RelationTitleResponse struct {
 
 // 創作者結構
 type StaffResponse struct {
-	ID      string               `json:"id"`
-	Name    string               `json:"name"`
-	Role    string               `json:"role"`    // 角色類型
-	Aliases []StaffAliasResponse `json:"aliases"` // 別名
+	ID       string               `json:"id"`
+	Name     string               `json:"name"`
+	Original string               `json:"original"` // 原文名
+	Role     string               `json:"role"`     // 角色類型
+	Aliases  []StaffAliasResponse `json:"aliases"`  // 別名
 }
 
 // 創作者別名結構
@@ -69,6 +70,7 @@ type TitleResponse struct {
 }
 
 type VaResponse struct {
+	Staff     StaffResponse     `json:"staff"`
 	Character CharacterResponse `json:"character"`
 }
 
@@ -166,4 +168,61 @@ type Stats struct {
 	Tags      int `json:"tags"`
 	Traits    int `json:"traits"`
 	VN        int `json:"vn"`
+}
+
+type CharacterSearchResponse struct { // 角色搜尋Response結構
+	ID          string                      `json:"id"`          // vndbid
+	Name        string                      `json:"name"`        // 名稱
+	Original    string                      `json:"original"`    // 原文名稱，可能為 null
+	Aliases     []string                    `json:"aliases"`     // 別名列表
+	Description string                      `json:"description"` // 描述，可能為 null，可能包含格式化代碼
+	Image       CharacterImage              `json:"image"`       // 圖片，可能為 null
+	BloodType   string                      `json:"blood_type"`  // 血型："a", "b", "ab" 或 "o"，可能為 null
+	Height      int                         `json:"height"`      // 身高（公分），可能為 null
+	Weight      int                         `json:"weight"`      // 體重（公斤），可能為 null
+	Bust        int                         `json:"bust"`        // 胸圍（公分），可能為 null
+	Waist       int                         `json:"waist"`       // 腰圍（公分），可能為 null
+	Hips        int                         `json:"hips"`        // 臀圍（公分），可能為 null
+	Cup         string                      `json:"cup"`         // 罩杯："AAA", "AA" 或任何單一字母，可能為 null
+	Age         *int                        `json:"age"`         // 年齡（歲），可能為 null
+	Birthday    [2]int                      `json:"birthday"`    // 生日 [月, 日]，可能為 null
+	Sex         [2]string                   `json:"sex"`         // 性別 [表面性別, 真實性別]，可能為 null，值："m", "f", "b", "n"
+	Gender      [2]string                   `json:"gender"`      // 自我性別認同 [非劇透, 劇透]，可能為 null，值："m", "f", "o", "a"
+	VNs         []CharacterSearchVnResponse `json:"vns"`
+	Vas         []string
+	//	Traits      []CharacterSearchTraitResponse `json:"traits"`
+}
+
+// 角色圖片結構（與視覺小說圖片欄位相同，但不包含縮圖）
+type CharacterImage struct {
+	URL string `json:"url"` // 圖片 URL
+}
+
+type CharacterSearchVnResponse struct { // 獲得Role欄位
+	Title    string          `json:"title"` // 羅馬拼音
+	Alttitle string          `json:"alttitle"`
+	Titles   []TitleResponse `json:"titles"`
+	Spoiler  int             `json:"spoiler"` // 劇透等級
+	Role     string          `json:"role"`    // main/primary/side/appears
+}
+
+type VnSearchCharacterResponse struct { // VN查角色Response結構
+	ID       string `json:"id"`       // vndbid
+	Role     string `json:"role"`     // main/primary/side/appears
+	Name     string `json:"name"`     // 角色名稱
+	Original string `json:"original"` // 角色原文名稱，可能為 null
+}
+
+type CharacterSearchTraitResponse struct { // 角色特徵結構
+	ID          string   `json:"id"`          // vndbid
+	Name        string   `json:"name"`        // 特徵名稱（應與 group_name 一起顯示）
+	Aliases     []string `json:"aliases"`     // 別名列表
+	Description string   `json:"description"` // 描述，可能包含格式化代碼
+	Searchable  bool     `json:"searchable"`  // 是否可搜尋
+	Applicable  bool     `json:"applicable"`  // 是否適用
+	Sexual      bool     `json:"sexual"`      // 是否為性相關特徵
+	GroupID     string   `json:"group_id"`    // vndbid，所屬群組 ID
+	GroupName   string   `json:"group_name"`  // 群組名稱（頂層父特徵）
+	Spoiler     int      `json:"spoiler"`     // 劇透等級
+	Lie         bool     `json:"lie"`
 }

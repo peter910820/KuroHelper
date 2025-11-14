@@ -206,12 +206,16 @@ func galgameCommands() []*discordgo.ApplicationCommand {
 					Required:    false,
 					Choices: []*discordgo.ApplicationCommandOptionChoice{
 						{
-							Name:  "erogamescape",
+							Name:  "VNDB",
 							Value: "1",
 						},
 						{
-							Name:  "Bangumi",
+							Name:  "erogamescape",
 							Value: "2",
+						},
+						{
+							Name:  "Bangumi",
+							Value: "3",
 						},
 					},
 				},

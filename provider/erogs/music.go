@@ -3,12 +3,13 @@ package erogs
 import (
 	"encoding/json"
 	"fmt"
+	"kurohelper/cache"
 )
 
 func GetMusicByFuzzy(search string, idSearch bool) (*FuzzySearchMusicResponse, error) {
 	searchJP := ""
 	if !idSearch {
-		searchJP = zhtwToJp(search)
+		searchJP = cache.ZhTwToJp(search)
 	}
 	sql, err := buildFuzzySearchMusicSQL(search, searchJP, idSearch)
 	if err != nil {
@@ -31,7 +32,7 @@ func GetMusicByFuzzy(search string, idSearch bool) (*FuzzySearchMusicResponse, e
 }
 
 func GetMusicListByFuzzy(search string) (*[]FuzzySearchListResponse, error) {
-	searchJP := zhtwToJp(search)
+	searchJP := cache.ZhTwToJp(search)
 	sql, err := buildFuzzySearchMusicListSQL(search, searchJP)
 	if err != nil {
 		return nil, err
