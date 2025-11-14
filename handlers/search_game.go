@@ -54,18 +54,16 @@ func SearchGame(s *discordgo.Session, i *discordgo.InteractionCreate, cid *utils
 			if optList == "" {
 				vndbSearchGame(s, i)
 			} else {
+				vndbSearchGameList(s, i, cid)
 			}
 		}
 	} else {
 		commandNameProvider := cid.GetCommandNameProvider()
 		switch commandNameProvider {
 		case "erogs":
-			if !cid.GetCommandNameIsList() {
-				erogsSearchGame(s, i)
-			} else {
-				erogsSearchGameList(s, i, cid)
-			}
+			erogsSearchGameList(s, i, cid)
 		case "vndb":
+			vndbSearchGameList(s, i, cid)
 		}
 	}
 }
@@ -363,7 +361,7 @@ func erogsSearchGameList(s *discordgo.Session, i *discordgo.InteractionCreate, c
 	actionsRow := utils.MakeActionsRow(messageComponent)
 	listData := make([]string, 0, len(*res))
 	for _, r := range *res {
-		listData = append(listData, fmt.Sprintf("e%-5s　%s (%s)", strconv.Itoa(r.ID), r.Name, r.Category))
+		listData = append(listData, fmt.Sprintf("**e%-5s**　%s (%s)", strconv.Itoa(r.ID), r.Name, r.Category))
 	}
 	embed := &discordgo.MessageEmbed{
 		Title: fmt.Sprintf("遊戲列表搜尋 (%d筆)", count),
@@ -513,4 +511,96 @@ func vndbSearchGame(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		},
 	}
 	utils.InteractionEmbedRespond(s, i, embed, nil, true)
+}
+
+// vndb查詢遊戲列表搜尋處理
+func vndbSearchGameList(s *discordgo.Session, i *discordgo.InteractionCreate, cid *utils.NewCID) {
+	var res *[]vndb.GetVnIDUseListResponse
+	var messageComponent []discordgo.MessageComponent
+	var hasMore bool
+	var count int
+	var pageIndex int
+	if cid == nil {
+		keyword, err := utils.GetOptions(i, "keyword")
+		if err != nil {
+			utils.HandleError(err, s, i)
+			return
+		}
+
+		res, err = vndb.GetVnID(keyword)
+		if err != nil {
+			utils.HandleError(err, s, i)
+			return
+		}
+
+		idStr := uuid.New().String()
+		cache.Set(idStr, *res)
+
+		// 計算筆數
+		count = len(*res)
+
+		hasMore = pagination(res, 0, false)
+
+		if hasMore {
+			cidCommandName := utils.MakeCIDCommandName(i.ApplicationCommandData().Name, true, "vndb")
+			messageComponent = []discordgo.MessageComponent{utils.MakeCIDPageComponent("▶️", idStr, 1, cidCommandName)}
+		}
+	} else {
+		// 處理CID
+		pageCID := utils.PageCID{
+			NewCID: *cid,
+		}
+		cacheValue, err := cache.Get(pageCID.GetCacheID())
+		if err != nil {
+			utils.HandleError(err, s, i)
+			return
+		}
+		resValue := cacheValue.([]vndb.GetVnIDUseListResponse)
+		res = &resValue
+
+		// 計算筆數
+		count = len(*res)
+
+		// 資料分頁
+		pageIndex, err = pageCID.GetPageIndex()
+		if err != nil {
+			utils.HandleError(err, s, i)
+			return
+		}
+		hasMore = pagination(res, pageIndex, true)
+		cidCommandName := utils.MakeCIDCommandName(cid.GetCommandName(), true, "vndb")
+		if hasMore {
+			if pageIndex == 0 {
+				messageComponent = []discordgo.MessageComponent{utils.MakeCIDPageComponent("▶️", pageCID.GetCacheID(), 1, cidCommandName)}
+			} else {
+				messageComponent = []discordgo.MessageComponent{utils.MakeCIDPageComponent("◀️", pageCID.GetCacheID(), pageIndex-1, cidCommandName)}
+				messageComponent = append(messageComponent, utils.MakeCIDPageComponent("▶️", pageCID.GetCacheID(), pageIndex+1, cidCommandName))
+			}
+		} else {
+			messageComponent = []discordgo.MessageComponent{utils.MakeCIDPageComponent("◀️", pageCID.GetCacheID(), pageIndex-1, cidCommandName)}
+		}
+	}
+	actionsRow := utils.MakeActionsRow(messageComponent)
+	listData := make([]string, 0, len(*res))
+	for _, r := range *res {
+		listData = append(listData, fmt.Sprintf("**%s**　%s (%s)", r.ID, r.Title, r.Alttitle))
+	}
+	embed := &discordgo.MessageEmbed{
+		Title: fmt.Sprintf("遊戲列表搜尋 (%d筆)", count),
+		Color: 0xF8F8DF,
+		Fields: []*discordgo.MessageEmbedField{
+			{
+				Name:   "ID/名稱",
+				Value:  strings.Join(listData, "\n"),
+				Inline: false,
+			},
+		},
+	}
+
+	if cid == nil {
+		utils.InteractionEmbedRespond(s, i, embed, actionsRow, true)
+	} else {
+		utils.EditEmbedRespond(s, i, embed, actionsRow)
+	}
+
 }
