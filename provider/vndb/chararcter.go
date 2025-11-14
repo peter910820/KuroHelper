@@ -46,8 +46,8 @@ func GetCharacterByFuzzy(keyword string, isID bool) (*CharacterSearchResponse, e
 	}
 
 	reqVn := VndbCreate()
-	characterIDFilter := []interface{}{"id", "=", resCharacters.Results[0].ID}
-	reqVn.Filters = []interface{}{"character", "=", characterIDFilter}
+	characterIDFilter := []any{"id", "=", resCharacters.Results[0].ID}
+	reqVn.Filters = []any{"character", "=", characterIDFilter}
 	reqVn.Fields = "va.staff.name, va.staff.original, va.character.id"
 	jsonVn, err := json.Marshal(reqVn)
 	if err != nil {
