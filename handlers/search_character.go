@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -46,7 +47,7 @@ func SearchCharacter(s *discordgo.Session, i *discordgo.InteractionCreate, cid *
 			if optList == "" {
 				vndbSearchCharacter(s, i)
 			} else {
-				return
+				vndbSearchCharacterList(s, i, cid)
 			}
 		case "2":
 			if optList == "" {
@@ -67,9 +68,9 @@ func SearchCharacter(s *discordgo.Session, i *discordgo.InteractionCreate, cid *
 		switch commandNameProvider {
 		case "vndb":
 			if !cid.GetCommandNameIsList() {
-				erogsSearchCharacter(s, i)
+				vndbSearchCharacter(s, i)
 			} else {
-				erogsSearchCharacterList(s, i, cid)
+				vndbSearchCharacterList(s, i, cid)
 			}
 		case "erogs":
 			if !cid.GetCommandNameIsList() {
@@ -281,12 +282,11 @@ func bangumiSearchCharacter(s *discordgo.Session, i *discordgo.InteractionCreate
 	} else {
 		nameData = fmt.Sprintf("%s (%s)", res.Name, res.NameCN)
 	}
+	image := generateImage(i, res.Image)
 	embed := &discordgo.MessageEmbed{
 		Title: nameData,
 		Color: 0xF8F8DF,
-		Image: &discordgo.MessageEmbedImage{
-			URL: res.Image,
-		},
+		Image: image,
 		Fields: []*discordgo.MessageEmbedField{
 			{
 				Name:   "別名",
@@ -360,25 +360,23 @@ func vndbSearchCharacter(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 	logrus.Printf("vndb查詢角色: %s", keyword)
-	// idSearch, _ := regexp.MatchString(`^e\d+$`, keyword)
-	res, err = vndb.GetCharacterByFuzzy(keyword)
+	idSearch, _ := regexp.MatchString(`^c\d+$`, keyword)
+	res, err = vndb.GetCharacterByFuzzy(keyword, idSearch)
 	if err != nil {
 		utils.HandleError(err, s, i)
 		return
 	}
-	nameData := ""
-	heightData := ""
-	weightData := ""
-	BWHData := ""
-	ageData := ""
-	birthDayData := ""
+	nameData := "res.Name"
+	heightData := "未收錄"
+	weightData := "未收錄"
+	BWHData := "未收錄"
+	ageData := "未收錄"
+	birthDayData := "未收錄"
 	sexData := ""
 	genderData := ""
 	vnData := make([]string, 0, len(res.VNs))
 	if res.Original != "" {
 		nameData = fmt.Sprintf("%s (%s)", res.Original, res.Name)
-	} else {
-		nameData = res.Name
 	}
 	if len(res.Aliases) == 0 {
 		res.Aliases = []string{"未收錄"}
@@ -389,32 +387,22 @@ func vndbSearchCharacter(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if res.BloodType == "" {
 		res.BloodType = "未收錄"
 	}
-	if res.Height == 0 {
-		heightData = "未收錄"
-	} else {
+	if res.Height != 0 {
 		heightData = strconv.Itoa(res.Height) + "cm"
 	}
-	if res.Weight == 0 {
-		weightData = "未收錄"
-	} else {
+	if res.Weight != 0 {
 		weightData = strconv.Itoa(res.Weight) + "kg"
 	}
-	if res.Bust == 0 && res.Waist == 0 && res.Hips == 0 {
-		BWHData = "未收錄"
-	} else {
+	if res.Bust != 0 && res.Waist != 0 && res.Hips != 0 {
 		BWHData = fmt.Sprintf("%d/%d/%d", res.Bust, res.Waist, res.Hips)
 	}
 	if res.Cup == "" {
 		res.Cup = "未收錄"
 	}
-	if res.Age == nil {
-		ageData = "未收錄"
-	} else {
+	if res.Age != nil {
 		ageData = strconv.Itoa(*res.Age)
 	}
-	if res.Birthday == [2]int{} {
-		birthDayData = "未收錄"
-	} else {
+	if res.Birthday != [2]int{} {
 		birthDayData = fmt.Sprintf("%d月%d號", res.Birthday[0], res.Birthday[1])
 	}
 	if res.Sex == [2]string{} {
@@ -431,20 +419,19 @@ func vndbSearchCharacter(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	} else {
 		genderData = vndb.Gender[res.Gender[0]]
 	}
-
 	if len(res.VNs) == 0 {
 		vnData = append(vnData, "未收錄")
 	} else {
+		sort.Slice(res.VNs, func(i, j int) bool { // 依照角色定位排序
+			return vndb.RolePriority[res.VNs[i].Role] < vndb.RolePriority[res.VNs[j].Role]
+		})
 		for _, vn := range res.VNs {
-			titleData := ""
+			titleData := vn.Title
 			for _, title := range vn.Titles {
-				if title.Main {
+				if title.Main { // 抓取原文標題
 					titleData = title.Title
 					break
 				}
-			}
-			if titleData == "" {
-				titleData = vn.Title
 			}
 			if vn.Spoiler == 0 {
 				vnData = append(vnData, fmt.Sprintf("%s (%s)", titleData, vndb.Role[vn.Role]))
@@ -455,12 +442,12 @@ func vndbSearchCharacter(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	res.Description = vndb.ConvertBBCodeToMarkdown(res.Description)
+	image := generateImage(i, res.Image.URL)
 	embed := &discordgo.MessageEmbed{
-		Title: nameData,
-		Color: 0xF8F8DF,
-		Image: &discordgo.MessageEmbedImage{
-			URL: res.Image.URL,
-		},
+		Title:       nameData,
+		Description: res.Description, // 敘述放在Description欄位以避免超過字數限制
+		Color:       0xF8F8DF,
+		Image:       image,
 		Fields: []*discordgo.MessageEmbedField{
 			{
 				Name:   "別名",
@@ -508,11 +495,6 @@ func vndbSearchCharacter(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				Inline: true,
 			},
 			{
-				Name:   "角色敘述",
-				Value:  res.Description,
-				Inline: false,
-			},
-			{
 				Name:   "登場於",
 				Value:  strings.Join(vnData, "\n"),
 				Inline: true,
@@ -520,4 +502,115 @@ func vndbSearchCharacter(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		},
 	}
 	utils.InteractionEmbedRespond(s, i, embed, nil, true)
+}
+
+// vndb查詢角色列表搜尋處理
+func vndbSearchCharacterList(s *discordgo.Session, i *discordgo.InteractionCreate, cid *utils.NewCID) {
+	var res *[]vndb.CharacterSearchResponse
+	var messageComponent []discordgo.MessageComponent
+	var hasMore bool
+	var count int
+	var pageIndex int
+	if cid == nil {
+		keyword, err := utils.GetOptions(i, "keyword")
+		if err != nil {
+			utils.HandleError(err, s, i)
+			return
+		}
+
+		res, err = vndb.GetCharacterListByFuzzy(keyword)
+		if err != nil {
+			utils.HandleError(err, s, i)
+			return
+		}
+
+		idStr := uuid.New().String()
+		cache.Set(idStr, *res)
+
+		// 計算筆數
+		count = len(*res)
+
+		hasMore = pagination(res, 0, false)
+
+		if hasMore {
+			cidCommandName := utils.MakeCIDCommandName(i.ApplicationCommandData().Name, true, "vndb")
+			messageComponent = []discordgo.MessageComponent{utils.MakeCIDPageComponent("▶️", idStr, 1, cidCommandName)}
+		}
+	} else {
+		// 處理CID
+		pageCID := utils.PageCID{
+			NewCID: *cid,
+		}
+		cacheValue, err := cache.Get(pageCID.GetCacheID())
+		if err != nil {
+			utils.HandleError(err, s, i)
+			return
+		}
+		resValue := cacheValue.([]vndb.CharacterSearchResponse)
+		res = &resValue
+
+		// 計算筆數
+		count = len(*res)
+
+		// 資料分頁
+		pageIndex, err = pageCID.GetPageIndex()
+		if err != nil {
+			utils.HandleError(err, s, i)
+			return
+		}
+		hasMore = pagination(res, pageIndex, true)
+		cidCommandName := utils.MakeCIDCommandName(cid.GetCommandName(), true, "vndb")
+		if hasMore {
+			if pageIndex == 0 {
+				messageComponent = []discordgo.MessageComponent{utils.MakeCIDPageComponent("▶️", pageCID.GetCacheID(), 1, cidCommandName)}
+			} else {
+				messageComponent = []discordgo.MessageComponent{utils.MakeCIDPageComponent("◀️", pageCID.GetCacheID(), pageIndex-1, cidCommandName)}
+				messageComponent = append(messageComponent, utils.MakeCIDPageComponent("▶️", pageCID.GetCacheID(), pageIndex+1, cidCommandName))
+			}
+		} else {
+			messageComponent = []discordgo.MessageComponent{utils.MakeCIDPageComponent("◀️", pageCID.GetCacheID(), pageIndex-1, cidCommandName)}
+		}
+	}
+	actionsRow := utils.MakeActionsRow(messageComponent)
+	listData := make([]string, 0, len(*res))
+	for _, r := range *res {
+		nameData := r.Name
+		vnData := []string{}
+		if r.Original != "" { // 有原文名稱則顯示原文名稱
+			nameData = r.Original
+		}
+		sort.Slice(r.VNs, func(i, j int) bool { // 依照角色定位排序
+			return vndb.RolePriority[r.VNs[i].Role] < vndb.RolePriority[r.VNs[j].Role]
+		})
+		for _, vn := range r.VNs {
+			vnNameData := vn.Title
+			for _, title := range vn.Titles {
+				if title.Main { // 抓取原文標題
+					vnNameData = title.Title
+					break
+				}
+			}
+			vnData = append(vnData, fmt.Sprintf("%s (%s)", vnNameData, vndb.Role[vn.Role]))
+			if len(vnData) >= 2 { // 一個角色最多顯示兩個遊戲
+				break
+			}
+		}
+		listData = append(listData, fmt.Sprintf("%-6s　%s  ( %s )", r.ID, nameData, strings.Join(vnData, "\n")))
+	}
+	embed := &discordgo.MessageEmbed{
+		Title: fmt.Sprintf("角色列表搜尋 (%d筆)", count),
+		Color: 0xF8F8DF,
+		Fields: []*discordgo.MessageEmbedField{
+			{
+				Name:   "ID/名稱",
+				Value:  strings.Join(listData, "\n"),
+				Inline: false,
+			},
+		},
+	}
+	if cid == nil {
+		utils.InteractionEmbedRespond(s, i, embed, actionsRow, true)
+	} else {
+		utils.EditEmbedRespond(s, i, embed, actionsRow)
+	}
 }

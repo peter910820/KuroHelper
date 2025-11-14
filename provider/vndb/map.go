@@ -14,9 +14,15 @@ var (
 		"a": "不明",
 	}
 	Role = map[string]string{
-		"protagonist": "主角",
-		"primary":     "主角",
-		"side":        "配角",
-		"appears":     "配角",
+		"main":    "主角",
+		"primary": "主角",
+		"side":    "配角",
+		"appears": "配角",
+	}
+	RolePriority = map[string]int{
+		"main":    1,
+		"primary": 2,
+		"side":    3,
+		"appears": 4,
 	}
 )

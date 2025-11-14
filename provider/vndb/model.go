@@ -170,7 +170,7 @@ type Stats struct {
 	VN        int `json:"vn"`
 }
 
-type CharacterSearchResponse struct {
+type CharacterSearchResponse struct { // 角色搜尋Response結構
 	ID          string                      `json:"id"`          // vndbid
 	Name        string                      `json:"name"`        // 名稱
 	Original    string                      `json:"original"`    // 原文名稱，可能為 null
@@ -206,14 +206,14 @@ type CharacterSearchVnResponse struct { // 獲得Role欄位
 	Role     string          `json:"role"`    // main/primary/side/appears
 }
 
-type VnSearchCharacterResponse struct {
+type VnSearchCharacterResponse struct { // VN查角色Response結構
 	ID       string `json:"id"`       // vndbid
 	Role     string `json:"role"`     // main/primary/side/appears
 	Name     string `json:"name"`     // 角色名稱
 	Original string `json:"original"` // 角色原文名稱，可能為 null
 }
 
-type CharacterSearchTraitResponse struct {
+type CharacterSearchTraitResponse struct { // 角色特徵結構
 	ID          string   `json:"id"`          // vndbid
 	Name        string   `json:"name"`        // 特徵名稱（應與 group_name 一起顯示）
 	Aliases     []string `json:"aliases"`     // 別名列表
@@ -225,10 +225,4 @@ type CharacterSearchTraitResponse struct {
 	GroupName   string   `json:"group_name"`  // 群組名稱（頂層父特徵）
 	Spoiler     int      `json:"spoiler"`     // 劇透等級
 	Lie         bool     `json:"lie"`
-}
-
-type CharacterSearchListResponse struct {
-	ID       string `json:"id"`       // vndbid
-	Name     string `json:"name"`     // 角色名稱
-	Original string `json:"original"` // 角色原文名稱，可能為 null
 }

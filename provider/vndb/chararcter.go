@@ -7,10 +7,15 @@ import (
 	"strings"
 )
 
-func GetCharacterByFuzzy(keyword string) (*CharacterSearchResponse, error) {
+func GetCharacterByFuzzy(keyword string, idsearch bool) (*CharacterSearchResponse, error) {
 	reqCharacter := VndbCreate()
-	reqCharacter.Filters = []interface{}{"search", "=", keyword}
 	reqCharacterSort := "searchrank"
+	reqCharacter.Filters = []interface{}{"search", "=", keyword}
+	if idsearch {
+		reqCharacter.Filters = []interface{}{"id", "=", keyword}
+		reqCharacterSort = ""
+	}
+
 	reqCharacterResults := 1
 	reqCharacter.Sort = &reqCharacterSort
 	reqCharacter.Results = &reqCharacterResults
@@ -99,4 +104,33 @@ func ConvertBBCodeToMarkdown(text string) string {
 	reCharacterID := regexp.MustCompile(`\[(.+?)\]\(/c(\d+?)\)`)
 	text = reCharacterID.ReplaceAllString(text, "[$1](https://vndb.org/c$2)")
 	return strings.TrimSpace(text)
+}
+
+func GetCharacterListByFuzzy(keyword string) (*[]CharacterSearchResponse, error) {
+	reqCharacter := VndbCreate()
+	reqCharacter.Filters = []interface{}{"search", "=", keyword}
+	reqCharacterSort := "searchrank"
+	reqCharacter.Sort = &reqCharacterSort
+	basicFields := "id, name, original"
+	vnsFields := "vns.title, vns.alttitle, vns.spoiler, vns.role, vns.titles.title, vns.titles.main"
+	allFields := []string{
+		basicFields,
+		vnsFields,
+	}
+	reqCharacter.Fields = strings.Join(allFields, ", ")
+	jsonCharacter, err := json.Marshal(reqCharacter)
+	if err != nil {
+		return nil, err
+	}
+	r, err := sendPostRequest("/character", jsonCharacter)
+	if err != nil {
+		return nil, err
+	}
+	var resCharacters BasicResponse[CharacterSearchResponse]
+	err = json.Unmarshal(r, &resCharacters)
+	if err != nil {
+		return nil, err
+	}
+
+	return &resCharacters.Results, nil
 }
