@@ -10,7 +10,7 @@ import (
 func GetProducerByFuzzy(keyword string, companyType string) (*ProducerSearchResponse, error) {
 	reqProducer := VndbCreate()
 
-	filtersProducer := []interface{}{}
+	filtersProducer := []any{}
 	if companyType != "" {
 		filtersProducer = append(filtersProducer, "and")
 		switch companyType {
@@ -23,7 +23,7 @@ func GetProducerByFuzzy(keyword string, companyType string) (*ProducerSearchResp
 		}
 		filtersProducer = append(filtersProducer, []string{"search", "=", keyword})
 	} else {
-		filtersProducer = []interface{}{"search", "=", keyword}
+		filtersProducer = []any{"search", "=", keyword}
 	}
 
 	reqProducer.Filters = filtersProducer
@@ -61,8 +61,8 @@ func GetProducerByFuzzy(keyword string, companyType string) (*ProducerSearchResp
 	// 等到查詢解析完後才能去查詢遊戲的資料
 	reqVn := VndbCreate()
 
-	reqVn.Filters = []interface{}{
-		"developer", "=", []interface{}{"id", "=", resProducer.Results[0].ID},
+	reqVn.Filters = []any{
+		"developer", "=", []any{"id", "=", resProducer.Results[0].ID},
 	}
 
 	reqVn.Fields = "title, alttitle, length_minutes, length_votes, average, rating, votecount"

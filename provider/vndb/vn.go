@@ -7,11 +7,15 @@ import (
 	kurohelpererrors "kurohelper/errors"
 )
 
-func GetVnUseID(brandid string) (*BasicResponse[GetVnUseIDResponse], error) {
+func GetVn(keyword string, isID bool) (*BasicResponse[GetVnUseIDResponse], error) {
 	req := VndbCreate()
-
-	req.Filters = []interface{}{
-		"id", "=", brandid,
+	reqSort := "searchrank"
+	req.Filters = []any{"search", "=", keyword}
+	if isID {
+		req.Filters = []any{"id", "=", keyword}
+		reqSort = ""
+		reqResults := 1
+		req.Results = &reqResults
 	}
 
 	titleFields := "title, alttitle"
@@ -36,6 +40,7 @@ func GetVnUseID(brandid string) (*BasicResponse[GetVnUseIDResponse], error) {
 		relationsFields,
 	}
 
+	req.Sort = &reqSort
 	req.Fields = strings.Join(allFields, ", ")
 
 	jsonData, err := json.Marshal(req)
@@ -59,4 +64,34 @@ func GetVnUseID(brandid string) (*BasicResponse[GetVnUseIDResponse], error) {
 	}
 
 	return &res, nil
+}
+
+func GetVnID(keyword string) (*[]GetVnIDUseListResponse, error) {
+	req := VndbCreate()
+	reqSort := "searchrank"
+	req.Filters = []any{"search", "=", keyword}
+	req.Fields = "id, title, alttitle, developers.name, developers.original, developers.aliases"
+	req.Sort = &reqSort
+
+	jsonData, err := json.Marshal(req)
+	if err != nil {
+		return nil, err
+	}
+
+	body, err := sendPostRequest("/vn", jsonData)
+	if err != nil {
+		return nil, err
+	}
+
+	var res BasicResponse[GetVnIDUseListResponse]
+	err = json.Unmarshal(body, &res)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(res.Results) == 0 {
+		return nil, kurohelpererrors.ErrSearchNoContent
+	}
+
+	return &res.Results, nil
 }

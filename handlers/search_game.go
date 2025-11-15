@@ -31,21 +31,39 @@ func SearchGame(s *discordgo.Session, i *discordgo.InteractionCreate, cid *utils
 	}
 
 	if i.Type == discordgo.InteractionApplicationCommand {
-		opt, err := utils.GetOptions(i, "列表搜尋")
+		optList, err := utils.GetOptions(i, "列表搜尋")
 		if err != nil && errors.Is(err, kurohelpererrors.ErrOptionTranslateFail) {
 			utils.HandleError(err, s, i)
 			return
 		}
-		if opt == "" {
-			erogsSearchGame(s, i)
-		} else {
-			erogsSearchGameList(s, i, cid)
+		optSource, err := utils.GetOptions(i, "查詢資料庫選項")
+		if err != nil && errors.Is(err, kurohelpererrors.ErrOptionTranslateFail) {
+			utils.HandleError(err, s, i)
+			return
+		}
+		switch optSource {
+		case "":
+			fallthrough
+		case "2":
+			if optList == "" {
+				erogsSearchGame(s, i)
+			} else {
+				erogsSearchGameList(s, i, cid)
+			}
+		case "1":
+			if optList == "" {
+				vndbSearchGame(s, i)
+			} else {
+				vndbSearchGameList(s, i, cid)
+			}
 		}
 	} else {
-		if !cid.GetCommandNameIsList() {
-			erogsSearchGame(s, i)
-		} else {
+		commandNameProvider := cid.GetCommandNameProvider()
+		switch commandNameProvider {
+		case "erogs":
 			erogsSearchGameList(s, i, cid)
+		case "vndb":
+			vndbSearchGameList(s, i, cid)
 		}
 	}
 }
@@ -96,7 +114,7 @@ func erogsSearchGame(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	vndbRating := 0.0
 	vndbVotecount := 0
 	if strings.TrimSpace(res.VndbId) != "" {
-		resVndb, err = vndb.GetVnUseID(res.VndbId)
+		resVndb, err = vndb.GetVn(res.VndbId, false)
 		if err != nil {
 			utils.HandleError(err, s, i)
 			return
@@ -343,7 +361,229 @@ func erogsSearchGameList(s *discordgo.Session, i *discordgo.InteractionCreate, c
 	actionsRow := utils.MakeActionsRow(messageComponent)
 	listData := make([]string, 0, len(*res))
 	for _, r := range *res {
-		listData = append(listData, fmt.Sprintf("e%-5s　%s (%s)", strconv.Itoa(r.ID), r.Name, r.Category))
+		listData = append(listData, fmt.Sprintf("**e%-5s**　%s (%s)", strconv.Itoa(r.ID), r.Name, r.Category))
+	}
+	embed := &discordgo.MessageEmbed{
+		Title: fmt.Sprintf("遊戲列表搜尋 (%d筆)", count),
+		Color: 0xF8F8DF,
+		Fields: []*discordgo.MessageEmbedField{
+			{
+				Name:   "ID/名稱",
+				Value:  strings.Join(listData, "\n"),
+				Inline: false,
+			},
+		},
+	}
+
+	if cid == nil {
+		utils.InteractionEmbedRespond(s, i, embed, actionsRow, true)
+	} else {
+		utils.EditEmbedRespond(s, i, embed, actionsRow)
+	}
+
+}
+
+// vndb查詢遊戲處理
+func vndbSearchGame(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	keyword, err := utils.GetOptions(i, "keyword")
+	if err != nil {
+		utils.HandleError(err, s, i)
+		return
+	}
+
+	idSearch, _ := regexp.MatchString(`^v\d+$`, keyword)
+	res, err := vndb.GetVn(keyword, idSearch)
+	if err != nil {
+		utils.HandleError(err, s, i)
+		return
+	}
+
+	/* 處理回傳結構 */
+
+	gameTitle := res.Results[0].Alttitle
+	if strings.TrimSpace(gameTitle) == "" {
+		gameTitle = res.Results[0].Title
+	}
+	brandTitle := res.Results[0].Developers[0].Original
+	if strings.TrimSpace(brandTitle) != "" {
+		brandTitle += fmt.Sprintf("(%s)", res.Results[0].Developers[0].Name)
+	} else {
+		brandTitle = res.Results[0].Developers[0].Name
+	}
+
+	// staff block(待優化)
+	var scenario string
+	var art string
+	var songs string
+	var tmpAlias string
+	for _, staff := range res.Results[0].Staff {
+		if staff.Aliases != nil {
+			tmpAlias = "("
+			for _, alias := range staff.Aliases {
+				tmpAlias += alias.Name + ", "
+			}
+			tmpAlias = tmpAlias[:len(tmpAlias)-2]
+			tmpAlias += ")"
+
+			if len(tmpAlias) == 2 {
+				tmpAlias = ""
+			}
+		}
+
+		switch staff.Role {
+		case "scenario":
+			scenario += fmt.Sprintf("*%s*%s\n", staff.Name, tmpAlias)
+		case "art":
+			art += fmt.Sprintf("*%s*%s\n", staff.Name, tmpAlias)
+		case "songs":
+			songs += fmt.Sprintf("*%s*%s\n", staff.Name, tmpAlias)
+		}
+	}
+
+	// character block
+	character := make([]string, 0, len(res.Results[0].Va))
+	for _, va := range res.Results[0].Va {
+		for _, vns := range va.Character.Vns {
+			if vns.Role == "primary" {
+				character = append(character, fmt.Sprintf("**%s**(%s)", va.Character.Original, "主要角色"))
+			} else {
+				character = append(character, fmt.Sprintf("**%s**(%s)", va.Character.Original, "次要角色"))
+			}
+		}
+	}
+
+	// relations block
+	relationsGame := make([]string, 0, len(res.Results[0].Relations))
+	for _, rg := range res.Results[0].Relations {
+		relationsGame = append(relationsGame, fmt.Sprintf("%s(%s)", rg.Titles[0].Title, rg.ID))
+	}
+	relationsGameDisplay := strings.Join(relationsGame, ", ")
+	if strings.TrimSpace(relationsGameDisplay) == "" {
+		relationsGameDisplay = "無"
+	}
+
+	image := generateImage(i, res.Results[0].Image.Url)
+	embed := &discordgo.MessageEmbed{
+		Title: gameTitle,
+		Color: 0x04108e,
+		Image: image,
+		Fields: []*discordgo.MessageEmbedField{
+			{
+				Name:   "品牌(公司)名稱",
+				Value:  brandTitle,
+				Inline: false,
+			},
+			{
+				Name:   "劇本",
+				Value:  scenario,
+				Inline: false,
+			},
+			{
+				Name:   "美術",
+				Value:  art,
+				Inline: false,
+			},
+			{
+				Name:   "音樂",
+				Value:  songs,
+				Inline: false,
+			},
+			{
+				Name:   "評價(平均/貝式平均/樣本數)",
+				Value:  fmt.Sprintf("%.1f/%.1f/%d", res.Results[0].Average, res.Results[0].Rating, res.Results[0].Votecount),
+				Inline: true,
+			},
+			{
+				Name:   "平均遊玩時數/樣本數",
+				Value:  fmt.Sprintf("%d(H)/%d", res.Results[0].LengthMinutes/60, res.Results[0].LengthVotes),
+				Inline: true,
+			},
+			{
+				Name:   "角色列表",
+				Value:  strings.Join(character, ", "),
+				Inline: false,
+			},
+			{
+				Name:   "相關遊戲",
+				Value:  relationsGameDisplay,
+				Inline: false,
+			},
+		},
+	}
+	utils.InteractionEmbedRespond(s, i, embed, nil, true)
+}
+
+// vndb查詢遊戲列表搜尋處理
+func vndbSearchGameList(s *discordgo.Session, i *discordgo.InteractionCreate, cid *utils.NewCID) {
+	var res *[]vndb.GetVnIDUseListResponse
+	var messageComponent []discordgo.MessageComponent
+	var hasMore bool
+	var count int
+	var pageIndex int
+	if cid == nil {
+		keyword, err := utils.GetOptions(i, "keyword")
+		if err != nil {
+			utils.HandleError(err, s, i)
+			return
+		}
+
+		res, err = vndb.GetVnID(keyword)
+		if err != nil {
+			utils.HandleError(err, s, i)
+			return
+		}
+
+		idStr := uuid.New().String()
+		cache.Set(idStr, *res)
+
+		// 計算筆數
+		count = len(*res)
+
+		hasMore = pagination(res, 0, false)
+
+		if hasMore {
+			cidCommandName := utils.MakeCIDCommandName(i.ApplicationCommandData().Name, true, "vndb")
+			messageComponent = []discordgo.MessageComponent{utils.MakeCIDPageComponent("▶️", idStr, 1, cidCommandName)}
+		}
+	} else {
+		// 處理CID
+		pageCID := utils.PageCID{
+			NewCID: *cid,
+		}
+		cacheValue, err := cache.Get(pageCID.GetCacheID())
+		if err != nil {
+			utils.HandleError(err, s, i)
+			return
+		}
+		resValue := cacheValue.([]vndb.GetVnIDUseListResponse)
+		res = &resValue
+
+		// 計算筆數
+		count = len(*res)
+
+		// 資料分頁
+		pageIndex, err = pageCID.GetPageIndex()
+		if err != nil {
+			utils.HandleError(err, s, i)
+			return
+		}
+		hasMore = pagination(res, pageIndex, true)
+		cidCommandName := utils.MakeCIDCommandName(cid.GetCommandName(), true, "vndb")
+		if hasMore {
+			if pageIndex == 0 {
+				messageComponent = []discordgo.MessageComponent{utils.MakeCIDPageComponent("▶️", pageCID.GetCacheID(), 1, cidCommandName)}
+			} else {
+				messageComponent = []discordgo.MessageComponent{utils.MakeCIDPageComponent("◀️", pageCID.GetCacheID(), pageIndex-1, cidCommandName)}
+				messageComponent = append(messageComponent, utils.MakeCIDPageComponent("▶️", pageCID.GetCacheID(), pageIndex+1, cidCommandName))
+			}
+		} else {
+			messageComponent = []discordgo.MessageComponent{utils.MakeCIDPageComponent("◀️", pageCID.GetCacheID(), pageIndex-1, cidCommandName)}
+		}
+	}
+	actionsRow := utils.MakeActionsRow(messageComponent)
+	listData := make([]string, 0, len(*res))
+	for _, r := range *res {
+		listData = append(listData, fmt.Sprintf("**%s**　%s (%s)", r.ID, r.Title, r.Alttitle))
 	}
 	embed := &discordgo.MessageEmbed{
 		Title: fmt.Sprintf("遊戲列表搜尋 (%d筆)", count),

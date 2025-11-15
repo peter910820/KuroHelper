@@ -45,6 +45,7 @@ type/subject
     - hotfix: 緊急修復錯誤 **允許Bypass**
     - release: 發布版本
     - test: 測試分支(不會合到main，專門記錄用)
+    - chore: 雜項修改, 通常與構建過程或工具相關
     - refactor: 內部重構程式碼(跟使用者無關)
     - ci: CI/CD, 流水線相關 **允許Bypass**
     - style: 代碼格式化、調整UI畫面或新增註解

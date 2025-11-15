@@ -7,24 +7,24 @@ package vndb
 //
 // 這邊結構是根據需要的去對應，不是VNDB的完整結構
 type BasicRequest struct {
-	Filters           []interface{} `json:"filters"` // 必填
-	Fields            string        `json:"fields"`  // 必填
-	Sort              *string       `json:"sort,omitempty"`
-	Reverse           *bool         `json:"reverse,omitempty"`
-	Results           *int          `json:"results,omitempty"`
-	Page              *int          `json:"page,omitempty"`
-	Count             *bool         `json:"count,omitempty"`
-	CompactFilters    *bool         `json:"compact_filters,omitempty"`
-	NormalizedFilters *bool         `json:"normalized_filters,omitempty"`
+	Filters           []any   `json:"filters"` // 必填
+	Fields            string  `json:"fields"`  // 必填
+	Sort              *string `json:"sort,omitempty"`
+	Reverse           *bool   `json:"reverse,omitempty"`
+	Results           *int    `json:"results,omitempty"`
+	Page              *int    `json:"page,omitempty"`
+	Count             *bool   `json:"count,omitempty"`
+	CompactFilters    *bool   `json:"compact_filters,omitempty"`
+	NormalizedFilters *bool   `json:"normalized_filters,omitempty"`
 }
 
 // [VNDB]Response結構
 type BasicResponse[T any] struct {
-	Results           []T           `json:"results"`
-	More              bool          `json:"more"`
-	Count             int           `json:"count"`
-	CompactFilters    string        `json:"compact_filters"`
-	NormalizedFilters []interface{} `json:"normalized_filters"`
+	Results           []T    `json:"results"`
+	More              bool   `json:"more"`
+	Count             int    `json:"count"`
+	CompactFilters    string `json:"compact_filters"`
+	NormalizedFilters []any  `json:"normalized_filters"`
 }
 
 // [VNDB]品牌(發行單位)Response
@@ -113,6 +113,13 @@ type GetVnUseIDResponse struct {
 	Titles        []TitleResponse     `json:"titles"`
 	Va            []VaResponse        `json:"va"`
 	Image         ImageResponse       `json:"image"`
+}
+
+type GetVnIDUseListResponse struct {
+	ID         string              `json:"id"`
+	Title      string              `json:"title"`
+	Alttitle   string              `json:"alttitle"`
+	Developers []DeveloperResponse `json:"developers"`
 }
 
 // producer Response

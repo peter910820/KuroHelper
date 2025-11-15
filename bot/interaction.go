@@ -26,8 +26,6 @@ func onInteractionApplicationCommand(s *discordgo.Session, i *discordgo.Interact
 		go handlers.Helper(s, i)
 	case "vndb統計資料":
 		go handlers.VndbStats(s, i)
-	case "查詢指定遊戲":
-		go handlers.VndbSearchGameByID(s, i)
 	case "查詢遊戲":
 		go handlers.SearchGame(s, i, nil)
 	case "查詢公司品牌":

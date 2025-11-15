@@ -10,14 +10,14 @@ import (
 func GetStaffByFuzzy(keyword string, roleType string) (*BasicResponse[StaffSearchResponse], error) {
 	req := VndbCreate()
 
-	filters := []interface{}{}
+	filters := []any{}
 	if roleType != "" {
 		filters = append(filters, "and")
 		// 傳進來的直接就是API篩選項規格的字串
 		filters = append(filters, []string{"type", "=", roleType})
 		filters = append(filters, []string{"search", "=", keyword})
 	} else {
-		filters = []interface{}{"search", "=", keyword}
+		filters = []any{"search", "=", keyword}
 	}
 
 	req.Filters = filters
