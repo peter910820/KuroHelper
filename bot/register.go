@@ -260,6 +260,10 @@ func galgameCommands() []*discordgo.ApplicationCommand {
 			},
 		},
 		{
+			Name:        "隨機角色",
+			Description: "隨機一個Galgame角色",
+		},
+		{
 			Name:        "個人資料",
 			Description: "取得自己的個人資料(KuroHelper)",
 		},

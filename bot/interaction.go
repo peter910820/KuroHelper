@@ -42,6 +42,8 @@ func onInteractionApplicationCommand(s *discordgo.Session, i *discordgo.Interact
 		go handlers.AddInWish(s, i, nil)
 	case "清除快取":
 		go handlers.CleanCache(s, i)
+	case "隨機角色":
+		go handlers.RandomCharacter(s, i)
 	case "隨機遊戲":
 		go handlers.RandomGame(s, i)
 	case "個人資料":
