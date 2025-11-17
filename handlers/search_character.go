@@ -361,7 +361,7 @@ func vndbSearchCharacter(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 	logrus.Printf("vndb查詢角色: %s", keyword)
 	idSearch, _ := regexp.MatchString(`^c\d+$`, keyword)
-	res, err = vndb.GetCharacterByFuzzy(keyword, idSearch)
+	res, err = vndb.GetCharacterByFuzzy(keyword, idSearch, false)
 	if err != nil {
 		utils.HandleError(err, s, i)
 		return

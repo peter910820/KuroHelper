@@ -239,7 +239,25 @@ func galgameCommands() []*discordgo.ApplicationCommand {
 		},
 		{
 			Name:        "隨機遊戲",
-			Description: "隨機一部Galgame(ymgal)",
+			Description: "隨機一部Galgame",
+			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "查詢資料庫選項",
+					Description: "選擇查詢的資料庫",
+					Required:    false,
+					Choices: []*discordgo.ApplicationCommandOptionChoice{
+						{
+							Name:  "VNDB",
+							Value: "1",
+						},
+						{
+							Name:  "ymgal",
+							Value: "2",
+						},
+					},
+				},
+			},
 		},
 		{
 			Name:        "個人資料",
