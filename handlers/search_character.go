@@ -284,9 +284,10 @@ func bangumiSearchCharacter(s *discordgo.Session, i *discordgo.InteractionCreate
 	}
 	image := generateImage(i, res.Image)
 	embed := &discordgo.MessageEmbed{
-		Title: nameData,
-		Color: 0xF8F8DF,
-		Image: image,
+		Title:       nameData,
+		Description: res.Summary,
+		Color:       0xF8F8DF,
+		Image:       image,
 		Fields: []*discordgo.MessageEmbedField{
 			{
 				Name:   "別名",
@@ -322,11 +323,6 @@ func bangumiSearchCharacter(s *discordgo.Session, i *discordgo.InteractionCreate
 				Name:   "三圍",
 				Value:  res.BWH,
 				Inline: true,
-			},
-			{
-				Name:   "角色敘述",
-				Value:  res.Summary,
-				Inline: false,
 			},
 			{
 				Name:   "CV",
