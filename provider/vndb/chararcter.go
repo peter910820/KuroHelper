@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-func GetCharacterByFuzzy(keyword string, isID bool) (*CharacterSearchResponse, error) {
+func GetCharacterByFuzzy(keyword string, isID bool, isRandom bool) (*CharacterSearchResponse, error) {
 	reqCharacter := VndbCreate()
 	reqCharacterSort := "searchrank"
 	reqCharacter.Filters = []any{"search", "=", keyword}
@@ -15,7 +15,10 @@ func GetCharacterByFuzzy(keyword string, isID bool) (*CharacterSearchResponse, e
 		reqCharacter.Filters = []any{"id", "=", keyword}
 		reqCharacterSort = ""
 	}
-
+	if isRandom {
+		reqCharacter.Filters = []any{"and", []any{"id", ">=", keyword}, []any{"vn", "=", []any{"votecount", ">=", "100"}}}
+		reqCharacterSort = ""
+	}
 	reqCharacterResults := 1
 	reqCharacter.Sort = &reqCharacterSort
 	reqCharacter.Results = &reqCharacterResults

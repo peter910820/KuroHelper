@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -114,7 +115,7 @@ func erogsSearchGame(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	vndbRating := 0.0
 	vndbVotecount := 0
 	if strings.TrimSpace(res.VndbId) != "" {
-		resVndb, err = vndb.GetVn(res.VndbId, false)
+		resVndb, err = vndb.GetVn(res.VndbId, false, false)
 		if err != nil {
 			utils.HandleError(err, s, i)
 			return
@@ -392,12 +393,11 @@ func vndbSearchGame(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	idSearch, _ := regexp.MatchString(`^v\d+$`, keyword)
-	res, err := vndb.GetVn(keyword, idSearch)
+	res, err := vndb.GetVn(keyword, idSearch, false)
 	if err != nil {
 		utils.HandleError(err, s, i)
 		return
 	}
-
 	/* 處理回傳結構 */
 
 	gameTitle := res.Results[0].Alttitle
@@ -410,52 +410,86 @@ func vndbSearchGame(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	} else {
 		brandTitle = res.Results[0].Developers[0].Name
 	}
-
-	// staff block(待優化)
+	logrus.Printf("搜尋遊戲: %s", gameTitle)
+	// staff block
 	var scenario string
 	var art string
 	var songs string
 	var tmpAlias string
 	for _, staff := range res.Results[0].Staff {
-		if staff.Aliases != nil {
-			tmpAlias = "("
+		staffName := staff.Original
+		if staffName == "" {
+			staffName = staff.Name
+		}
+		if len(staff.Aliases) > 0 {
+			aliases := make([]string, 0, len(staff.Aliases))
 			for _, alias := range staff.Aliases {
-				tmpAlias += alias.Name + ", "
+				if alias.IsMain {
+					staffName = alias.Name
+				} else {
+					aliases = append(aliases, alias.Name)
+				}
 			}
-			tmpAlias = tmpAlias[:len(tmpAlias)-2]
-			tmpAlias += ")"
-
-			if len(tmpAlias) == 2 {
+			tmpAlias = "(" + strings.Join(aliases, ", ") + ")"
+			if len(aliases) == 0 {
 				tmpAlias = ""
 			}
 		}
 
 		switch staff.Role {
 		case "scenario":
-			scenario += fmt.Sprintf("*%s*%s\n", staff.Name, tmpAlias)
+			scenario += fmt.Sprintf("%s %s\n", staffName, tmpAlias)
 		case "art":
-			art += fmt.Sprintf("*%s*%s\n", staff.Name, tmpAlias)
+			art += fmt.Sprintf("%s %s\n", staffName, tmpAlias)
 		case "songs":
-			songs += fmt.Sprintf("*%s*%s\n", staff.Name, tmpAlias)
+			songs += fmt.Sprintf("%s %s\n", staffName, tmpAlias)
 		}
 	}
 
 	// character block
-	character := make([]string, 0, len(res.Results[0].Va))
+
+	characterMap := make(map[string]CharacterData) // map[characterID]CharacterData
 	for _, va := range res.Results[0].Va {
-		for _, vns := range va.Character.Vns {
-			if vns.Role == "primary" {
-				character = append(character, fmt.Sprintf("**%s**(%s)", va.Character.Original, "主要角色"))
-			} else {
-				character = append(character, fmt.Sprintf("**%s**(%s)", va.Character.Original, "次要角色"))
+		characterName := va.Character.Original
+		if characterName == "" {
+			characterName = va.Character.Name
+		}
+		for _, vn := range va.Character.Vns {
+			if vn.ID == res.Results[0].ID {
+				characterMap[va.Character.ID] = CharacterData{
+					Name: characterName,
+					Role: vn.Role,
+				}
+				break
 			}
 		}
+	}
+
+	// 將 map 轉為 slice 並排序
+	characterList := make([]CharacterData, 0, len(characterMap))
+	for _, character := range characterMap {
+		characterList = append(characterList, character)
+	}
+	sort.Slice(characterList, func(i, j int) bool {
+		return characterList[i].Role < characterList[j].Role
+	})
+
+	// 格式化輸出
+	characters := make([]string, 0, len(characterList))
+	for _, character := range characterList {
+		characters = append(characters, fmt.Sprintf("**%s** (%s)", character.Name, vndb.Role[character.Role]))
 	}
 
 	// relations block
 	relationsGame := make([]string, 0, len(res.Results[0].Relations))
 	for _, rg := range res.Results[0].Relations {
-		relationsGame = append(relationsGame, fmt.Sprintf("%s(%s)", rg.Titles[0].Title, rg.ID))
+		titleName := ""
+		for _, title := range rg.Titles {
+			if title.Main {
+				titleName = title.Title
+			}
+		}
+		relationsGame = append(relationsGame, fmt.Sprintf("%s(%s)", titleName, rg.ID))
 	}
 	relationsGameDisplay := strings.Join(relationsGame, ", ")
 	if strings.TrimSpace(relationsGameDisplay) == "" {
@@ -500,7 +534,7 @@ func vndbSearchGame(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			},
 			{
 				Name:   "角色列表",
-				Value:  strings.Join(character, ", "),
+				Value:  strings.Join(characters, " / "),
 				Inline: false,
 			},
 			{

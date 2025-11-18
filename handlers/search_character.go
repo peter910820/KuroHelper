@@ -284,9 +284,10 @@ func bangumiSearchCharacter(s *discordgo.Session, i *discordgo.InteractionCreate
 	}
 	image := generateImage(i, res.Image)
 	embed := &discordgo.MessageEmbed{
-		Title: nameData,
-		Color: 0xF8F8DF,
-		Image: image,
+		Title:       nameData,
+		Description: res.Summary,
+		Color:       0xF8F8DF,
+		Image:       image,
 		Fields: []*discordgo.MessageEmbedField{
 			{
 				Name:   "別名",
@@ -324,11 +325,6 @@ func bangumiSearchCharacter(s *discordgo.Session, i *discordgo.InteractionCreate
 				Inline: true,
 			},
 			{
-				Name:   "角色敘述",
-				Value:  res.Summary,
-				Inline: false,
-			},
-			{
 				Name:   "CV",
 				Value:  strings.Join(res.CV, "/"),
 				Inline: false,
@@ -361,7 +357,7 @@ func vndbSearchCharacter(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 	logrus.Printf("vndb查詢角色: %s", keyword)
 	idSearch, _ := regexp.MatchString(`^c\d+$`, keyword)
-	res, err = vndb.GetCharacterByFuzzy(keyword, idSearch)
+	res, err = vndb.GetCharacterByFuzzy(keyword, idSearch, false)
 	if err != nil {
 		utils.HandleError(err, s, i)
 		return

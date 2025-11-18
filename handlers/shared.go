@@ -7,6 +7,11 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
+type CharacterData struct {
+	Name string
+	Role string
+}
+
 const (
 	Played = 1 << iota
 	Wish

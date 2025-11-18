@@ -43,6 +43,7 @@ type RelationResponse struct {
 // [VNDB]關聯的標題Response
 type RelationTitleResponse struct {
 	Title string `json:"title"`
+	Main  bool   `json:"main"`
 }
 
 // 創作者結構
@@ -77,6 +78,7 @@ type VaResponse struct {
 type CharacterResponse struct {
 	ID       string        `json:"id"`
 	Original string        `json:"original"`
+	Name     string        `json:"name"`
 	Vns      []VnsResponse `json:"vns"`
 }
 
