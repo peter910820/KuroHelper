@@ -447,10 +447,6 @@ func vndbSearchGame(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	// character block
-	type CharacterData struct {
-		Name string
-		Role string
-	}
 
 	characterMap := make(map[string]CharacterData) // map[characterID]CharacterData
 	for _, va := range res.Results[0].Va {
