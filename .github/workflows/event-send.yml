@@ -38,6 +38,7 @@ jobs:
           echo "COMMIT_BODY=$(git log -1 --pretty=format:'%b')" >> $GITHUB_ENV
           echo "COMMIT_BRANCH=$(git rev-parse --abbrev-ref HEAD)" >> $GITHUB_ENV
           echo "EVENT_NAME=${{ github.event_name }}" >> $GITHUB_ENV
+          echo "REPO_NAME=${GITHUB_REPOSITORY##*/}" >> $GITHUB_ENV
 
       - name: Send commit to discord
         if: github.event_name == 'push'
@@ -53,4 +54,5 @@ jobs:
           -F "subject=$COMMIT_SUBJECT" \
           -F "body=$COMMIT_BODY" \
           -F "branch=$COMMIT_BRANCH" \
-          -F "event_name=$EVENT_NAME"
+          -F "event_name=$EVENT_NAME" \
+          -F "repo_name=$REPO_NAME"

@@ -92,11 +92,12 @@ func PushSend(kuroHelper *discordgo.Session, c *fiber.Ctx) error {
 	date := c.FormValue("date")
 	subject := c.FormValue("subject")
 	body := c.FormValue("body")
+	repoName := c.FormValue("repo_name")
 
 	embed := &discordgo.MessageEmbed{
-		Title:       "KuroHelper Push Event",
+		Title:       repoName + " Push Event",
 		Color:       0xaf5f3c,
-		Description: fmt.Sprintf("[%s](https://github.com/peter910820/KuroHelper/commit/%s)  %s\n%s", hash, fullHash, branch, date),
+		Description: fmt.Sprintf("[%s](https://github.com/peter910820/%s/commit/%s)  %s\n%s", hash, repoName, fullHash, branch, date),
 		Fields: []*discordgo.MessageEmbedField{
 			{
 				Name:   "發送人",
