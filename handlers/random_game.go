@@ -3,7 +3,6 @@ package handlers
 import (
 	"errors"
 	"fmt"
-	"math/rand"
 	"sort"
 	"strings"
 
@@ -66,16 +65,7 @@ func ymgalRandomGame(s *discordgo.Session, i *discordgo.InteractionCreate) {
 }
 
 func vndbRandomGame(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	r, err := vndb.GetStats()
-	if err != nil {
-		utils.HandleError(err, s, i)
-		return
-	}
-	// 產生隨機數字
-	randomVNID := fmt.Sprintf("v%d", rand.Intn(r.VN))
-	// 根據隨機數字查詢遊戲
-
-	res, err := vndb.GetVn(randomVNID, true, true)
+	res, err := vndb.GetRandomVN()
 	if err != nil {
 		utils.HandleError(err, s, i)
 		return
@@ -92,7 +82,7 @@ func vndbRandomGame(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	} else {
 		brandTitle = res.Results[0].Developers[0].Name
 	}
-	logrus.Printf("搜尋遊戲: %s", gameTitle)
+	logrus.Printf("隨機遊戲: %s", gameTitle)
 	// staff block
 	var scenario string
 	var art string
@@ -217,6 +207,11 @@ func vndbRandomGame(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			{
 				Name:   "角色列表",
 				Value:  strings.Join(characters, " / "),
+				Inline: false,
+			},
+			{
+				Name:   "ID",
+				Value:  res.Results[0].ID,
 				Inline: false,
 			},
 			{

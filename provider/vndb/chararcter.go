@@ -2,26 +2,25 @@ package vndb
 
 import (
 	"encoding/json"
+	"fmt"
 	kurohelpererrors "kurohelper/errors"
+	"math/rand"
 	"regexp"
 	"strings"
 )
 
-func GetCharacterByFuzzy(keyword string, isID bool, isRandom bool) (*CharacterSearchResponse, error) {
-	reqCharacter := VndbCreate()
+func GetCharacterByFuzzy(keyword string) (*CharacterSearchResponse, error) {
+	reqCharacter := VndbCreate() // 建立基本request結構
+
+	// 依照關鍵字的相關度排序
 	reqCharacterSort := "searchrank"
-	reqCharacter.Filters = []any{"search", "=", keyword}
-	if isID {
-		reqCharacter.Filters = []any{"id", "=", keyword}
-		reqCharacterSort = ""
-	}
-	if isRandom {
-		reqCharacter.Filters = []any{"and", []any{"id", ">=", keyword}, []any{"vn", "=", []any{"votecount", ">=", "100"}}}
-		reqCharacterSort = ""
-	}
-	reqCharacterResults := 1
 	reqCharacter.Sort = &reqCharacterSort
+
+	// 限制回傳一筆結果
+	reqCharacterResults := 1
 	reqCharacter.Results = &reqCharacterResults
+
+	// 指定要取得的欄位
 	basicFields := "id, name, original, aliases, description, image.url, blood_type, height, weight, bust, waist, hips, cup, age, birthday, sex, gender"
 	vnsFields := "vns.title, vns.alttitle, vns.spoiler, vns.role, vns.titles.title, vns.titles.main"
 	allFields := []string{
@@ -29,6 +28,10 @@ func GetCharacterByFuzzy(keyword string, isID bool, isRandom bool) (*CharacterSe
 		vnsFields,
 	}
 	reqCharacter.Fields = strings.Join(allFields, ", ")
+
+	// 設定搜尋條件
+	reqCharacter.Filters = []any{"search", "=", keyword}
+
 	jsonCharacter, err := json.Marshal(reqCharacter)
 	if err != nil {
 		return nil, err
@@ -48,28 +51,151 @@ func GetCharacterByFuzzy(keyword string, isID bool, isRandom bool) (*CharacterSe
 		return nil, kurohelpererrors.ErrSearchNoContent
 	}
 
+	// 取得角色詳細資料
+	err = GetCharacterDetail(resCharacters.Results[0].ID, &resCharacters)
+	if err != nil {
+		return nil, err
+	}
+	return &resCharacters.Results[0], nil
+}
+
+func GetCharacterByID(keyword string) (*CharacterSearchResponse, error) {
+	reqCharacter := VndbCreate() // 建立基本request結構
+
+	// 不需要排序
+	reqCharacterSort := ""
+	reqCharacter.Sort = &reqCharacterSort
+
+	// 限制回傳一筆結果
+	reqCharacterResults := 1
+	reqCharacter.Results = &reqCharacterResults
+
+	// 指定要取得的欄位
+	basicFields := "id, name, original, aliases, description, image.url, blood_type, height, weight, bust, waist, hips, cup, age, birthday, sex, gender"
+	vnsFields := "vns.title, vns.alttitle, vns.spoiler, vns.role, vns.titles.title, vns.titles.main"
+	allFields := []string{
+		basicFields,
+		vnsFields,
+	}
+	reqCharacter.Fields = strings.Join(allFields, ", ")
+
+	// 設定搜尋條件
+	reqCharacter.Filters = []any{"id", "=", keyword}
+
+	jsonCharacter, err := json.Marshal(reqCharacter)
+	if err != nil {
+		return nil, err
+	}
+
+	r, err := sendPostRequest("/character", jsonCharacter)
+	if err != nil {
+		return nil, err
+	}
+
+	var resCharacters BasicResponse[CharacterSearchResponse]
+	err = json.Unmarshal(r, &resCharacters)
+	if err != nil {
+		return nil, err
+	}
+	if len(resCharacters.Results) == 0 {
+		return nil, kurohelpererrors.ErrSearchNoContent
+	}
+
+	// 取得角色詳細資料
+	err = GetCharacterDetail(resCharacters.Results[0].ID, &resCharacters)
+	if err != nil {
+		return nil, err
+	}
+	return &resCharacters.Results[0], nil
+}
+
+func GetRandomCharacter() (*CharacterSearchResponse, error) {
+	reqCharacter := VndbCreate() // 建立基本request結構
+
+	// 不需要排序
+	reqCharacterSort := ""
+	reqCharacter.Sort = &reqCharacterSort
+
+	// 限制回傳一筆結果
+	reqCharacterResults := 1
+	reqCharacter.Results = &reqCharacterResults
+
+	// 指定要取得的欄位
+	basicFields := "id, name, original, aliases, description, image.url, blood_type, height, weight, bust, waist, hips, cup, age, birthday, sex, gender"
+	vnsFields := "vns.title, vns.alttitle, vns.spoiler, vns.role, vns.titles.title, vns.titles.main"
+	allFields := []string{
+		basicFields,
+		vnsFields,
+	}
+	reqCharacter.Fields = strings.Join(allFields, ", ")
+
+	// 設定搜尋條件
+	resStat, err := GetStats() // 獲取角色id總數
+	if err != nil {
+		return nil, err
+	}
+	var resCharacters BasicResponse[CharacterSearchResponse]
+	var randomCharacterID string
+	for {
+		randomCharacterID = fmt.Sprintf("c%d", rand.Intn(resStat.Chars))
+		reqCharacter.Filters = []any{"and", []any{"id", ">=", randomCharacterID}, []any{"vn", "=", []any{"votecount", ">=", "100"}}}
+
+		jsonCharacter, err := json.Marshal(reqCharacter)
+		if err != nil {
+			return nil, err
+		}
+
+		r, err := sendPostRequest("/character", jsonCharacter)
+		if err != nil {
+			return nil, err
+		}
+
+		err = json.Unmarshal(r, &resCharacters)
+		if err != nil {
+			return nil, err
+		}
+
+		if len(resCharacters.Results) != 0 {
+			break
+		}
+	}
+	// 取得角色詳細資料
+	err = GetCharacterDetail(resCharacters.Results[0].ID, &resCharacters)
+	if err != nil {
+		return nil, err
+	}
+
+	return &resCharacters.Results[0], nil
+}
+
+func GetCharacterDetail(characterID string, resCharacters *BasicResponse[CharacterSearchResponse]) error {
 	reqVn := VndbCreate()
-	characterIDFilter := []any{"id", "=", resCharacters.Results[0].ID}
+
+	characterIDFilter := []any{"id", "=", characterID}
 	reqVn.Filters = []any{"character", "=", characterIDFilter}
 	reqVn.Fields = "va.staff.name, va.staff.original, va.character.id"
+
 	jsonVn, err := json.Marshal(reqVn)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	r, err = sendPostRequest("/vn", jsonVn)
+
+	r, err := sendPostRequest("/vn", jsonVn)
 	if err != nil {
-		return nil, err
+		return err
 	}
+
 	var resVn BasicResponse[GetVnUseIDResponse]
 	err = json.Unmarshal(r, &resVn)
 	if err != nil {
-		return nil, err
+		return err
 	}
+
 	var vasMap = make(map[string]bool) // 去重
 	var vas []string
 	for _, vn := range resVn.Results {
 		for _, va := range vn.Va {
-			if va.Character.ID == resCharacters.Results[0].ID {
+			if va.Character.ID == characterID {
 				if va.Staff.Original != "" {
 					vasMap[va.Staff.Original] = true
 				} else {
@@ -78,6 +204,7 @@ func GetCharacterByFuzzy(keyword string, isID bool, isRandom bool) (*CharacterSe
 			}
 		}
 	}
+
 	if len(vasMap) == 0 {
 		resCharacters.Results[0].Vas = []string{"未收錄"}
 	} else {
@@ -87,7 +214,7 @@ func GetCharacterByFuzzy(keyword string, isID bool, isRandom bool) (*CharacterSe
 		resCharacters.Results[0].Vas = vas
 	}
 
-	return &resCharacters.Results[0], nil
+	return nil
 }
 
 func ConvertBBCodeToMarkdown(text string) string {

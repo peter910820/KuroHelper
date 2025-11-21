@@ -355,14 +355,21 @@ func vndbSearchCharacter(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		utils.HandleError(err, s, i)
 		return
 	}
-	logrus.Printf("vndb查詢角色: %s", keyword)
+
 	idSearch, _ := regexp.MatchString(`^c\d+$`, keyword)
-	res, err = vndb.GetCharacterByFuzzy(keyword, idSearch, false)
+	if idSearch {
+		logrus.Printf("vndb查詢角色ID: %s", keyword)
+		res, err = vndb.GetCharacterByID(keyword)
+	} else {
+		logrus.Printf("vndb查詢角色: %s", keyword)
+		res, err = vndb.GetCharacterByFuzzy(keyword)
+	}
+
 	if err != nil {
 		utils.HandleError(err, s, i)
 		return
 	}
-	nameData := "res.Name"
+	nameData := res.Name
 	heightData := "未收錄"
 	weightData := "未收錄"
 	BWHData := "未收錄"
@@ -378,7 +385,7 @@ func vndbSearchCharacter(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		res.Aliases = []string{"未收錄"}
 	}
 	if res.Description == "" {
-		res.Description = "未收錄"
+		res.Description = "無角色敘述"
 	}
 	if res.BloodType == "" {
 		res.BloodType = "未收錄"

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"kurohelper/provider/vndb"
 	"kurohelper/utils"
-	"math/rand"
 	"sort"
 	"strconv"
 	"strings"
@@ -23,22 +22,12 @@ func RandomCharacter(s *discordgo.Session, i *discordgo.InteractionCreate) {
 }
 
 func vndbRandomCharacter(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	r, err := vndb.GetStats()
+	res, err := vndb.GetRandomCharacter()
 	if err != nil {
 		utils.HandleError(err, s, i)
 		return
 	}
-	// 產生隨機數字
-	randomCharacterID := fmt.Sprintf("c%d", rand.Intn(r.Chars))
-	// 根據隨機數字查詢遊戲
-
-	res, err := vndb.GetCharacterByFuzzy(randomCharacterID, true, true)
-	if err != nil {
-		utils.HandleError(err, s, i)
-		return
-	}
-	logrus.Printf("隨機角色: %s", res.Name)
-	nameData := "res.Name"
+	nameData := res.Name
 	heightData := "未收錄"
 	weightData := "未收錄"
 	BWHData := "未收錄"
@@ -50,11 +39,12 @@ func vndbRandomCharacter(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if res.Original != "" {
 		nameData = fmt.Sprintf("%s (%s)", res.Original, res.Name)
 	}
+	logrus.Printf("隨機角色: %s", nameData)
 	if len(res.Aliases) == 0 {
 		res.Aliases = []string{"未收錄"}
 	}
 	if res.Description == "" {
-		res.Description = "未收錄"
+		res.Description = "無角色敘述"
 	}
 	if res.BloodType == "" {
 		res.BloodType = "未收錄"
@@ -169,6 +159,11 @@ func vndbRandomCharacter(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			{
 				Name:   "登場於",
 				Value:  strings.Join(vnData, "\n"),
+				Inline: true,
+			},
+			{
+				Name:   "ID",
+				Value:  res.ID,
 				Inline: true,
 			},
 		},
