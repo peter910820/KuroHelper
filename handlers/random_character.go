@@ -37,8 +37,7 @@ func vndbRandomCharacter(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		utils.HandleError(err, s, i)
 		return
 	}
-	logrus.Printf("隨機角色: %s", res.Name)
-	nameData := "res.Name"
+	nameData := res.Name
 	heightData := "未收錄"
 	weightData := "未收錄"
 	BWHData := "未收錄"
@@ -50,6 +49,7 @@ func vndbRandomCharacter(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if res.Original != "" {
 		nameData = fmt.Sprintf("%s (%s)", res.Original, res.Name)
 	}
+	logrus.Printf("隨機角色: %s", nameData)
 	if len(res.Aliases) == 0 {
 		res.Aliases = []string{"未收錄"}
 	}
