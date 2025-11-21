@@ -277,17 +277,5 @@ func vndbCommands() []*discordgo.ApplicationCommand {
 			Name:        "vndb統計資料",
 			Description: "取得VNDB統計資料(VNDB)",
 		},
-		{
-			Name:        "查詢指定遊戲",
-			Description: "根據VNDB ID查詢指定遊戲資料(VNDB)，此方法只允許輸入VNDB ID",
-			Options: []*discordgo.ApplicationCommandOption{
-				{
-					Type:        discordgo.ApplicationCommandOptionString,
-					Name:        "brandid",
-					Description: "VNDB ID",
-					Required:    true,
-				},
-			},
-		},
 	}
 }
