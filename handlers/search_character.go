@@ -369,7 +369,7 @@ func vndbSearchCharacter(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		utils.HandleError(err, s, i)
 		return
 	}
-	nameData := "res.Name"
+	nameData := res.Name
 	heightData := "未收錄"
 	weightData := "未收錄"
 	BWHData := "未收錄"
