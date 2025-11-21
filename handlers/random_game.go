@@ -220,6 +220,11 @@ func vndbRandomGame(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				Inline: false,
 			},
 			{
+				Name:   "ID",
+				Value:  res.Results[0].ID,
+				Inline: false,
+			},
+			{
 				Name:   "相關遊戲",
 				Value:  relationsGameDisplay,
 				Inline: false,

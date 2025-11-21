@@ -44,7 +44,7 @@ func vndbRandomCharacter(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		res.Aliases = []string{"未收錄"}
 	}
 	if res.Description == "" {
-		res.Description = "未收錄"
+		res.Description = "無角色敘述"
 	}
 	if res.BloodType == "" {
 		res.BloodType = "未收錄"
@@ -159,6 +159,11 @@ func vndbRandomCharacter(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			{
 				Name:   "登場於",
 				Value:  strings.Join(vnData, "\n"),
+				Inline: true,
+			},
+			{
+				Name:   "ID",
+				Value:  res.ID,
 				Inline: true,
 			},
 		},
