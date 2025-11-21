@@ -115,7 +115,7 @@ func erogsSearchGame(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	vndbRating := 0.0
 	vndbVotecount := 0
 	if strings.TrimSpace(res.VndbId) != "" {
-		resVndb, err = vndb.GetVn(res.VndbId, false, false)
+		resVndb, err = vndb.GetVNByID(res.VndbId)
 		if err != nil {
 			utils.HandleError(err, s, i)
 			return
@@ -391,9 +391,16 @@ func vndbSearchGame(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		utils.HandleError(err, s, i)
 		return
 	}
-
+	var res *vndb.BasicResponse[vndb.GetVnUseIDResponse]
 	idSearch, _ := regexp.MatchString(`^v\d+$`, keyword)
-	res, err := vndb.GetVn(keyword, idSearch, false)
+	if idSearch {
+		res, err = vndb.GetVNByID(keyword)
+		logrus.Printf("vndb搜尋遊戲ID: %s", keyword)
+	} else {
+		res, err = vndb.GetVNByFuzzy(keyword)
+		logrus.Printf("vndb搜尋遊戲: %s", keyword)
+	}
+
 	if err != nil {
 		utils.HandleError(err, s, i)
 		return
@@ -410,7 +417,7 @@ func vndbSearchGame(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	} else {
 		brandTitle = res.Results[0].Developers[0].Name
 	}
-	logrus.Printf("搜尋遊戲: %s", gameTitle)
+
 	// staff block
 	var scenario string
 	var art string

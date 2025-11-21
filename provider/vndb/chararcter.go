@@ -62,7 +62,7 @@ func GetCharacterByFuzzy(keyword string) (*CharacterSearchResponse, error) {
 func GetCharacterByID(keyword string) (*CharacterSearchResponse, error) {
 	reqCharacter := VndbCreate() // 建立基本request結構
 
-	// 依照關鍵字的相關度排序
+	// 不需要排序
 	reqCharacterSort := ""
 	reqCharacter.Sort = &reqCharacterSort
 
@@ -112,7 +112,7 @@ func GetCharacterByID(keyword string) (*CharacterSearchResponse, error) {
 func GetRandomCharacter() (*CharacterSearchResponse, error) {
 	reqCharacter := VndbCreate() // 建立基本request結構
 
-	// 依照關鍵字的相關度排序
+	// 不需要排序
 	reqCharacterSort := ""
 	reqCharacter.Sort = &reqCharacterSort
 
