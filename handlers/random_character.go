@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"kurohelper/provider/vndb"
 	"kurohelper/utils"
-	"math/rand"
 	"sort"
 	"strconv"
 	"strings"
@@ -23,16 +22,7 @@ func RandomCharacter(s *discordgo.Session, i *discordgo.InteractionCreate) {
 }
 
 func vndbRandomCharacter(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	r, err := vndb.GetStats()
-	if err != nil {
-		utils.HandleError(err, s, i)
-		return
-	}
-	// 產生隨機數字
-	randomCharacterID := fmt.Sprintf("c%d", rand.Intn(r.Chars))
-	// 根據隨機數字查詢遊戲
-
-	res, err := vndb.GetCharacterByFuzzy(randomCharacterID, true, true)
+	res, err := vndb.GetRandomCharacter()
 	if err != nil {
 		utils.HandleError(err, s, i)
 		return

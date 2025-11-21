@@ -355,9 +355,16 @@ func vndbSearchCharacter(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		utils.HandleError(err, s, i)
 		return
 	}
-	logrus.Printf("vndb查詢角色: %s", keyword)
+
 	idSearch, _ := regexp.MatchString(`^c\d+$`, keyword)
-	res, err = vndb.GetCharacterByFuzzy(keyword, idSearch, false)
+	if idSearch {
+		logrus.Printf("vndb查詢角色ID: %s", keyword)
+		res, err = vndb.GetCharacterByID(keyword)
+	} else {
+		logrus.Printf("vndb查詢角色: %s", keyword)
+		res, err = vndb.GetCharacterByFuzzy(keyword)
+	}
+
 	if err != nil {
 		utils.HandleError(err, s, i)
 		return
