@@ -101,7 +101,7 @@ func galgameCommands() []*discordgo.ApplicationCommand {
 		},
 		{
 			Name:        "查詢遊戲",
-			Description: "根據關鍵字查詢遊戲資料(ErogameScape)",
+			Description: "根據關鍵字查詢遊戲資料",
 			Options: []*discordgo.ApplicationCommandOption{
 				{
 					Type:        discordgo.ApplicationCommandOptionString,
@@ -141,7 +141,7 @@ func galgameCommands() []*discordgo.ApplicationCommand {
 		},
 		{
 			Name:        "查詢公司品牌",
-			Description: "根據關鍵字查詢公司品牌資料",
+			Description: "根據關鍵字查詢公司品牌資料(VNDB)",
 			Options: []*discordgo.ApplicationCommandOption{
 				{
 					Type:        discordgo.ApplicationCommandOptionString,
@@ -195,7 +195,7 @@ func galgameCommands() []*discordgo.ApplicationCommand {
 		},
 		{
 			Name:        "查詢角色",
-			Description: "根據關鍵字查詢角色資料(ErogameScape)",
+			Description: "根據關鍵字查詢角色資料",
 			Options: []*discordgo.ApplicationCommandOption{
 				{
 					Type:        discordgo.ApplicationCommandOptionString,
@@ -261,7 +261,7 @@ func galgameCommands() []*discordgo.ApplicationCommand {
 		},
 		{
 			Name:        "隨機角色",
-			Description: "隨機一個Galgame角色",
+			Description: "隨機一個Galgame角色(VNDB)",
 		},
 		{
 			Name:        "個人資料",
