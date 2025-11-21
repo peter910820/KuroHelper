@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 
 	"github.com/bwmarrin/discordgo"
@@ -94,9 +95,26 @@ func PushSend(kuroHelper *discordgo.Session, c *fiber.Ctx) error {
 	body := c.FormValue("body")
 	repoName := c.FormValue("repo_name")
 
+	color := 0xF8C3CD
+
+	switch strings.TrimSpace(repoName) {
+	case "KuroHelper":
+		color = 0xF8C3CD
+	case "kurohelper-docs":
+		color = 0x268785
+	case "kurohelper-db":
+		color = 0x6699A1
+	case "kurohelper-api":
+		color = 0xFFBA84
+	case "kurohelper-web":
+		color = 0xB5495B
+	case "kurohelper-web-nuxt3":
+		color = 0x42D392
+	}
+
 	embed := &discordgo.MessageEmbed{
 		Title:       repoName + " Push Event",
-		Color:       0xaf5f3c,
+		Color:       color,
 		Description: fmt.Sprintf("[%s](https://github.com/peter910820/%s/commit/%s)  %s\n%s", hash, repoName, fullHash, branch, date),
 		Fields: []*discordgo.MessageEmbedField{
 			{
