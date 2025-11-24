@@ -2,11 +2,12 @@ package handlers
 
 import (
 	"fmt"
-	"kurohelper/provider/vndb"
 	"kurohelper/utils"
 	"sort"
 	"strconv"
 	"strings"
+
+	"github.com/peter910820/kurohelper-core/vndb"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/sirupsen/logrus"

@@ -3,8 +3,9 @@ package handlers
 import (
 	"github.com/bwmarrin/discordgo"
 
-	"kurohelper/cache"
 	"kurohelper/utils"
+
+	"github.com/peter910820/kurohelper-core/cache"
 )
 
 // 清除快取Handler

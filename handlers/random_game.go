@@ -7,9 +7,10 @@ import (
 	"strings"
 
 	kurohelpererrors "kurohelper/errors"
-	"kurohelper/provider/vndb"
-	"kurohelper/provider/ymgal"
 	"kurohelper/utils"
+
+	"github.com/peter910820/kurohelper-core/vndb"
+	"github.com/peter910820/kurohelper-core/ymgal"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/sirupsen/logrus"

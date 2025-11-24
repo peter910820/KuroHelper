@@ -12,12 +12,13 @@ import (
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 
-	"kurohelper/cache"
 	kurohelpererrors "kurohelper/errors"
-	"kurohelper/provider/bangumi"
-	"kurohelper/provider/erogs"
-	"kurohelper/provider/vndb"
 	"kurohelper/utils"
+
+	"github.com/peter910820/kurohelper-core/bangumi"
+	"github.com/peter910820/kurohelper-core/cache"
+	"github.com/peter910820/kurohelper-core/erogs"
+	"github.com/peter910820/kurohelper-core/vndb"
 )
 
 // 查詢角色Handler

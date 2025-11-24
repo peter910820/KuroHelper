@@ -11,10 +11,11 @@ import (
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 
-	"kurohelper/cache"
 	kurohelpererrors "kurohelper/errors"
-	"kurohelper/provider/erogs"
 	"kurohelper/utils"
+
+	"github.com/peter910820/kurohelper-core/cache"
+	"github.com/peter910820/kurohelper-core/erogs"
 )
 
 // 查詢音樂Handler

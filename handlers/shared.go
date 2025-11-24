@@ -1,8 +1,9 @@
 package handlers
 
 import (
-	"kurohelper/cache"
 	"kurohelper/utils"
+
+	"github.com/peter910820/kurohelper-core/cache"
 
 	"github.com/bwmarrin/discordgo"
 )

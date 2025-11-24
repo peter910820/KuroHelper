@@ -13,10 +13,11 @@ import (
 
 	"gorm.io/gorm"
 
-	"kurohelper/cache"
 	kurohelpererrors "kurohelper/errors"
-	"kurohelper/provider/erogs"
 	"kurohelper/utils"
+
+	"github.com/peter910820/kurohelper-core/cache"
+	"github.com/peter910820/kurohelper-core/erogs"
 )
 
 // 加已玩Handler
