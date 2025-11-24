@@ -1,15 +1,17 @@
 package bootstrap
 
 import (
+	"kurohelper/utils"
 	"os"
+	"time"
 
 	"github.com/joho/godotenv"
 	"github.com/sirupsen/logrus"
 
-	"kurohelper/cache"
-	"kurohelper/provider/erogs"
-	"kurohelper/provider/seiya"
-	"kurohelper/provider/ymgal"
+	"github.com/peter910820/kurohelper-core/cache"
+	"github.com/peter910820/kurohelper-core/erogs"
+	"github.com/peter910820/kurohelper-core/seiya"
+	"github.com/peter910820/kurohelper-core/ymgal"
 
 	kurohelperdb "github.com/peter910820/kurohelper-db/v2"
 )
@@ -50,7 +52,7 @@ func Init(stopChan <-chan struct{}) {
 	cache.InitSeiyaCorrespond()
 
 	// erogs rate limit init
-	erogs.InitRateLimit()
+	erogs.InitRateLimit(time.Duration(utils.GetEnvInt("EROGS_RATE_LIMIT_RESET_TIME", 10)))
 
 	// seiya init
 	err = seiya.Init()

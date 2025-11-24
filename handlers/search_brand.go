@@ -12,11 +12,12 @@ import (
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 
-	"kurohelper/cache"
 	kurohelpererrors "kurohelper/errors"
-	"kurohelper/provider/erogs"
-	"kurohelper/provider/vndb"
 	"kurohelper/utils"
+
+	"github.com/peter910820/kurohelper-core/cache"
+	"github.com/peter910820/kurohelper-core/erogs"
+	"github.com/peter910820/kurohelper-core/vndb"
 )
 
 // 查詢公司品牌Handler

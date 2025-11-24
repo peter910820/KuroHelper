@@ -12,9 +12,10 @@ import (
 
 	"gorm.io/gorm"
 
-	"kurohelper/cache"
-	"kurohelper/provider/erogs"
 	"kurohelper/utils"
+
+	"github.com/peter910820/kurohelper-core/cache"
+	"github.com/peter910820/kurohelper-core/erogs"
 )
 
 // 加收藏Handler
