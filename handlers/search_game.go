@@ -11,6 +11,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"github.com/google/uuid"
 	kurohelperdb "github.com/peter910820/kurohelper-db/v2"
+	"github.com/siongui/gojianfan"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 
@@ -21,6 +22,7 @@ import (
 	"github.com/peter910820/kurohelper-core/erogs"
 	"github.com/peter910820/kurohelper-core/seiya"
 	"github.com/peter910820/kurohelper-core/vndb"
+	"github.com/peter910820/kurohelper-core/ymgal"
 )
 
 // 查詢遊戲Handler
@@ -72,10 +74,6 @@ func SearchGame(s *discordgo.Session, i *discordgo.InteractionCreate, cid *utils
 
 // erogs查詢遊戲處理
 func erogsSearchGame(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseDeferredChannelMessageWithSource,
-	})
-
 	var res *erogs.FuzzySearchGameResponse
 	var resVndb *vndb.BasicResponse[vndb.GetVnUseIDResponse]
 
@@ -86,6 +84,19 @@ func erogsSearchGame(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	idSearch, _ := regexp.MatchString(`^e\d+$`, keyword)
+
+	// 條件符合就用月幕做跳板
+	if !idSearch && utils.IsAllHanziOrDigit(keyword) {
+		ymgalKeyword, err := ymgalGetGameString(keyword)
+		if err != nil {
+			logrus.Warn(err)
+		}
+
+		if strings.TrimSpace(ymgalKeyword) != "" {
+			keyword = ymgalKeyword
+		}
+	}
+
 	res, err = erogs.GetGameByFuzzy(keyword, idSearch)
 	if err != nil {
 		utils.HandleError(err, s, i)
@@ -645,4 +656,24 @@ func vndbSearchGameList(s *discordgo.Session, i *discordgo.InteractionCreate, ci
 		utils.EditEmbedRespond(s, i, embed, actionsRow)
 	}
 
+}
+
+// 月幕查詢遊戲名稱處理
+func ymgalGetGameString(keyword string) (string, error) {
+	logrus.Printf("ymgal查詢遊戲: %s", keyword)
+
+	searchGameRes, err := ymgal.SearchGame(gojianfan.T2S(keyword))
+	if err != nil {
+		return "", err
+	}
+
+	if len(searchGameRes.Result) == 0 {
+		return "", kurohelpererrors.ErrSearchNoContent
+	}
+
+	sort.Slice(searchGameRes.Result, func(i, j int) bool {
+		return searchGameRes.Result[i].Weights > searchGameRes.Result[j].Weights
+	})
+
+	return searchGameRes.Result[0].Name, nil
 }

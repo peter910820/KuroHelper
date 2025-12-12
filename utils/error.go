@@ -8,6 +8,8 @@ import (
 	"gorm.io/gorm"
 
 	kurohelpererrors "kurohelper/errors"
+
+	kurohelpercore "github.com/peter910820/kurohelper-core"
 )
 
 // 錯誤統一處理方法
@@ -19,6 +21,7 @@ func HandleError(err error, s *discordgo.Session, i *discordgo.InteractionCreate
 	case errors.Is(err, kurohelpererrors.ErrRateLimit):
 		InteractionEmbedErrorRespond(s, i, "速率限制，請過約1分鐘後再試", true)
 	case errors.Is(err, kurohelpererrors.ErrSearchNoContent):
+	case errors.Is(err, kurohelpercore.ErrSearchNoContent):
 		InteractionEmbedErrorRespond(s, i, "找不到任何結果喔", true)
 	case errors.Is(err, kurohelpererrors.ErrTimeWrongFormat):
 		InteractionEmbedErrorRespond(s, i, "日期格式錯誤，格式為YYYYMMDD", true)
