@@ -60,8 +60,8 @@ func Init(stopChan <-chan struct{}) {
 		logrus.Fatal(err)
 	}
 
-	// ymgal init token
-	err = ymgal.GetToken()
+	// ymgal init
+	err = ymgalInit()
 	if err != nil {
 		logrus.Fatal(err)
 	}
@@ -69,4 +69,18 @@ func Init(stopChan <-chan struct{}) {
 	cache.InitUser()
 	// 掛載自動清除快取job
 	go cache.CleanCacheJob(360, stopChan)
+}
+
+// ymgal init
+func ymgalInit() error {
+	// init config
+	ymgal.Init(os.Getenv("YMGAL_ENDPOINT"), os.Getenv("YMGAL_CLIENT_ID"), os.Getenv("YMGAL_CLIENT_SECRET"))
+
+	// init token
+	// ymgal init token
+	err := ymgal.GetToken()
+	if err != nil {
+		return err
+	}
+	return nil
 }
