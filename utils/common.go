@@ -1,10 +1,12 @@
 package utils
 
 import (
-	kurohelpererrors "kurohelper/errors"
+	"cmp"
 	"os"
 	"strconv"
 	"time"
+
+	kurohelpererrors "kurohelper/errors"
 )
 
 // check if the string is English
@@ -89,4 +91,18 @@ func isHanzi(r rune) bool {
 		return true
 	}
 	return false
+}
+
+func Max[T cmp.Ordered](a, b T) T {
+	if a > b {
+		return a
+	}
+	return b
+}
+
+func Min[T cmp.Ordered](a, b T) T {
+	if a < b {
+		return a
+	}
+	return b
 }

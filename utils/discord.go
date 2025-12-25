@@ -1,6 +1,8 @@
 package utils
 
 import (
+	"strconv"
+
 	"github.com/bwmarrin/discordgo"
 	"github.com/sirupsen/logrus"
 
@@ -189,4 +191,15 @@ func GetUsername(i *discordgo.InteractionCreate) string {
 		return i.User.Username
 	}
 	return ""
+}
+
+func GetAvatarURL(user *discordgo.User) string {
+	if user.Avatar != "" {
+		// 自訂大頭貼
+		return discordgo.EndpointUserAvatar(user.ID, user.Avatar)
+	}
+
+	// 沒有自訂大頭貼 → 使用預設頭貼
+	discriminator, _ := strconv.Atoi(user.Discriminator)
+	return discordgo.EndpointDefaultUserAvatar(discriminator % 5)
 }
