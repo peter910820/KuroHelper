@@ -18,6 +18,7 @@ import (
 	kurohelpererrors "kurohelper/errors"
 	"kurohelper/utils"
 
+	kurohelpercore "github.com/peter910820/kurohelper-core"
 	"github.com/peter910820/kurohelper-core/cache"
 	"github.com/peter910820/kurohelper-core/erogs"
 	"github.com/peter910820/kurohelper-core/seiya"
@@ -668,7 +669,7 @@ func ymgalGetGameString(keyword string) (string, error) {
 	}
 
 	if len(searchGameRes.Result) == 0 {
-		return "", kurohelpererrors.ErrSearchNoContent
+		return "", kurohelpercore.ErrSearchNoContent
 	}
 
 	sort.Slice(searchGameRes.Result, func(i, j int) bool {
