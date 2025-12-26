@@ -35,7 +35,7 @@ func HandleError(err error, s *discordgo.Session, i *discordgo.InteractionCreate
 	case errors.Is(err, kurohelpererrors.ErrCIDGetParameterFailed):
 		fallthrough
 	case errors.Is(err, kurohelpercore.ErrCacheLost):
-		InteractionEmbedErrorRespond(s, i, "快取過期，請重新查詢", true)
+		EmbedErrorRespond(s, i, "快取過期，請重新查詢")
 	case errors.Is(err, kurohelpercore.ErrStatusCodeAbnormal):
 		fallthrough
 	case errors.Is(err, kurohelpererrors.ErrOptionTranslateFail):
