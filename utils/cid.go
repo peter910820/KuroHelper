@@ -101,16 +101,16 @@ func (cid PageCID) GetPageIndex() (int, error) {
 }
 
 // 取得AddHasPlayedCID的遊玩結束時間(非必填，沒有的話會是nil)
-func (cid AddHasPlayedCID) GetCompleteDate() (time.Time, error) {
+func (cid AddHasPlayedCID) GetCompleteDate() (*time.Time, error) {
 	if strings.TrimSpace([]string(cid.NewCID)[3]) == "" {
-		return time.Time{}, nil
+		return nil, nil
 	}
 
 	t, err := time.Parse("20060102", []string(cid.NewCID)[3])
 	if err != nil {
-		return time.Time{}, kurohelpererrors.ErrCIDGetParameterFailed
+		return nil, kurohelpererrors.ErrCIDGetParameterFailed
 	}
-	return t, nil
+	return &t, nil
 }
 
 // 建立CID索引為0的字串(CommandName)

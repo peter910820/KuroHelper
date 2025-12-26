@@ -41,6 +41,26 @@ func pagination[T any](result *[]T, page int, useCache bool) bool {
 	}
 }
 
+// 資料分頁(回傳切片本身版本)
+func paginationR[T any](result []T, page int, useCache bool) ([]T, bool) {
+	resultLen := len(result)
+	expectedMin := page * 10
+	expectedMax := page*10 + 10
+
+	if !useCache || page == 0 {
+		if resultLen > 10 {
+			return result[:10], true
+		}
+		return result, false
+	} else {
+		if resultLen > expectedMax {
+			return result[expectedMin:expectedMax], true
+		} else {
+			return result[utils.Min(expectedMin, resultLen):], false
+		}
+	}
+}
+
 // 產生顯示圖片，會檢查白名單來判斷要不要顯示
 func generateImage(i *discordgo.InteractionCreate, url string) *discordgo.MessageEmbedImage {
 	var image *discordgo.MessageEmbedImage

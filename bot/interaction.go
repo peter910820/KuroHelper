@@ -47,7 +47,7 @@ func onInteractionApplicationCommand(s *discordgo.Session, i *discordgo.Interact
 	case "隨機遊戲":
 		go handlers.RandomGame(s, i)
 	case "個人資料":
-		go handlers.GetUserinfo(s, i)
+		go handlers.GetUserinfo(s, i, nil)
 	}
 }
 
@@ -73,6 +73,8 @@ func onInteractionMessageComponent(s *discordgo.Session, i *discordgo.Interactio
 			go handlers.AddHasPlayed(s, i, &cid)
 		case "加收藏":
 			go handlers.AddInWish(s, i, &cid)
+		case "個人資料":
+			go handlers.GetUserinfo(s, i, &cid)
 		}
 	} else {
 		utils.HandleError(kurohelpererrors.ErrCIDWrongFormat, s, i)
