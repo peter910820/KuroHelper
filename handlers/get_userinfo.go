@@ -87,7 +87,7 @@ func GetUserinfo(s *discordgo.Session, i *discordgo.InteractionCreate, cid *util
 		}
 
 		for i, hp := range hasPlayed {
-			if i == 10 || i > len(hasPlayed)+1 {
+			if i == 10 {
 				break
 			}
 
@@ -100,7 +100,7 @@ func GetUserinfo(s *discordgo.Session, i *discordgo.InteractionCreate, cid *util
 		}
 
 		for i, iw := range inWish {
-			if i == 10 || i > len(inWish)+1 {
+			if i == 10 {
 				break
 			}
 
