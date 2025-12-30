@@ -263,6 +263,24 @@ func galgameCommands() []*discordgo.ApplicationCommand {
 		{
 			Name:        "隨機角色",
 			Description: "隨機一個Galgame角色(VNDB)",
+			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "隨機角色的身分",
+					Description: "選擇隨機角色的身分",
+					Required:    false,
+					Choices: []*discordgo.ApplicationCommandOptionChoice{
+						{
+							Name:  "主角",
+							Value: "1",
+						},
+						{
+							Name:  "配角",
+							Value: "2",
+						},
+					},
+				},
+			},
 		},
 		{
 			Name:        "個人資料",
