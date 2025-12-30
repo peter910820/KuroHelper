@@ -27,12 +27,8 @@ func AddInWish(s *discordgo.Session, i *discordgo.InteractionCreate, cid *utils.
 	})
 
 	if cid != nil {
-		addInWishCID := utils.AddInWishCID{
-			NewCID: *cid,
-		}
-
 		// get cache
-		cacheValue, err := cache.Get(addInWishCID.GetCacheID())
+		cacheValue, err := cache.Get(cid.GetCacheID())
 		if err != nil {
 			utils.HandleError(err, s, i)
 			return
@@ -108,7 +104,7 @@ func AddInWish(s *discordgo.Session, i *discordgo.InteractionCreate, cid *utils.
 		cache.Set(idStr, *res)
 
 		cidCommandName := utils.MakeCIDCommandName(i.ApplicationCommandData().Name, false, "")
-		messageComponent := []discordgo.MessageComponent{utils.MakeCIDAddInWishComponent("✅", idStr, cidCommandName)}
+		messageComponent := []discordgo.MessageComponent{utils.MakeCIDCommonComponent("✅", idStr, cidCommandName)}
 		actionsRow := utils.MakeActionsRow(messageComponent)
 
 		image := generateImage(i, res.BannerUrl)

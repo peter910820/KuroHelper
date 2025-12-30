@@ -20,7 +20,7 @@ func HandleError(err error, s *discordgo.Session, i *discordgo.InteractionCreate
 	case errors.Is(err, kurohelperdb.ErrUniqueViolation):
 		InteractionEmbedErrorRespond(s, i, "資料已存在，此次操作無效", true)
 	case errors.Is(err, gorm.ErrRecordNotFound):
-		InteractionEmbedErrorRespond(s, i, "使用者尚未建檔", true)
+		InteractionEmbedErrorRespond(s, i, "找不到資料或使用者尚未建檔", true)
 	case errors.Is(err, kurohelpercore.ErrRateLimit):
 		InteractionEmbedErrorRespond(s, i, "速率限制，請過約1分鐘後再試", true)
 	case errors.Is(err, kurohelpercore.ErrSearchNoContent):

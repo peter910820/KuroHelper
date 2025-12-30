@@ -48,6 +48,10 @@ func onInteractionApplicationCommand(s *discordgo.Session, i *discordgo.Interact
 		go handlers.RandomGame(s, i)
 	case "個人資料":
 		go handlers.GetUserinfo(s, i, nil)
+	case "刪除已玩":
+		go handlers.RemoveHasPlayed(s, i, nil)
+	case "刪除收藏":
+		go handlers.RemoveInWish(s, i, nil)
 	}
 }
 
@@ -75,6 +79,10 @@ func onInteractionMessageComponent(s *discordgo.Session, i *discordgo.Interactio
 			go handlers.AddInWish(s, i, &cid)
 		case "個人資料":
 			go handlers.GetUserinfo(s, i, &cid)
+		case "刪除已玩":
+			go handlers.RemoveHasPlayed(s, i, &cid)
+		case "刪除收藏":
+			go handlers.RemoveInWish(s, i, &cid)
 		}
 	} else {
 		utils.HandleError(kurohelpererrors.ErrCIDWrongFormat, s, i)

@@ -14,6 +14,7 @@ func RegisterCommand(s *discordgo.Session) {
 	guildCmds = append(guildCmds, managementCommands()...)
 	globalCmds = append(globalCmds, galgameCommands()...)
 	globalCmds = append(globalCmds, vndbCommands()...)
+	globalCmds = append(guildCmds, selfDatabaseCommands()...)
 
 	// guild commands
 	// main mangement group ID
@@ -266,6 +267,35 @@ func galgameCommands() []*discordgo.ApplicationCommand {
 		{
 			Name:        "個人資料",
 			Description: "取得自己的個人資料(KuroHelper)",
+		},
+	}
+}
+
+func selfDatabaseCommands() []*discordgo.ApplicationCommand {
+	return []*discordgo.ApplicationCommand{
+		{
+			Name:        "刪除已玩",
+			Description: "刪除個人建檔的已玩資料",
+			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "keyword",
+					Description: "關鍵字",
+					Required:    true,
+				},
+			},
+		},
+		{
+			Name:        "刪除收藏",
+			Description: "刪除個人建檔的收藏資料",
+			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "keyword",
+					Description: "關鍵字",
+					Required:    true,
+				},
+			},
 		},
 	}
 }
