@@ -28,10 +28,6 @@ type (
 		NewCID
 	}
 
-	AddInWishCID struct {
-		NewCID
-	}
-
 	AddHasPlayedCID struct {
 		NewCID
 	}
@@ -40,7 +36,7 @@ type (
 const (
 	CustomIDTypePage CustomIDType = iota + 1
 	CustomIDTypeSort
-	CustomIDTypeAddInWish
+	CustomIDTypeAddCommon
 	CustomIDTypeAddHasPlayed
 )
 
@@ -120,7 +116,6 @@ func MakeCIDCommandName(commandName string, isList bool, provider string) Custom
 	} else {
 		return CustomIDCommandName(commandName + "//" + provider)
 	}
-
 }
 
 // 建立事件為Page的CID
@@ -145,10 +140,10 @@ func MakeCIDAddHasPlayedComponent(label string, id string, completDate time.Time
 	}
 }
 
-func MakeCIDAddInWishComponent(label string, id string, commandName CustomIDCommandName) *discordgo.Button {
+func MakeCIDCommonComponent(label string, id string, commandName CustomIDCommandName) *discordgo.Button {
 	return &discordgo.Button{
 		Label:    label,
 		Style:    discordgo.PrimaryButton,
-		CustomID: fmt.Sprintf("%s|%d|%s", string(commandName), CustomIDTypeAddInWish, id),
+		CustomID: fmt.Sprintf("%s|%d|%s", string(commandName), CustomIDTypeAddCommon, id),
 	}
 }

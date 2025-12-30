@@ -8,7 +8,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/joho/godotenv v1.5.1
 	github.com/peter910820/kurohelper-core v1.2.0
-	github.com/peter910820/kurohelper-db/v2 v2.3.0
+	github.com/peter910820/kurohelper-db/v2 v2.4.0
 	github.com/siongui/gojianfan v0.0.0-20210926212422-2f175ac615de
 	github.com/sirupsen/logrus v1.9.3
 	gorm.io/gorm v1.31.0
