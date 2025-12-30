@@ -1,7 +1,9 @@
 package handlers
 
 import (
+	"errors"
 	"fmt"
+	kurohelpererrors "kurohelper/errors"
 	"kurohelper/utils"
 	"sort"
 	"strconv"
@@ -13,17 +15,22 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// 隨機遊戲Handler
+// 隨機角色Handler
 func RandomCharacter(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	// 長時間查詢
 	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseDeferredChannelMessageWithSource,
 	})
-	vndbRandomCharacter(s, i)
+	opt, err := utils.GetOptions(i, "隨機角色的身分")
+	if err != nil && errors.Is(err, kurohelpererrors.ErrOptionTranslateFail) {
+		utils.HandleError(err, s, i)
+		return
+	}
+	vndbRandomCharacter(s, i, opt)
 }
 
-func vndbRandomCharacter(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	res, err := vndb.GetRandomCharacter()
+func vndbRandomCharacter(s *discordgo.Session, i *discordgo.InteractionCreate, opt string) {
+	res, err := vndb.GetRandomCharacter(opt)
 	if err != nil {
 		utils.HandleError(err, s, i)
 		return
