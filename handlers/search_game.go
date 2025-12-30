@@ -516,7 +516,13 @@ func vndbSearchGame(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		relationsGameDisplay = "無"
 	}
 
+	// 過濾色情/暴力圖片
 	image := generateImage(i, res.Results[0].Image.Url)
+	if res.Results[0].Image.Sexual == 2 || res.Results[0].Image.Violence == 2 {
+		image = nil
+		logrus.Printf("%s 封面已過濾圖片顯示", gameTitle)
+	}
+
 	embed := &discordgo.MessageEmbed{
 		Title: gameTitle,
 		Color: 0x04108e,

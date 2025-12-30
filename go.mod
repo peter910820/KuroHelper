@@ -40,4 +40,3 @@ require (
 	golang.org/x/text v0.31.0 // indirect
 	gorm.io/driver/postgres v1.6.0 // indirect
 )
-replace github.com/peter910820/kurohelper-core => ../kurohelper-core
