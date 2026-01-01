@@ -70,7 +70,7 @@ func erogsSearchCreator(s *discordgo.Session, i *discordgo.InteractionCreate, ci
 			return
 		}
 
-		logrus.Printf("erogs查詢創作者: %s", keyword)
+		logrus.WithField("guildID", i.GuildID).Infof("erogs查詢創作者: %s", keyword)
 
 		idStr := uuid.New().String()
 		cache.SearchCache.Set(idStr, *res)

@@ -102,7 +102,7 @@ func erogsSearchCharacter(s *discordgo.Session, i *discordgo.InteractionCreate) 
 		return
 	}
 
-	logrus.Printf("erogs查詢角色: %s", keyword)
+	logrus.WithField("guildID", i.GuildID).Infof("erogs查詢角色: %s", keyword)
 
 	if res.Birthday == "公式情報なし" {
 		res.Birthday = "未收錄"
@@ -276,7 +276,7 @@ func bangumiSearchCharacter(s *discordgo.Session, i *discordgo.InteractionCreate
 		utils.HandleError(err, s, i)
 		return
 	}
-	logrus.Printf("Bangumi查詢角色: %s", keyword)
+	logrus.WithField("guildID", i.GuildID).Infof("Bangumi查詢角色: %s", keyword)
 	nameData := ""
 	if res.NameCN == "" {
 		nameData = res.Name
@@ -359,10 +359,10 @@ func vndbSearchCharacter(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	idSearch, _ := regexp.MatchString(`^c\d+$`, keyword)
 	if idSearch {
-		logrus.Printf("vndb查詢角色ID: %s", keyword)
+		logrus.WithField("guildID", i.GuildID).Infof("vndb查詢角色ID: %s", keyword)
 		res, err = vndb.GetCharacterByID(keyword)
 	} else {
-		logrus.Printf("vndb查詢角色: %s", keyword)
+		logrus.WithField("guildID", i.GuildID).Infof("vndb查詢角色: %s", keyword)
 		res, err = vndb.GetCharacterByFuzzy(keyword)
 	}
 

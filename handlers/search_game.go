@@ -90,7 +90,7 @@ func erogsSearchGame(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if !idSearch && utils.IsAllHanziOrDigit(keyword) {
 		ymgalKeyword, err := ymgalGetGameString(keyword)
 		if err != nil {
-			logrus.Warn(err)
+			logrus.WithField("guildID", i.GuildID).Warn(err)
 		}
 
 		if strings.TrimSpace(ymgalKeyword) != "" {
@@ -104,7 +104,7 @@ func erogsSearchGame(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
-	logrus.Printf("erogs查詢遊戲: %s", keyword)
+	logrus.WithField("guildID", i.GuildID).Infof("erogs查詢遊戲: %s", keyword)
 
 	// 處理使用者資訊
 	userID := utils.GetUserID(i)
@@ -408,10 +408,10 @@ func vndbSearchGame(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	idSearch, _ := regexp.MatchString(`^v\d+$`, keyword)
 	if idSearch {
 		res, err = vndb.GetVNByID(keyword)
-		logrus.Printf("vndb搜尋遊戲ID: %s", keyword)
+		logrus.WithField("guildID", i.GuildID).Infof("vndb搜尋遊戲ID: %s", keyword)
 	} else {
 		res, err = vndb.GetVNByFuzzy(keyword)
-		logrus.Printf("vndb搜尋遊戲: %s", keyword)
+		logrus.WithField("guildID", i.GuildID).Infof("vndb搜尋遊戲: %s", keyword)
 	}
 
 	if err != nil {
@@ -520,7 +520,7 @@ func vndbSearchGame(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	image := generateImage(i, res.Results[0].Image.Url)
 	if res.Results[0].Image.Sexual == 2 || res.Results[0].Image.Violence == 2 {
 		image = nil
-		logrus.Printf("%s 封面已過濾圖片顯示", gameTitle)
+		logrus.WithField("guildID", i.GuildID).Infof("%s 封面已過濾圖片顯示", gameTitle)
 	}
 
 	embed := &discordgo.MessageEmbed{
@@ -667,7 +667,7 @@ func vndbSearchGameList(s *discordgo.Session, i *discordgo.InteractionCreate, ci
 
 // 月幕查詢遊戲名稱處理
 func ymgalGetGameString(keyword string) (string, error) {
-	logrus.Printf("ymgal查詢遊戲: %s", keyword)
+	logrus.Debugf("ymgal查詢遊戲: %s", keyword)
 
 	searchGameRes, err := ymgal.SearchGame(gojianfan.T2S(keyword))
 	if err != nil {

@@ -47,7 +47,7 @@ func vndbRandomCharacter(s *discordgo.Session, i *discordgo.InteractionCreate, o
 	if res.Original != "" {
 		nameData = fmt.Sprintf("%s (%s)", res.Original, res.Name)
 	}
-	logrus.Printf("隨機角色: %s", nameData)
+	logrus.WithField("guildID", i.GuildID).Infof("隨機角色: %s", nameData)
 	if len(res.Aliases) == 0 {
 		res.Aliases = []string{"未收錄"}
 	}

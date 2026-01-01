@@ -15,7 +15,7 @@ import (
 
 // 錯誤統一處理方法
 func HandleError(err error, s *discordgo.Session, i *discordgo.InteractionCreate) {
-	logrus.Error(err)
+	logrus.WithField("guildID", i.GuildID).Error(err)
 	switch {
 	case errors.Is(err, kurohelperdb.ErrUniqueViolation):
 		InteractionEmbedRespond(s, i, MakeErrorEmbedMsg("資料已存在，此次操作無效"), nil, true)
