@@ -12,11 +12,11 @@ import (
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 
+	"kurohelper/cache"
 	kurohelpererrors "kurohelper/errors"
 	"kurohelper/utils"
 
 	"github.com/peter910820/kurohelper-core/bangumi"
-	"github.com/peter910820/kurohelper-core/cache"
 	"github.com/peter910820/kurohelper-core/erogs"
 	"github.com/peter910820/kurohelper-core/vndb"
 )
@@ -189,7 +189,7 @@ func erogsSearchCharacterList(s *discordgo.Session, i *discordgo.InteractionCrea
 		}
 
 		idStr := uuid.New().String()
-		cache.Set(idStr, *res)
+		cache.SearchCache.Set(idStr, *res)
 
 		// 計算筆數
 		count = len(*res)
@@ -205,7 +205,7 @@ func erogsSearchCharacterList(s *discordgo.Session, i *discordgo.InteractionCrea
 		pageCID := utils.PageCID{
 			NewCID: *cid,
 		}
-		cacheValue, err := cache.Get(pageCID.GetCacheID())
+		cacheValue, err := cache.SearchCache.Get(pageCID.GetCacheID())
 		if err != nil {
 			utils.HandleError(err, s, i)
 			return
@@ -529,7 +529,7 @@ func vndbSearchCharacterList(s *discordgo.Session, i *discordgo.InteractionCreat
 		}
 
 		idStr := uuid.New().String()
-		cache.Set(idStr, *res)
+		cache.SearchCache.Set(idStr, *res)
 
 		// 計算筆數
 		count = len(*res)
@@ -545,7 +545,7 @@ func vndbSearchCharacterList(s *discordgo.Session, i *discordgo.InteractionCreat
 		pageCID := utils.PageCID{
 			NewCID: *cid,
 		}
-		cacheValue, err := cache.Get(pageCID.GetCacheID())
+		cacheValue, err := cache.SearchCache.Get(pageCID.GetCacheID())
 		if err != nil {
 			utils.HandleError(err, s, i)
 			return

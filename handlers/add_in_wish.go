@@ -11,9 +11,11 @@ import (
 
 	"gorm.io/gorm"
 
+	"kurohelper/store"
 	"kurohelper/utils"
 
-	"github.com/peter910820/kurohelper-core/cache"
+	"kurohelper/cache"
+
 	"github.com/peter910820/kurohelper-core/erogs"
 )
 
@@ -28,7 +30,7 @@ func AddInWish(s *discordgo.Session, i *discordgo.InteractionCreate, cid *utils.
 
 	if cid != nil {
 		// get cache
-		cacheValue, err := cache.Get(cid.GetCacheID())
+		cacheValue, err := cache.UserInfoCache.Get(cid.GetCacheID())
 		if err != nil {
 			utils.HandleError(err, s, i)
 			return
@@ -68,8 +70,8 @@ func AddInWish(s *discordgo.Session, i *discordgo.InteractionCreate, cid *utils.
 			}
 
 			// 確保新建立的使用者有加入快取
-			if _, ok := cache.UserCache[userID]; !ok {
-				cache.UserCache[userID] = struct{}{}
+			if _, ok := store.UserStore[userID]; !ok {
+				store.UserStore[userID] = struct{}{}
 			}
 
 			embed := &discordgo.MessageEmbed{
@@ -101,7 +103,7 @@ func AddInWish(s *discordgo.Session, i *discordgo.InteractionCreate, cid *utils.
 		}
 
 		idStr := uuid.New().String()
-		cache.Set(idStr, *res)
+		cache.UserInfoCache.Set(idStr, *res)
 
 		cidCommandName := utils.MakeCIDCommandName(i.ApplicationCommandData().Name, false, "")
 		messageComponent := []discordgo.MessageComponent{utils.MakeCIDCommonComponent("✅", idStr, cidCommandName)}

@@ -14,30 +14,38 @@ type Cache struct {
 }
 
 type CacheStore struct {
-	data map[string]*Cache
-	mu   sync.RWMutex
+	data       map[string]*Cache
+	expireTime time.Duration
+	mu         sync.RWMutex
 }
 
 var (
-	UserInfoCache = NewCacheStore()
+	// 一般查詢快取
+	SearchCache = NewCacheStore(10 * time.Minute)
+	// 個人資料快取
+	UserInfoCache = NewCacheStore(1 * time.Minute)
 )
 
-func NewCacheStore() *CacheStore {
+// make new cache store
+func NewCacheStore(expireTime time.Duration) *CacheStore {
 	return &CacheStore{
-		data: make(map[string]*Cache),
+		data:       make(map[string]*Cache),
+		expireTime: expireTime,
 	}
 }
 
+// set cache
 func (c *CacheStore) Set(key string, value any) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
 	c.data[key] = &Cache{
 		Value:    value,
-		ExpireAt: time.Now().Add(10 * time.Minute),
+		ExpireAt: time.Now().Add(c.expireTime),
 	}
 }
 
+// get cache
 func (c *CacheStore) Get(key string) (any, error) {
 	c.mu.RLock()
 	item, ok := c.data[key]
@@ -52,4 +60,17 @@ func (c *CacheStore) Get(key string) (any, error) {
 	}
 
 	return item.Value, nil
+}
+
+// clean all cache
+func (c *CacheStore) Clean() (count int) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	for k := range c.data {
+		delete(c.data, k)
+		count++
+	}
+
+	return
 }

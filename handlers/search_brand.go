@@ -12,10 +12,11 @@ import (
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 
+	"kurohelper/cache"
 	kurohelpererrors "kurohelper/errors"
+	"kurohelper/store"
 	"kurohelper/utils"
 
-	"github.com/peter910820/kurohelper-core/cache"
 	"github.com/peter910820/kurohelper-core/erogs"
 	"github.com/peter910820/kurohelper-core/vndb"
 )
@@ -72,7 +73,7 @@ func erogsSearchBrand(s *discordgo.Session, i *discordgo.InteractionCreate, cid 
 		}
 
 		idStr := uuid.New().String()
-		cache.Set(idStr, *res)
+		cache.SearchCache.Set(idStr, *res)
 
 		// 根據遊戲評價排序
 		sort.Slice(res.GameList, func(i, j int) bool {
@@ -98,7 +99,7 @@ func erogsSearchBrand(s *discordgo.Session, i *discordgo.InteractionCreate, cid 
 		pageCID := utils.PageCID{
 			NewCID: *cid,
 		}
-		cacheValue, err := cache.Get(pageCID.GetCacheID())
+		cacheValue, err := cache.SearchCache.Get(pageCID.GetCacheID())
 		if err != nil {
 			utils.HandleError(err, s, i)
 			return
@@ -132,7 +133,7 @@ func erogsSearchBrand(s *discordgo.Session, i *discordgo.InteractionCreate, cid 
 	status := make(map[int]byte)
 	userID := utils.GetUserID(i)
 	if strings.TrimSpace(userID) != "" {
-		_, ok := cache.UserCache[userID]
+		_, ok := store.UserStore[userID]
 		if ok {
 			userGameErogs, err := kurohelperdb.GetUserGameErogsByUserID(userID)
 			if err != nil {
@@ -227,7 +228,7 @@ func vndbSearchBrand(s *discordgo.Session, i *discordgo.InteractionCreate, cid *
 		}
 
 		idStr := uuid.New().String()
-		cache.Set(idStr, *res)
+		cache.SearchCache.Set(idStr, *res)
 		hasMore = pagination(&(res.Vn.Results), 0, false)
 
 		if hasMore {
@@ -239,7 +240,7 @@ func vndbSearchBrand(s *discordgo.Session, i *discordgo.InteractionCreate, cid *
 		pageCID := utils.PageCID{
 			NewCID: *cid,
 		}
-		cacheValue, err := cache.Get(pageCID.GetCacheID())
+		cacheValue, err := cache.SearchCache.Get(pageCID.GetCacheID())
 		if err != nil {
 			utils.HandleError(err, s, i)
 			return

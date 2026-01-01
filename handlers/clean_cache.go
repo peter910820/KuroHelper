@@ -5,12 +5,12 @@ import (
 
 	"kurohelper/utils"
 
-	"github.com/peter910820/kurohelper-core/cache"
+	"kurohelper/cache"
 )
 
 // 清除快取Handler
 func CleanCache(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	cache.Clean()
+	cache.UserInfoCache.Clean()
 
 	embed := &discordgo.MessageEmbed{
 		Title:       "🔐管理員訊息",

@@ -39,8 +39,8 @@ github.com/mattn/go-isatty v0.0.20 h1:xfD0iDuEKnDkl03q4limB+vH+GxLEtL/jb4xVJSWWE
 github.com/mattn/go-isatty v0.0.20/go.mod h1:W+V8PltTTMOvKvAeJH7IuucS94S2C6jfK/D7dTCTo3Y=
 github.com/mattn/go-runewidth v0.0.16 h1:E5ScNMtiwvlvB5paMFdw9p4kSQzbXFikJ5SQO6TULQc=
 github.com/mattn/go-runewidth v0.0.16/go.mod h1:Jdepj2loyihRzMpdS35Xk/zdY8IAYHsh153qUoGf23w=
-github.com/peter910820/kurohelper-core v1.2.0 h1:Do9eTA1OH73peBDohavqxEqCclfSntroyUD+cBXP1bA=
-github.com/peter910820/kurohelper-core v1.2.0/go.mod h1:btujfiKsMMP/Lx+AHOyxJe1zskIi6YIZlCucTknoEWQ=
+github.com/peter910820/kurohelper-core v1.3.0 h1:zGlBD29cPk9NYXNOWrnm+HoCOSiWNE0kZZDunyQnqyY=
+github.com/peter910820/kurohelper-core v1.3.0/go.mod h1:btujfiKsMMP/Lx+AHOyxJe1zskIi6YIZlCucTknoEWQ=
 github.com/peter910820/kurohelper-db/v2 v2.4.0 h1:yEN/4isM77x7iJ8PaJrBgmPp5km0jXt37RezaLy9Huc=
 github.com/peter910820/kurohelper-db/v2 v2.4.0/go.mod h1:VhV8nmE9vARDxn7FOKezCS6naJOalplzM/qXkbUTiD0=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
