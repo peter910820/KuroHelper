@@ -13,10 +13,11 @@ import (
 
 	"gorm.io/gorm"
 
+	"kurohelper/cache"
 	kurohelpererrors "kurohelper/errors"
+	"kurohelper/store"
 	"kurohelper/utils"
 
-	"github.com/peter910820/kurohelper-core/cache"
 	"github.com/peter910820/kurohelper-core/erogs"
 )
 
@@ -41,7 +42,7 @@ func AddHasPlayed(s *discordgo.Session, i *discordgo.InteractionCreate, cid *uti
 		}
 
 		// get cache
-		cacheValue, err := cache.Get(addHasPlayedCID.GetCacheID())
+		cacheValue, err := cache.UserInfoCache.Get(addHasPlayedCID.GetCacheID())
 		if err != nil {
 			utils.HandleError(err, s, i)
 			return
@@ -81,8 +82,8 @@ func AddHasPlayed(s *discordgo.Session, i *discordgo.InteractionCreate, cid *uti
 			}
 
 			// 確保新建立的使用者有加入快取
-			if _, ok := cache.UserCache[userID]; !ok {
-				cache.UserCache[userID] = struct{}{}
+			if _, ok := store.UserStore[userID]; !ok {
+				store.UserStore[userID] = struct{}{}
 			}
 
 			embed := &discordgo.MessageEmbed{
@@ -134,7 +135,7 @@ func AddHasPlayed(s *discordgo.Session, i *discordgo.InteractionCreate, cid *uti
 		}
 
 		idStr := uuid.New().String()
-		cache.Set(idStr, *res)
+		cache.UserInfoCache.Set(idStr, *res)
 
 		cidCommandName := utils.MakeCIDCommandName(i.ApplicationCommandData().Name, false, "")
 		messageComponent := []discordgo.MessageComponent{utils.MakeCIDAddHasPlayedComponent("✅", idStr, t, cidCommandName)}

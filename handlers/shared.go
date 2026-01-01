@@ -1,9 +1,8 @@
 package handlers
 
 import (
+	"kurohelper/store"
 	"kurohelper/utils"
-
-	"github.com/peter910820/kurohelper-core/cache"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -66,7 +65,7 @@ func generateImage(i *discordgo.InteractionCreate, url string) *discordgo.Messag
 	var image *discordgo.MessageEmbedImage
 	if i.GuildID != "" {
 		// guild
-		if _, ok := cache.GuildDiscordAllowList[i.GuildID]; ok {
+		if _, ok := store.GuildDiscordAllowList[i.GuildID]; ok {
 			image = &discordgo.MessageEmbedImage{
 				URL: url,
 			}
@@ -74,7 +73,7 @@ func generateImage(i *discordgo.InteractionCreate, url string) *discordgo.Messag
 	} else {
 		// DM
 		userID := utils.GetUserID(i)
-		if _, ok := cache.GuildDiscordAllowList[userID]; ok {
+		if _, ok := store.GuildDiscordAllowList[userID]; ok {
 			image = &discordgo.MessageEmbedImage{
 				URL: url,
 			}

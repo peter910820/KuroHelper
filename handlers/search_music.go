@@ -11,10 +11,10 @@ import (
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 
+	"kurohelper/cache"
 	kurohelpererrors "kurohelper/errors"
 	"kurohelper/utils"
 
-	"github.com/peter910820/kurohelper-core/cache"
 	"github.com/peter910820/kurohelper-core/erogs"
 )
 
@@ -161,7 +161,7 @@ func erogsSearchMusicList(s *discordgo.Session, i *discordgo.InteractionCreate, 
 		}
 
 		idStr := uuid.New().String()
-		cache.Set(idStr, *res)
+		cache.SearchCache.Set(idStr, *res)
 
 		// 計算筆數
 		count = len(*res)
@@ -177,7 +177,7 @@ func erogsSearchMusicList(s *discordgo.Session, i *discordgo.InteractionCreate, 
 		pageCID := utils.PageCID{
 			NewCID: *cid,
 		}
-		cacheValue, err := cache.Get(pageCID.GetCacheID())
+		cacheValue, err := cache.SearchCache.Get(pageCID.GetCacheID())
 		if err != nil {
 			utils.HandleError(err, s, i)
 			return

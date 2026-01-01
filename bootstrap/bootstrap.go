@@ -1,6 +1,8 @@
 package bootstrap
 
 import (
+	"kurohelper/cache"
+	"kurohelper/store"
 	"kurohelper/utils"
 	"os"
 	"time"
@@ -8,9 +10,9 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/sirupsen/logrus"
 
-	"github.com/peter910820/kurohelper-core/cache"
 	"github.com/peter910820/kurohelper-core/erogs"
 	"github.com/peter910820/kurohelper-core/seiya"
+	corestore "github.com/peter910820/kurohelper-core/store"
 	"github.com/peter910820/kurohelper-core/ymgal"
 
 	kurohelperdb "github.com/peter910820/kurohelper-db/v2"
@@ -44,12 +46,12 @@ func Init(stopChan <-chan struct{}) {
 	kurohelperdb.Migration(kurohelperdb.Dbs) // 選填
 
 	// 將白名單存成快取
-	cache.InitAllowList()
+	store.InitAllowList()
 
 	// init ZhtwToJp var
-	cache.InitZhtwToJp()
+	corestore.InitZhtwToJp()
 
-	cache.InitSeiyaCorrespond()
+	corestore.InitSeiyaCorrespond()
 
 	// erogs rate limit init
 	erogs.InitRateLimit(time.Duration(utils.GetEnvInt("EROGS_RATE_LIMIT_RESET_TIME", 10)))
@@ -66,7 +68,7 @@ func Init(stopChan <-chan struct{}) {
 		logrus.Fatal(err)
 	}
 
-	cache.InitUser()
+	store.InitUser()
 	// 掛載自動清除快取job
 	go cache.CleanCacheJob(360, stopChan)
 }

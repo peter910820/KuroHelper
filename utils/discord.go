@@ -84,47 +84,6 @@ func InteractionEmbedRespondForSelf(s *discordgo.Session, i *discordgo.Interacti
 	}
 }
 
-// 傳送嵌入訊息內建包裝錯誤的版本
-func InteractionEmbedErrorRespond(s *discordgo.Session, i *discordgo.InteractionCreate, errString string, editFlag bool) {
-	embed := &discordgo.MessageEmbed{
-		Title: "❌錯誤",
-		Color: 0xcc543a,
-		Fields: []*discordgo.MessageEmbedField{
-			{
-				Name:   "說明",
-				Value:  errString,
-				Inline: false,
-			},
-		},
-	}
-	InteractionEmbedRespond(s, i, embed, nil, editFlag)
-}
-
-func EmbedErrorRespond(s *discordgo.Session, i *discordgo.InteractionCreate, errString string) {
-	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseDeferredMessageUpdate,
-	})
-
-	embed := &discordgo.MessageEmbed{
-		Title: "❌錯誤",
-		Color: 0xcc543a,
-		Fields: []*discordgo.MessageEmbedField{
-			{
-				Name:   "說明",
-				Value:  errString,
-				Inline: false,
-			},
-		},
-	}
-
-	s.ChannelMessageEditComplex(&discordgo.MessageEdit{
-		ID:         i.Message.ID,
-		Channel:    i.Message.ChannelID,
-		Embeds:     &[]*discordgo.MessageEmbed{embed},
-		Components: &[]discordgo.MessageComponent{},
-	})
-}
-
 func EditEmbedRespond(s *discordgo.Session, i *discordgo.InteractionCreate, embed *discordgo.MessageEmbed, components *discordgo.ActionsRow) {
 	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseDeferredMessageUpdate,
@@ -170,6 +129,20 @@ func MakeActionsRow(messageComponent []discordgo.MessageComponent) *discordgo.Ac
 		return nil
 	}
 
+}
+
+func MakeErrorEmbedMsg(errString string) *discordgo.MessageEmbed {
+	return &discordgo.MessageEmbed{
+		Title: "❌錯誤",
+		Color: 0xcc543a,
+		Fields: []*discordgo.MessageEmbedField{
+			{
+				Name:   "說明",
+				Value:  errString,
+				Inline: false,
+			},
+		},
+	}
 }
 
 // get user discord ID

@@ -15,11 +15,11 @@ import (
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 
+	"kurohelper/cache"
 	kurohelpererrors "kurohelper/errors"
 	"kurohelper/utils"
 
 	kurohelpercore "github.com/peter910820/kurohelper-core"
-	"github.com/peter910820/kurohelper-core/cache"
 	"github.com/peter910820/kurohelper-core/erogs"
 	"github.com/peter910820/kurohelper-core/seiya"
 	"github.com/peter910820/kurohelper-core/vndb"
@@ -326,7 +326,7 @@ func erogsSearchGameList(s *discordgo.Session, i *discordgo.InteractionCreate, c
 		}
 
 		idStr := uuid.New().String()
-		cache.Set(idStr, *res)
+		cache.SearchCache.Set(idStr, *res)
 
 		// 計算筆數
 		count = len(*res)
@@ -342,7 +342,7 @@ func erogsSearchGameList(s *discordgo.Session, i *discordgo.InteractionCreate, c
 		pageCID := utils.PageCID{
 			NewCID: *cid,
 		}
-		cacheValue, err := cache.Get(pageCID.GetCacheID())
+		cacheValue, err := cache.SearchCache.Get(pageCID.GetCacheID())
 		if err != nil {
 			utils.HandleError(err, s, i)
 			return
@@ -594,7 +594,7 @@ func vndbSearchGameList(s *discordgo.Session, i *discordgo.InteractionCreate, ci
 		}
 
 		idStr := uuid.New().String()
-		cache.Set(idStr, *res)
+		cache.SearchCache.Set(idStr, *res)
 
 		// 計算筆數
 		count = len(*res)
@@ -610,7 +610,7 @@ func vndbSearchGameList(s *discordgo.Session, i *discordgo.InteractionCreate, ci
 		pageCID := utils.PageCID{
 			NewCID: *cid,
 		}
-		cacheValue, err := cache.Get(pageCID.GetCacheID())
+		cacheValue, err := cache.SearchCache.Get(pageCID.GetCacheID())
 		if err != nil {
 			utils.HandleError(err, s, i)
 			return
