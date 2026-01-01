@@ -83,7 +83,7 @@ func vndbRandomGame(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	} else {
 		brandTitle = res.Results[0].Developers[0].Name
 	}
-	logrus.Printf("隨機遊戲: %s", gameTitle)
+	logrus.WithField("guildID", i.GuildID).Infof("隨機遊戲: %s", gameTitle)
 	// staff block
 	var scenario string
 	var art string
@@ -173,7 +173,7 @@ func vndbRandomGame(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	image := generateImage(i, res.Results[0].Image.Url)
 	if res.Results[0].Image.Sexual == 2 || res.Results[0].Image.Violence == 2 {
 		image = nil
-		logrus.Printf("%s 封面已過濾圖片顯示", gameTitle)
+		logrus.Debugf("%s 封面已過濾圖片顯示", gameTitle)
 	}
 
 	embed := &discordgo.MessageEmbed{

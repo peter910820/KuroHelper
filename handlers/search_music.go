@@ -67,7 +67,7 @@ func erogsSearchMusic(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
-	logrus.Printf("erogs查詢音樂: %s", keyword)
+	logrus.WithField("guildID", i.GuildID).Infof("erogs查詢音樂: %s", keyword)
 
 	musicData := make([]string, 0, len(res.GameCategories))
 	for _, m := range res.GameCategories {
