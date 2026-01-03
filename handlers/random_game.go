@@ -171,7 +171,7 @@ func vndbRandomGame(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	// 過濾色情/暴力圖片
 	image := generateImage(i, res.Results[0].Image.Url)
-	if res.Results[0].Image.Sexual == 2 || res.Results[0].Image.Violence == 2 {
+	if res.Results[0].Image.Sexual >= 1 || res.Results[0].Image.Violence >= 1 {
 		image = nil
 		logrus.Debugf("%s 封面已過濾圖片顯示", gameTitle)
 	}
