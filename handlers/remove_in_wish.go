@@ -2,8 +2,9 @@ package handlers
 
 import (
 	"fmt"
-	"kurohelper/cache"
-	"kurohelper/utils"
+
+	"discordbot/cache"
+	"discordbot/utils"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/google/uuid"

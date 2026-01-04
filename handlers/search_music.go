@@ -11,11 +11,11 @@ import (
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 
-	"kurohelper/cache"
-	kurohelpererrors "kurohelper/errors"
-	"kurohelper/utils"
+	"discordbot/cache"
+	discordboterrors "discordbot/errors"
+	"discordbot/utils"
 
-	"github.com/peter910820/kurohelper-core/erogs"
+	"github.com/kuro-helper/core/v2/erogs"
 )
 
 // 查詢音樂Handler
@@ -29,7 +29,7 @@ func SearchMusic(s *discordgo.Session, i *discordgo.InteractionCreate, cid *util
 
 	if i.Type == discordgo.InteractionApplicationCommand {
 		opt, err := utils.GetOptions(i, "列表搜尋")
-		if err != nil && errors.Is(err, kurohelpererrors.ErrOptionTranslateFail) {
+		if err != nil && errors.Is(err, discordboterrors.ErrOptionTranslateFail) {
 			utils.HandleError(err, s, i)
 			return
 		}

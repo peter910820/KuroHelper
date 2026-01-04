@@ -6,11 +6,11 @@ import (
 	"sort"
 	"strings"
 
-	kurohelpererrors "kurohelper/errors"
-	"kurohelper/utils"
+	discordboterrors "discordbot/errors"
+	"discordbot/utils"
 
-	"github.com/peter910820/kurohelper-core/vndb"
-	"github.com/peter910820/kurohelper-core/ymgal"
+	"github.com/kuro-helper/core/v2/vndb"
+	"github.com/kuro-helper/core/v2/ymgal"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/sirupsen/logrus"
@@ -23,7 +23,7 @@ func RandomGame(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		Type: discordgo.InteractionResponseDeferredChannelMessageWithSource,
 	})
 	opt, err := utils.GetOptions(i, "查詢資料庫選項")
-	if err != nil && errors.Is(err, kurohelpererrors.ErrOptionTranslateFail) {
+	if err != nil && errors.Is(err, discordboterrors.ErrOptionTranslateFail) {
 		utils.HandleError(err, s, i)
 		return
 	}

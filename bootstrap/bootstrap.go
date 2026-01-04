@@ -1,19 +1,19 @@
 package bootstrap
 
 import (
-	"kurohelper/cache"
-	"kurohelper/store"
-	"kurohelper/utils"
+	"discordbot/cache"
+	"discordbot/store"
+	"discordbot/utils"
 	"os"
 	"time"
 
 	"github.com/joho/godotenv"
 	"github.com/sirupsen/logrus"
 
-	"github.com/peter910820/kurohelper-core/erogs"
-	"github.com/peter910820/kurohelper-core/seiya"
-	corestore "github.com/peter910820/kurohelper-core/store"
-	"github.com/peter910820/kurohelper-core/ymgal"
+	"github.com/kuro-helper/core/v2/erogs"
+	"github.com/kuro-helper/core/v2/seiya"
+	corestore "github.com/kuro-helper/core/v2/store"
+	"github.com/kuro-helper/core/v2/ymgal"
 
 	kurohelperdb "github.com/peter910820/kurohelper-db/v2"
 )

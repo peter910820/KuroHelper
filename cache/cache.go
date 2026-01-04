@@ -4,7 +4,7 @@ import (
 	"sync"
 	"time"
 
-	kurohelpercore "github.com/peter910820/kurohelper-core"
+	kurohelpercore "github.com/kuro-helper/core/v2"
 )
 
 // cache struct

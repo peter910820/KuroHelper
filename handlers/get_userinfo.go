@@ -8,8 +8,8 @@ import (
 	"github.com/google/uuid"
 	kurohelperdb "github.com/peter910820/kurohelper-db/v2"
 
-	"kurohelper/cache"
-	"kurohelper/utils"
+	"discordbot/cache"
+	"discordbot/utils"
 )
 
 type UserInfo struct {
