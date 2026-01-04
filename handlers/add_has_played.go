@@ -13,12 +13,12 @@ import (
 
 	"gorm.io/gorm"
 
-	"kurohelper/cache"
-	kurohelpererrors "kurohelper/errors"
-	"kurohelper/store"
-	"kurohelper/utils"
+	"discordbot/cache"
+	discordboterrors "discordbot/errors"
+	"discordbot/store"
+	"discordbot/utils"
 
-	"github.com/peter910820/kurohelper-core/erogs"
+	"github.com/kuro-helper/core/v2/erogs"
 )
 
 // 加已玩Handler
@@ -108,7 +108,7 @@ func AddHasPlayed(s *discordgo.Session, i *discordgo.InteractionCreate, cid *uti
 		}
 
 		completeDate, err := utils.GetOptions(i, "complete_date")
-		if err != nil && !errors.Is(err, kurohelpererrors.ErrOptionNotFound) {
+		if err != nil && !errors.Is(err, discordboterrors.ErrOptionNotFound) {
 			utils.HandleError(err, s, i)
 			return
 		}

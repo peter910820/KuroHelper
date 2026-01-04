@@ -3,6 +3,7 @@ package handlers
 import (
 	"errors"
 	"fmt"
+	"os"
 	"sort"
 	"strings"
 
@@ -12,13 +13,13 @@ import (
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 
-	"kurohelper/cache"
-	kurohelpererrors "kurohelper/errors"
-	"kurohelper/store"
-	"kurohelper/utils"
+	"discordbot/cache"
+	discordboterrors "discordbot/errors"
+	"discordbot/store"
+	"discordbot/utils"
 
-	"github.com/peter910820/kurohelper-core/erogs"
-	"github.com/peter910820/kurohelper-core/vndb"
+	"github.com/kuro-helper/core/v2/erogs"
+	"github.com/kuro-helper/core/v2/vndb"
 )
 
 // 查詢公司品牌Handler
@@ -32,11 +33,11 @@ func SearchBrand(s *discordgo.Session, i *discordgo.InteractionCreate, cid *util
 
 	if i.Type == discordgo.InteractionApplicationCommand {
 		opt, err := utils.GetOptions(i, "查詢資料庫選項")
-		if err != nil && errors.Is(err, kurohelpererrors.ErrOptionTranslateFail) {
+		if err != nil && errors.Is(err, discordboterrors.ErrOptionTranslateFail) {
 			utils.HandleError(err, s, i)
 			return
 		}
-		if opt == "" {
+		if opt == "" && os.Getenv("SEARCH_GAME_SOURCE") != "VNDB" {
 			erogsSearchBrand(s, i, cid)
 		} else {
 			vndbSearchBrand(s, i, cid)

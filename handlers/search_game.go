@@ -3,6 +3,7 @@ package handlers
 import (
 	"errors"
 	"fmt"
+	"os"
 	"regexp"
 	"sort"
 	"strconv"
@@ -15,15 +16,15 @@ import (
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 
-	"kurohelper/cache"
-	kurohelpererrors "kurohelper/errors"
-	"kurohelper/utils"
+	"discordbot/cache"
+	discordboterrors "discordbot/errors"
+	"discordbot/utils"
 
-	kurohelpercore "github.com/peter910820/kurohelper-core"
-	"github.com/peter910820/kurohelper-core/erogs"
-	"github.com/peter910820/kurohelper-core/seiya"
-	"github.com/peter910820/kurohelper-core/vndb"
-	"github.com/peter910820/kurohelper-core/ymgal"
+	kurohelpercore "github.com/kuro-helper/core/v2"
+	"github.com/kuro-helper/core/v2/erogs"
+	"github.com/kuro-helper/core/v2/seiya"
+	"github.com/kuro-helper/core/v2/vndb"
+	"github.com/kuro-helper/core/v2/ymgal"
 )
 
 // 查詢遊戲Handler
@@ -37,17 +38,25 @@ func SearchGame(s *discordgo.Session, i *discordgo.InteractionCreate, cid *utils
 
 	if i.Type == discordgo.InteractionApplicationCommand {
 		optList, err := utils.GetOptions(i, "列表搜尋")
-		if err != nil && errors.Is(err, kurohelpererrors.ErrOptionTranslateFail) {
+		if err != nil && errors.Is(err, discordboterrors.ErrOptionTranslateFail) {
 			utils.HandleError(err, s, i)
 			return
 		}
 		optSource, err := utils.GetOptions(i, "查詢資料庫選項")
-		if err != nil && errors.Is(err, kurohelpererrors.ErrOptionTranslateFail) {
+		if err != nil && errors.Is(err, discordboterrors.ErrOptionTranslateFail) {
 			utils.HandleError(err, s, i)
 			return
 		}
 		switch optSource {
 		case "":
+			if os.Getenv("SEARCH_GAME_SOURCE") == "VNDB" {
+				if optList == "" {
+					vndbSearchGame(s, i)
+				} else {
+					vndbSearchGameList(s, i, cid)
+				}
+				return
+			}
 			fallthrough
 		case "2":
 			if optList == "" {

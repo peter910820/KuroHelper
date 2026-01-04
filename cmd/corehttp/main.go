@@ -11,8 +11,8 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/sirupsen/logrus"
 
-	"kurohelper/bootstrap"
-	"kurohelper/bot"
+	"discordbot/bootstrap"
+	"discordbot/bot"
 )
 
 func main() {
@@ -117,7 +117,7 @@ func PushSend(kuroHelper *discordgo.Session, c *fiber.Ctx) error {
 	embed := &discordgo.MessageEmbed{
 		Title:       repoName + " Push Event",
 		Color:       color,
-		Description: fmt.Sprintf("[%s](https://github.com/peter910820/%s/commit/%s)  %s\n%s", hash, repoName, fullHash, branch, date),
+		Description: fmt.Sprintf("[%s](https://github.com/orgs/kuro-helper/%s/commit/%s)  %s\n%s", hash, repoName, fullHash, branch, date),
 		Fields: []*discordgo.MessageEmbedField{
 			{
 				Name:   "發送人",

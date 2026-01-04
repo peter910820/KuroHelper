@@ -11,12 +11,11 @@ import (
 
 	"gorm.io/gorm"
 
-	"kurohelper/store"
-	"kurohelper/utils"
+	"discordbot/cache"
+	"discordbot/store"
+	"discordbot/utils"
 
-	"kurohelper/cache"
-
-	"github.com/peter910820/kurohelper-core/erogs"
+	"github.com/kuro-helper/core/v2/erogs"
 )
 
 // 加收藏Handler

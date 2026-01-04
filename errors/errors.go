@@ -1,4 +1,4 @@
-package kurohelpererrors
+package discordboterrors
 
 import "errors"
 

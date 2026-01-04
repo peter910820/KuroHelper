@@ -12,13 +12,13 @@ import (
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 
-	"kurohelper/cache"
-	kurohelpererrors "kurohelper/errors"
-	"kurohelper/utils"
+	"discordbot/cache"
+	discordbotrerrors "discordbot/errors"
+	"discordbot/utils"
 
-	"github.com/peter910820/kurohelper-core/bangumi"
-	"github.com/peter910820/kurohelper-core/erogs"
-	"github.com/peter910820/kurohelper-core/vndb"
+	"github.com/kuro-helper/core/v2/bangumi"
+	"github.com/kuro-helper/core/v2/erogs"
+	"github.com/kuro-helper/core/v2/vndb"
 )
 
 // 查詢角色Handler
@@ -32,12 +32,12 @@ func SearchCharacter(s *discordgo.Session, i *discordgo.InteractionCreate, cid *
 
 	if i.Type == discordgo.InteractionApplicationCommand {
 		optList, err := utils.GetOptions(i, "列表搜尋")
-		if err != nil && errors.Is(err, kurohelpererrors.ErrOptionTranslateFail) {
+		if err != nil && errors.Is(err, discordbotrerrors.ErrOptionTranslateFail) {
 			utils.HandleError(err, s, i)
 			return
 		}
 		optDB, err := utils.GetOptions(i, "查詢資料庫選項")
-		if err != nil && errors.Is(err, kurohelpererrors.ErrOptionTranslateFail) {
+		if err != nil && errors.Is(err, discordbotrerrors.ErrOptionTranslateFail) {
 			utils.HandleError(err, s, i)
 			return
 		}
@@ -60,7 +60,7 @@ func SearchCharacter(s *discordgo.Session, i *discordgo.InteractionCreate, cid *
 			if optList == "" {
 				bangumiSearchCharacter(s, i)
 			} else {
-				utils.HandleError(kurohelpererrors.ErrBangumiCharacterListSearchNotSupported, s, i)
+				utils.HandleError(discordbotrerrors.ErrBangumiCharacterListSearchNotSupported, s, i)
 			}
 		}
 	} else {

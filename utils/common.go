@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"time"
 
-	kurohelpererrors "kurohelper/errors"
+	discordboterrors "discordbot/errors"
 )
 
 // check if the string is English
@@ -29,16 +29,16 @@ func GetEnvInt(key string, def int) int {
 
 func ParseYYYYMMDD(s string) (time.Time, error) {
 	if len(s) != 8 {
-		return time.Time{}, kurohelpererrors.ErrTimeWrongFormat
+		return time.Time{}, discordboterrors.ErrTimeWrongFormat
 	}
 
 	if _, err := strconv.Atoi(s); err != nil {
-		return time.Time{}, kurohelpererrors.ErrTimeWrongFormat
+		return time.Time{}, discordboterrors.ErrTimeWrongFormat
 	}
 
 	t, err := time.Parse("20060102", s)
 	if err != nil {
-		return time.Time{}, kurohelpererrors.ErrTimeWrongFormat
+		return time.Time{}, discordboterrors.ErrTimeWrongFormat
 	}
 
 	return t, nil

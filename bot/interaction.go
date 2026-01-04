@@ -5,9 +5,9 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 
-	kurohelpererrors "kurohelper/errors"
-	"kurohelper/handlers"
-	"kurohelper/utils"
+	discordboterrors "discordbot/errors"
+	"discordbot/handlers"
+	"discordbot/utils"
 )
 
 func OnInteraction(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -83,7 +83,7 @@ func onInteractionMessageComponent(s *discordgo.Session, i *discordgo.Interactio
 			go handlers.RemoveInWish(s, i, &cid)
 		}
 	} else {
-		utils.HandleError(kurohelpererrors.ErrCIDWrongFormat, s, i)
+		utils.HandleError(discordboterrors.ErrCIDWrongFormat, s, i)
 		return
 	}
 }
