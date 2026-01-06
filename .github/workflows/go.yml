@@ -12,12 +12,12 @@ on:
       - bugfix/*
       - hotfix/*
       - release/*
-      # - test/*
       - refactor/*
       - ci/*
       - style/*
       - docs/*
       - chore/*
+      # - test/*
   pull_request:
     branches:
       - main

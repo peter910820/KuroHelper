@@ -1,0 +1,23 @@
+name: Commit Lint
+
+on:
+  push:
+    branches:
+      - main
+      - feature/*
+      - enhancement/*
+      - bugfix/*
+      - hotfix/*
+      - release/*
+      - refactor/*
+      - ci/*
+      - style/*
+      - docs/*
+      # - test/*
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  call-commit-lint:
+    uses: kuro-helper/.github/.github/workflows/commit-lint.yml@main
