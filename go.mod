@@ -1,4 +1,4 @@
-module discordbot
+module kurohelper
 
 go 1.24.0
 
@@ -7,8 +7,8 @@ require (
 	github.com/gofiber/fiber/v2 v2.52.10
 	github.com/google/uuid v1.6.0
 	github.com/joho/godotenv v1.5.1
-	github.com/kuro-helper/core/v2 v2.1.0
-	github.com/peter910820/kurohelper-db/v2 v2.4.0
+	github.com/kuro-helper/kurohelper-core/v3 v3.0.0
+	github.com/kuro-helper/kurohelper-db/v3 v3.0.0
 	github.com/siongui/gojianfan v0.0.0-20210926212422-2f175ac615de
 	github.com/sirupsen/logrus v1.9.3
 	gorm.io/gorm v1.31.1
@@ -28,7 +28,7 @@ require (
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/klauspost/compress v1.18.2 // indirect
-	github.com/kuro-helper/proxy v0.0.0-20260104092932-28db66382b21 // indirect
+	github.com/kuro-helper/kurohelper-proxy v1.0.0 // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-runewidth v0.0.19 // indirect

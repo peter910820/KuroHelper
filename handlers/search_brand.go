@@ -9,17 +9,17 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/google/uuid"
-	kurohelperdb "github.com/peter910820/kurohelper-db/v2"
+	kurohelperdb "github.com/kuro-helper/kurohelper-db/v3"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 
-	"discordbot/cache"
-	discordboterrors "discordbot/errors"
-	"discordbot/store"
-	"discordbot/utils"
+	"kurohelper/cache"
+	kurohelpererrors "kurohelper/errors"
+	"kurohelper/store"
+	"kurohelper/utils"
 
-	"github.com/kuro-helper/core/v2/erogs"
-	"github.com/kuro-helper/core/v2/vndb"
+	"github.com/kuro-helper/kurohelper-core/v3/erogs"
+	"github.com/kuro-helper/kurohelper-core/v3/vndb"
 )
 
 // 查詢公司品牌Handler
@@ -33,7 +33,7 @@ func SearchBrand(s *discordgo.Session, i *discordgo.InteractionCreate, cid *util
 
 	if i.Type == discordgo.InteractionApplicationCommand {
 		opt, err := utils.GetOptions(i, "查詢資料庫選項")
-		if err != nil && errors.Is(err, discordboterrors.ErrOptionTranslateFail) {
+		if err != nil && errors.Is(err, kurohelpererrors.ErrOptionTranslateFail) {
 			utils.HandleError(err, s, i)
 			return
 		}

@@ -11,8 +11,8 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/sirupsen/logrus"
 
-	"discordbot/bootstrap"
-	"discordbot/bot"
+	"kurohelper/bootstrap"
+	"kurohelper/bot"
 )
 
 func main() {

@@ -1,15 +1,15 @@
 package handlers
 
 import (
-	discordboterrors "discordbot/errors"
-	"discordbot/utils"
 	"errors"
 	"fmt"
+	kurohelpererrors "kurohelper/errors"
+	"kurohelper/utils"
 	"sort"
 	"strconv"
 	"strings"
 
-	"github.com/kuro-helper/core/v2/vndb"
+	"github.com/kuro-helper/kurohelper-core/v3/vndb"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/sirupsen/logrus"
@@ -22,7 +22,7 @@ func RandomCharacter(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		Type: discordgo.InteractionResponseDeferredChannelMessageWithSource,
 	})
 	opt, err := utils.GetOptions(i, "隨機角色的身分")
-	if err != nil && errors.Is(err, discordboterrors.ErrOptionTranslateFail) {
+	if err != nil && errors.Is(err, kurohelpererrors.ErrOptionTranslateFail) {
 		utils.HandleError(err, s, i)
 		return
 	}

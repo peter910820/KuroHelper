@@ -6,7 +6,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"github.com/sirupsen/logrus"
 
-	discordboterrors "discordbot/errors"
+	kurohelpererrors "kurohelper/errors"
 )
 
 // handle interaction command common respond
@@ -110,13 +110,13 @@ func GetOptions(i *discordgo.InteractionCreate, name string) (string, error) {
 		if v.Name == name {
 			value, ok := v.Value.(string) // type assertion
 			if !ok {
-				return "", discordboterrors.ErrOptionTranslateFail
+				return "", kurohelpererrors.ErrOptionTranslateFail
 			} else {
 				return value, nil
 			}
 		}
 	}
-	return "", discordboterrors.ErrOptionNotFound
+	return "", kurohelpererrors.ErrOptionNotFound
 }
 
 // Use discordgo.MessageComponent slice to make ActionsRow

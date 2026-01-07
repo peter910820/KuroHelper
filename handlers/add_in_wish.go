@@ -7,15 +7,15 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/google/uuid"
-	kurohelperdb "github.com/peter910820/kurohelper-db/v2"
+	kurohelperdb "github.com/kuro-helper/kurohelper-db/v3"
 
 	"gorm.io/gorm"
 
-	"discordbot/cache"
-	"discordbot/store"
-	"discordbot/utils"
+	"kurohelper/cache"
+	"kurohelper/store"
+	"kurohelper/utils"
 
-	"github.com/kuro-helper/core/v2/erogs"
+	"github.com/kuro-helper/kurohelper-core/v3/erogs"
 )
 
 // 加收藏Handler

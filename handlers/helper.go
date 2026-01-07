@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"discordbot/utils"
+	"kurohelper/utils"
 
 	"github.com/bwmarrin/discordgo"
 )

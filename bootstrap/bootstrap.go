@@ -1,21 +1,21 @@
 package bootstrap
 
 import (
-	"discordbot/cache"
-	"discordbot/store"
-	"discordbot/utils"
+	"kurohelper/cache"
+	"kurohelper/store"
+	"kurohelper/utils"
 	"os"
 	"time"
 
 	"github.com/joho/godotenv"
 	"github.com/sirupsen/logrus"
 
-	"github.com/kuro-helper/core/v2/erogs"
-	"github.com/kuro-helper/core/v2/seiya"
-	corestore "github.com/kuro-helper/core/v2/store"
-	"github.com/kuro-helper/core/v2/ymgal"
+	"github.com/kuro-helper/kurohelper-core/v3/erogs"
+	"github.com/kuro-helper/kurohelper-core/v3/seiya"
+	corestore "github.com/kuro-helper/kurohelper-core/v3/store"
+	"github.com/kuro-helper/kurohelper-core/v3/ymgal"
 
-	kurohelperdb "github.com/peter910820/kurohelper-db/v2"
+	kurohelperdb "github.com/kuro-helper/kurohelper-db/v3"
 )
 
 // 啟動函式

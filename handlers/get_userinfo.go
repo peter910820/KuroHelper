@@ -6,10 +6,10 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/google/uuid"
-	kurohelperdb "github.com/peter910820/kurohelper-db/v2"
+	kurohelperdb "github.com/kuro-helper/kurohelper-db/v3"
 
-	"discordbot/cache"
-	"discordbot/utils"
+	"kurohelper/cache"
+	"kurohelper/utils"
 )
 
 type UserInfo struct {

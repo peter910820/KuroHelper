@@ -1,7 +1,7 @@
 package store
 
 import (
-	kurohelperdb "github.com/peter910820/kurohelper-db/v2"
+	kurohelperdb "github.com/kuro-helper/kurohelper-db/v3"
 	"github.com/sirupsen/logrus"
 )
 

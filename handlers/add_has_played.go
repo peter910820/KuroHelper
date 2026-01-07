@@ -9,16 +9,16 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/google/uuid"
-	kurohelperdb "github.com/peter910820/kurohelper-db/v2"
+	kurohelperdb "github.com/kuro-helper/kurohelper-db/v3"
 
 	"gorm.io/gorm"
 
-	"discordbot/cache"
-	discordboterrors "discordbot/errors"
-	"discordbot/store"
-	"discordbot/utils"
+	"kurohelper/cache"
+	kurohelpererrors "kurohelper/errors"
+	"kurohelper/store"
+	"kurohelper/utils"
 
-	"github.com/kuro-helper/core/v2/erogs"
+	"github.com/kuro-helper/kurohelper-core/v3/erogs"
 )
 
 // 加已玩Handler
@@ -108,7 +108,7 @@ func AddHasPlayed(s *discordgo.Session, i *discordgo.InteractionCreate, cid *uti
 		}
 
 		completeDate, err := utils.GetOptions(i, "complete_date")
-		if err != nil && !errors.Is(err, discordboterrors.ErrOptionNotFound) {
+		if err != nil && !errors.Is(err, kurohelpererrors.ErrOptionNotFound) {
 			utils.HandleError(err, s, i)
 			return
 		}
