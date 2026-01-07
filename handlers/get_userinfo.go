@@ -6,10 +6,10 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/google/uuid"
-	kurohelperdb "github.com/peter910820/kurohelper-db/v2"
+	kurohelperdb "github.com/kuro-helper/kurohelper-db/v3"
 
-	"discordbot/cache"
-	"discordbot/utils"
+	"kurohelper/cache"
+	"kurohelper/utils"
 )
 
 type UserInfo struct {
@@ -247,16 +247,4 @@ func getUserPlayRecordTime(hp *kurohelperdb.UserHasPlayed) string {
 		return hp.CompletedAt.Format("2006-01-02")
 	}
 	return ""
-}
-
-func countUserData(items []kurohelperdb.UserGameErogs) (hasPlayedCount, inWishCount int) {
-	for _, it := range items {
-		if it.HasPlayed {
-			hasPlayedCount++
-		}
-		if it.InWish {
-			inWishCount++
-		}
-	}
-	return
 }

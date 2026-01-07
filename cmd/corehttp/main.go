@@ -11,8 +11,8 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/sirupsen/logrus"
 
-	"discordbot/bootstrap"
-	"discordbot/bot"
+	"kurohelper/bootstrap"
+	"kurohelper/bot"
 )
 
 func main() {
@@ -98,17 +98,19 @@ func PushSend(kuroHelper *discordgo.Session, c *fiber.Ctx) error {
 	color := 0xF8C3CD
 
 	switch strings.TrimSpace(repoName) {
-	case "KuroHelper":
+	case "kurohelper":
 		color = 0xF8C3CD
 	case "kurohelper-core":
 		color = 0x373C38
+	case "kurohelper-proxy":
+		color = 0x1B813E
 	case "kurohelper-docs":
 		color = 0x268785
 	case "kurohelper-db":
 		color = 0x6699A1
 	case "kurohelper-api":
 		color = 0xFFBA84
-	case "kurohelper-web":
+	case "kurohelper-web-nextjs":
 		color = 0xB5495B
 	case "kurohelper-web-nuxt3":
 		color = 0x42D392
@@ -117,7 +119,7 @@ func PushSend(kuroHelper *discordgo.Session, c *fiber.Ctx) error {
 	embed := &discordgo.MessageEmbed{
 		Title:       repoName + " Push Event",
 		Color:       color,
-		Description: fmt.Sprintf("[%s](https://github.com/orgs/kuro-helper/%s/commit/%s)  %s\n%s", hash, repoName, fullHash, branch, date),
+		Description: fmt.Sprintf("[%s](https://github.com/kuro-helper/%s/commit/%s)  %s\n%s", hash, repoName, fullHash, branch, date),
 		Fields: []*discordgo.MessageEmbedField{
 			{
 				Name:   "發送人",

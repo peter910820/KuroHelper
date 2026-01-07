@@ -9,17 +9,17 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/google/uuid"
-	kurohelperdb "github.com/peter910820/kurohelper-db/v2"
+	kurohelperdb "github.com/kuro-helper/kurohelper-db/v3"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 
-	"discordbot/cache"
-	discordboterrors "discordbot/errors"
-	"discordbot/store"
-	"discordbot/utils"
+	"kurohelper/cache"
+	kurohelpererrors "kurohelper/errors"
+	"kurohelper/store"
+	"kurohelper/utils"
 
-	"github.com/kuro-helper/core/v2/erogs"
-	"github.com/kuro-helper/core/v2/vndb"
+	"github.com/kuro-helper/kurohelper-core/v3/erogs"
+	"github.com/kuro-helper/kurohelper-core/v3/vndb"
 )
 
 // 查詢公司品牌Handler
@@ -33,7 +33,7 @@ func SearchBrand(s *discordgo.Session, i *discordgo.InteractionCreate, cid *util
 
 	if i.Type == discordgo.InteractionApplicationCommand {
 		opt, err := utils.GetOptions(i, "查詢資料庫選項")
-		if err != nil && errors.Is(err, discordboterrors.ErrOptionTranslateFail) {
+		if err != nil && errors.Is(err, kurohelpererrors.ErrOptionTranslateFail) {
 			utils.HandleError(err, s, i)
 			return
 		}
@@ -131,26 +131,34 @@ func erogsSearchBrand(s *discordgo.Session, i *discordgo.InteractionCreate, cid 
 	actionsRow := utils.MakeActionsRow(messageComponent)
 
 	// 處理資料庫
-	status := make(map[int]byte)
+	hasPlayedMap := make(map[int]struct{})
+	inWishMap := make(map[int]struct{})
 	userID := utils.GetUserID(i)
 	if strings.TrimSpace(userID) != "" {
 		_, ok := store.UserStore[userID]
 		if ok {
-			userGameErogs, err := kurohelperdb.GetUserGameErogsByUserID(userID)
+			// 已玩資訊
+			userHasPlayed, err := kurohelperdb.SelectUserHasPlayed(userID)
 			if err != nil {
 				if !errors.Is(err, gorm.ErrRecordNotFound) {
 					utils.HandleError(err, s, i)
 					return
 				}
 			}
-			// 利用位元運算壓縮狀態
-			for _, game := range userGameErogs {
-				if game.HasPlayed {
-					status[game.GameErogsID] |= Played
+			for _, item := range userHasPlayed {
+				hasPlayedMap[item.GameErogsID] = struct{}{}
+			}
+
+			// 收藏資訊
+			userInWish, err := kurohelperdb.SelectUserInWish(userID)
+			if err != nil {
+				if !errors.Is(err, gorm.ErrRecordNotFound) {
+					utils.HandleError(err, s, i)
+					return
 				}
-				if game.InWish {
-					status[game.GameErogsID] |= Wish
-				}
+			}
+			for _, item := range userInWish {
+				inWishMap[item.GameErogsID] = struct{}{}
 			}
 		}
 	}
@@ -158,13 +166,14 @@ func erogsSearchBrand(s *discordgo.Session, i *discordgo.InteractionCreate, cid 
 	gameData := make([]string, 0, len(res.GameList))
 	for _, g := range res.GameList {
 		var prefix string
-		flags := status[g.ID]
-		if flags&Played != 0 {
+
+		if _, exists := hasPlayedMap[g.ID]; exists {
 			prefix += "✅"
 		}
-		if flags&Wish != 0 {
+		if _, exists := inWishMap[g.ID]; exists {
 			prefix += "❤️"
 		}
+
 		gameData = append(gameData, fmt.Sprintf("%s%s　%d(%d)　**%s** (%s)", prefix, g.SellDay, g.Median, g.Count2, g.GameName, g.Model))
 	}
 

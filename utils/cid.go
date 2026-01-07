@@ -8,7 +8,7 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 
-	discordboterrors "discordbot/errors"
+	kurohelpererrors "kurohelper/errors"
 )
 
 type (
@@ -77,7 +77,7 @@ func (cid NewCID) GetCommandNameProvider() string {
 func (cid NewCID) GetCIDType() (CustomIDType, error) {
 	value, err := strconv.Atoi([]string(cid)[1])
 	if err != nil {
-		return 0, discordboterrors.ErrCIDGetParameterFailed
+		return 0, kurohelpererrors.ErrCIDGetParameterFailed
 	}
 	return CustomIDType(value), nil
 }
@@ -91,7 +91,7 @@ func (cid NewCID) GetCacheID() string {
 func (cid PageCID) GetPageIndex() (int, error) {
 	value, err := strconv.Atoi([]string(cid.NewCID)[3])
 	if err != nil {
-		return 0, discordboterrors.ErrCIDGetParameterFailed
+		return 0, kurohelpererrors.ErrCIDGetParameterFailed
 	}
 	return value, nil
 }
@@ -104,7 +104,7 @@ func (cid AddHasPlayedCID) GetCompleteDate() (*time.Time, error) {
 
 	t, err := time.Parse("20060102", []string(cid.NewCID)[3])
 	if err != nil {
-		return nil, discordboterrors.ErrCIDGetParameterFailed
+		return nil, kurohelpererrors.ErrCIDGetParameterFailed
 	}
 	return &t, nil
 }

@@ -1,14 +1,14 @@
 package handlers
 
 import (
-	"discordbot/cache"
-	"discordbot/utils"
 	"fmt"
+	"kurohelper/cache"
+	"kurohelper/utils"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/google/uuid"
 
-	kurohelperdb "github.com/peter910820/kurohelper-db/v2"
+	kurohelperdb "github.com/kuro-helper/kurohelper-db/v3"
 )
 
 type userRecordDataCache struct {

@@ -5,9 +5,9 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 
-	"discordbot/utils"
+	"kurohelper/utils"
 
-	"github.com/kuro-helper/core/v2/vndb"
+	"github.com/kuro-helper/kurohelper-core/v3/vndb"
 )
 
 // vndb統計資料Handler

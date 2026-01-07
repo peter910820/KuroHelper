@@ -7,10 +7,10 @@ import (
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 
-	discordboterrors "discordbot/errors"
+	kurohelpererrors "kurohelper/errors"
 
-	kurohelpercore "github.com/kuro-helper/core/v2"
-	kurohelperdb "github.com/peter910820/kurohelper-db/v2"
+	kurohelpercore "github.com/kuro-helper/kurohelper-core/v3"
+	kurohelperdb "github.com/kuro-helper/kurohelper-db/v3"
 )
 
 // 錯誤統一處理方法
@@ -25,21 +25,21 @@ func HandleError(err error, s *discordgo.Session, i *discordgo.InteractionCreate
 		InteractionEmbedRespond(s, i, MakeErrorEmbedMsg("速率限制，請過約1分鐘後再試"), nil, true)
 	case errors.Is(err, kurohelpercore.ErrSearchNoContent):
 		InteractionEmbedRespond(s, i, MakeErrorEmbedMsg("找不到任何結果喔"), nil, true)
-	case errors.Is(err, discordboterrors.ErrTimeWrongFormat):
+	case errors.Is(err, kurohelpererrors.ErrTimeWrongFormat):
 		InteractionEmbedRespond(s, i, MakeErrorEmbedMsg("日期格式錯誤，格式為YYYYMMDD"), nil, true)
-	case errors.Is(err, discordboterrors.ErrDateExceedsTomorrow):
+	case errors.Is(err, kurohelpererrors.ErrDateExceedsTomorrow):
 		InteractionEmbedRespond(s, i, MakeErrorEmbedMsg("日期格式錯誤，完成日期不得超過今日加一天"), nil, true)
 	case errors.Is(err, kurohelpercore.ErrBangumiCharacterListSearchNotSupported):
 		InteractionEmbedRespond(s, i, MakeErrorEmbedMsg("目前不支援對Bangumi使用角色列表搜尋"), nil, true)
-	case errors.Is(err, discordboterrors.ErrCIDGetParameterFailed):
+	case errors.Is(err, kurohelpererrors.ErrCIDGetParameterFailed):
 		fallthrough
 	case errors.Is(err, kurohelpercore.ErrCacheLost):
 		EditEmbedRespond(s, i, MakeErrorEmbedMsg("快取過期，請重新查詢"), nil)
 	case errors.Is(err, kurohelpercore.ErrStatusCodeAbnormal):
 		fallthrough
-	case errors.Is(err, discordboterrors.ErrOptionTranslateFail):
+	case errors.Is(err, kurohelpererrors.ErrOptionTranslateFail):
 		fallthrough
-	case errors.Is(err, discordboterrors.ErrOptionNotFound):
+	case errors.Is(err, kurohelpererrors.ErrOptionNotFound):
 		fallthrough
 	default:
 		InteractionEmbedRespond(s, i, MakeErrorEmbedMsg("該功能目前異常，請稍後再嘗試"), nil, true)

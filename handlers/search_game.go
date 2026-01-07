@@ -11,20 +11,20 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/google/uuid"
-	kurohelperdb "github.com/peter910820/kurohelper-db/v2"
+	kurohelperdb "github.com/kuro-helper/kurohelper-db/v3"
 	"github.com/siongui/gojianfan"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 
-	"discordbot/cache"
-	discordboterrors "discordbot/errors"
-	"discordbot/utils"
+	"kurohelper/cache"
+	kurohelpererrors "kurohelper/errors"
+	"kurohelper/utils"
 
-	kurohelpercore "github.com/kuro-helper/core/v2"
-	"github.com/kuro-helper/core/v2/erogs"
-	"github.com/kuro-helper/core/v2/seiya"
-	"github.com/kuro-helper/core/v2/vndb"
-	"github.com/kuro-helper/core/v2/ymgal"
+	kurohelpercore "github.com/kuro-helper/kurohelper-core/v3"
+	"github.com/kuro-helper/kurohelper-core/v3/erogs"
+	"github.com/kuro-helper/kurohelper-core/v3/seiya"
+	"github.com/kuro-helper/kurohelper-core/v3/vndb"
+	"github.com/kuro-helper/kurohelper-core/v3/ymgal"
 )
 
 // 查詢遊戲Handler
@@ -38,12 +38,12 @@ func SearchGame(s *discordgo.Session, i *discordgo.InteractionCreate, cid *utils
 
 	if i.Type == discordgo.InteractionApplicationCommand {
 		optList, err := utils.GetOptions(i, "列表搜尋")
-		if err != nil && errors.Is(err, discordboterrors.ErrOptionTranslateFail) {
+		if err != nil && errors.Is(err, kurohelpererrors.ErrOptionTranslateFail) {
 			utils.HandleError(err, s, i)
 			return
 		}
 		optSource, err := utils.GetOptions(i, "查詢資料庫選項")
-		if err != nil && errors.Is(err, discordboterrors.ErrOptionTranslateFail) {
+		if err != nil && errors.Is(err, kurohelpererrors.ErrOptionTranslateFail) {
 			utils.HandleError(err, s, i)
 			return
 		}
@@ -118,20 +118,23 @@ func erogsSearchGame(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	// 處理使用者資訊
 	userID := utils.GetUserID(i)
 	var userData string
-	userGameErogs, err := kurohelperdb.GetUserGameErogs(userID, res.ID)
+	_, err = kurohelperdb.GetUserHasPlayed(userID, res.ID)
 	if err != nil {
 		if !errors.Is(err, gorm.ErrRecordNotFound) {
 			utils.HandleError(err, s, i)
 			return
 		}
-	} else { // 有找到資料
-		if userGameErogs.HasPlayed {
-			userData += "✅"
+	} else {
+		userData += "✅"
+	}
+	_, err = kurohelperdb.GetUserInWish(userID, res.ID)
+	if err != nil {
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			utils.HandleError(err, s, i)
+			return
 		}
-
-		if userGameErogs.InWish {
-			userData += "❤️"
-		}
+	} else {
+		userData += "❤️"
 	}
 
 	vndbRating := 0.0

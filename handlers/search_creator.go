@@ -12,11 +12,11 @@ import (
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 
-	"discordbot/cache"
-	discordbotrerrors "discordbot/errors"
-	"discordbot/utils"
+	"kurohelper/cache"
+	kurohelperrerrors "kurohelper/errors"
+	"kurohelper/utils"
 
-	"github.com/kuro-helper/core/v2/erogs"
+	"github.com/kuro-helper/kurohelper-core/v3/erogs"
 )
 
 // 查詢創作者Handler
@@ -30,7 +30,7 @@ func SearchCreator(s *discordgo.Session, i *discordgo.InteractionCreate, cid *ut
 
 	if i.Type == discordgo.InteractionApplicationCommand {
 		opt, err := utils.GetOptions(i, "列表搜尋")
-		if err != nil && errors.Is(err, discordbotrerrors.ErrOptionTranslateFail) {
+		if err != nil && errors.Is(err, kurohelperrerrors.ErrOptionTranslateFail) {
 			utils.HandleError(err, s, i)
 			return
 		}
