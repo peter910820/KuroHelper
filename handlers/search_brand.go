@@ -131,26 +131,34 @@ func erogsSearchBrand(s *discordgo.Session, i *discordgo.InteractionCreate, cid 
 	actionsRow := utils.MakeActionsRow(messageComponent)
 
 	// 處理資料庫
-	status := make(map[int]byte)
+	hasPlayedMap := make(map[int]struct{})
+	inWishMap := make(map[int]struct{})
 	userID := utils.GetUserID(i)
 	if strings.TrimSpace(userID) != "" {
 		_, ok := store.UserStore[userID]
 		if ok {
-			userGameErogs, err := kurohelperdb.GetUserGameErogsByUserID(userID)
+			// 已玩資訊
+			userHasPlayed, err := kurohelperdb.SelectUserHasPlayed(userID)
 			if err != nil {
 				if !errors.Is(err, gorm.ErrRecordNotFound) {
 					utils.HandleError(err, s, i)
 					return
 				}
 			}
-			// 利用位元運算壓縮狀態
-			for _, game := range userGameErogs {
-				if game.HasPlayed {
-					status[game.GameErogsID] |= Played
+			for _, item := range userHasPlayed {
+				hasPlayedMap[item.GameErogsID] = struct{}{}
+			}
+
+			// 收藏資訊
+			userInWish, err := kurohelperdb.SelectUserInWish(userID)
+			if err != nil {
+				if !errors.Is(err, gorm.ErrRecordNotFound) {
+					utils.HandleError(err, s, i)
+					return
 				}
-				if game.InWish {
-					status[game.GameErogsID] |= Wish
-				}
+			}
+			for _, item := range userInWish {
+				inWishMap[item.GameErogsID] = struct{}{}
 			}
 		}
 	}
@@ -158,13 +166,14 @@ func erogsSearchBrand(s *discordgo.Session, i *discordgo.InteractionCreate, cid 
 	gameData := make([]string, 0, len(res.GameList))
 	for _, g := range res.GameList {
 		var prefix string
-		flags := status[g.ID]
-		if flags&Played != 0 {
+
+		if _, exists := hasPlayedMap[g.ID]; exists {
 			prefix += "✅"
 		}
-		if flags&Wish != 0 {
+		if _, exists := inWishMap[g.ID]; exists {
 			prefix += "❤️"
 		}
+
 		gameData = append(gameData, fmt.Sprintf("%s%s　%d(%d)　**%s** (%s)", prefix, g.SellDay, g.Median, g.Count2, g.GameName, g.Model))
 	}
 

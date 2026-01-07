@@ -248,15 +248,3 @@ func getUserPlayRecordTime(hp *kurohelperdb.UserHasPlayed) string {
 	}
 	return ""
 }
-
-func countUserData(items []kurohelperdb.UserGameErogs) (hasPlayedCount, inWishCount int) {
-	for _, it := range items {
-		if it.HasPlayed {
-			hasPlayedCount++
-		}
-		if it.InWish {
-			inWishCount++
-		}
-	}
-	return
-}

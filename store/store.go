@@ -36,7 +36,7 @@ func InitAllowList() {
 //
 // 目的是檢查使用者的時候不用先檢查他是否在資料庫，可以直接決定要產生User紀錄還是直接抓出資料
 func InitUser() {
-	user, err := kurohelperdb.GetAllUser()
+	user, err := kurohelperdb.GetUsers()
 	if err != nil {
 		logrus.Fatal(err)
 	}

@@ -118,20 +118,23 @@ func erogsSearchGame(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	// 處理使用者資訊
 	userID := utils.GetUserID(i)
 	var userData string
-	userGameErogs, err := kurohelperdb.GetUserGameErogs(userID, res.ID)
+	_, err = kurohelperdb.GetUserHasPlayed(userID, res.ID)
 	if err != nil {
 		if !errors.Is(err, gorm.ErrRecordNotFound) {
 			utils.HandleError(err, s, i)
 			return
 		}
-	} else { // 有找到資料
-		if userGameErogs.HasPlayed {
-			userData += "✅"
+	} else {
+		userData += "✅"
+	}
+	_, err = kurohelperdb.GetUserInWish(userID, res.ID)
+	if err != nil {
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			utils.HandleError(err, s, i)
+			return
 		}
-
-		if userGameErogs.InWish {
-			userData += "❤️"
-		}
+	} else {
+		userData += "❤️"
 	}
 
 	vndbRating := 0.0
