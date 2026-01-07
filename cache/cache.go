@@ -21,9 +21,9 @@ type CacheStore struct {
 
 var (
 	// 一般查詢快取
-	SearchCache = NewCacheStore(10 * time.Minute)
+	SearchCache = NewCacheStore(15 * time.Minute)
 	// 個人資料快取
-	UserInfoCache = NewCacheStore(1 * time.Minute)
+	UserInfoCache = NewCacheStore(10 * time.Minute)
 )
 
 // make new cache store
