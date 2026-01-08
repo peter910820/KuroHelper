@@ -26,15 +26,36 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      # 1. 下載主專案 (Bot) 到目前的執行目錄
+      - name: Checkout Main Project
+        uses: actions/checkout@v5
+        with:
+          path: kurohelper
 
+      # 2. 下載依賴專案到隔壁資料夾
+      - name: Checkout kurobidder Dependency
+        uses: actions/checkout@v5
+        with:
+          repository: kuro-helper/kurobidder
+          path: kurobidder
+
+      # 3. 設定 Go 環境
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
           go-version: "1.24.0"
 
+      # 4. 對接並編譯
       - name: Build
-        run: go build -v ./...
+        run: |
+          cd kurohelper
+          go mod edit -replace kurobidder=../kurobidder
+          
+          export GOPROXY=direct
+          
+          go mod tidy
+          
+          go build -v ./...
 
-    # - name: Test
-    #   run: go test -v ./...
+      # - name: Test
+      #   run: go test -v ./...
