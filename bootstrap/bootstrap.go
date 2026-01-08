@@ -10,6 +10,8 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/sirupsen/logrus"
 
+	"kurobidder/letao"
+
 	"github.com/kuro-helper/kurohelper-core/v3/erogs"
 	"github.com/kuro-helper/kurohelper-core/v3/seiya"
 	corestore "github.com/kuro-helper/kurohelper-core/v3/store"
@@ -18,8 +20,7 @@ import (
 	kurohelperdb "github.com/kuro-helper/kurohelper-db/v3"
 )
 
-// 啟動函式
-func Init(stopChan <-chan struct{}) {
+func BasicInit() {
 	// logrus settings
 	logrus.SetFormatter(&logrus.TextFormatter{
 		ForceColors:   true,
@@ -31,7 +32,10 @@ func Init(stopChan <-chan struct{}) {
 	if err != nil {
 		logrus.Fatal(err)
 	}
+}
 
+// 啟動函式
+func Init(stopChan <-chan struct{}, kurobidderDataChan chan<- []letao.AuctionItem) {
 	config := kurohelperdb.Config{
 		DBOwner:    os.Getenv("DB_OWNER"),
 		DBPassword: os.Getenv("DB_PASSWORD"),
@@ -39,7 +43,7 @@ func Init(stopChan <-chan struct{}) {
 		DBPort:     os.Getenv("DB_PORT"),
 	}
 
-	err = kurohelperdb.InitDsn(config)
+	err := kurohelperdb.InitDsn(config)
 	if err != nil {
 		logrus.Fatal(err)
 	}
@@ -71,6 +75,17 @@ func Init(stopChan <-chan struct{}) {
 	store.InitUser()
 	// 掛載自動清除快取job
 	go cache.CleanCacheJob(360, stopChan)
+	// 掛載 kurobidder 爬蟲 job
+	go KurobidderJob(
+		os.Getenv("LETAO_BASE_URL"),
+		letao.Filter{
+			Category:  os.Getenv("LETAO_CATEGORY"),
+			ViewCount: 20, // 只能送20或40
+			IsRecent:  true,
+		},
+		time.Duration(60),
+		stopChan,
+		kurobidderDataChan)
 }
 
 // ymgal init

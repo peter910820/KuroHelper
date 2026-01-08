@@ -11,14 +11,14 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/sirupsen/logrus"
 
+	"kurobidder/letao"
 	"kurohelper/bootstrap"
 	"kurohelper/bot"
 )
 
 func main() {
-	// 初始化專案作業
-	stopChan := make(chan struct{})
-	bootstrap.Init(stopChan)
+	// 基本初始化
+	bootstrap.BasicInit()
 
 	token := os.Getenv("BOT_TOKEN")
 	kuroHelper, err := discordgo.New("Bot " + token)
@@ -38,6 +38,11 @@ func main() {
 		logrus.Fatal(err)
 	}
 	defer kuroHelper.Close() // defer websocket disconnect
+
+	// 初始化專案作業
+	stopChan := make(chan struct{})
+	kurobidderDataChan := make(chan []letao.AuctionItem, 2)
+	bootstrap.Init(stopChan, kurobidderDataChan)
 
 	// Fiber server
 	app := fiber.New()
@@ -65,6 +70,20 @@ func main() {
 		}
 		close(fiberDone)
 		logrus.Println("Fiber close success")
+	}()
+
+	// 監聽 kurobidder 爬蟲數據並發送到 Discord
+	go func() {
+		for {
+			select {
+			case items := <-kurobidderDataChan:
+				if len(items) > 0 {
+					bootstrap.SendKurobidderDataToDiscord(kuroHelper, items)
+				}
+			case <-stopChan:
+				return
+			}
+		}
 	}()
 
 	c := make(chan os.Signal, 1)

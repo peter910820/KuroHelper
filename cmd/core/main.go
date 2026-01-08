@@ -1,6 +1,7 @@
 package main
 
 import (
+	"kurobidder/letao"
 	"os"
 	"os/signal"
 
@@ -12,9 +13,8 @@ import (
 )
 
 func main() {
-	// 初始化專案作業
-	stopChan := make(chan struct{})
-	bootstrap.Init(stopChan)
+	// 基本初始化
+	bootstrap.BasicInit()
 
 	token := os.Getenv("BOT_TOKEN")
 	kuroHelper, err := discordgo.New("Bot " + token)
@@ -33,6 +33,25 @@ func main() {
 	if err != nil {
 		logrus.Fatal(err)
 	}
+
+	// 初始化專案作業
+	stopChan := make(chan struct{})
+	kurobidderDataChan := make(chan []letao.AuctionItem, 2)
+	bootstrap.Init(stopChan, kurobidderDataChan)
+
+	// 監聽 kurobidder 爬蟲數據並發送到 Discord
+	go func() {
+		for {
+			select {
+			case items := <-kurobidderDataChan:
+				if len(items) > 0 {
+					bootstrap.SendKurobidderDataToDiscord(kuroHelper, items)
+				}
+			case <-stopChan:
+				return
+			}
+		}
+	}()
 
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
