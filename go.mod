@@ -12,6 +12,7 @@ require (
 	github.com/siongui/gojianfan v0.0.0-20210926212422-2f175ac615de
 	github.com/sirupsen/logrus v1.9.3
 	gorm.io/gorm v1.31.1
+	kurobidder v0.0.0
 )
 
 require (
@@ -41,3 +42,5 @@ require (
 	golang.org/x/text v0.32.0 // indirect
 	gorm.io/driver/postgres v1.6.0 // indirect
 )
+
+replace kurobidder => ../kurobidder
