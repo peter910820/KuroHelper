@@ -96,7 +96,7 @@ func erogsSearchGame(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	idSearch, _ := regexp.MatchString(`^e\d+$`, keyword)
 
 	// 條件符合就用月幕做跳板
-	if !idSearch && utils.IsAllHanziOrDigit(keyword) {
+	if !idSearch && utils.IsAllHanziOrDigit(keyword) && strings.EqualFold(os.Getenv("USE_YMGAL_OPTIMIZATION"), "true") {
 		ymgalKeyword, err := ymgalGetGameString(keyword)
 		if err != nil {
 			logrus.WithField("guildID", i.GuildID).Warn(err)
