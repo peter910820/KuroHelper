@@ -1,4 +1,4 @@
-# KuroHelper
+# kurohelper
 
 [![made-with-python](https://img.shields.io/badge/Made%20with-Golnag-00A7D0.svg)](https://www.python.org/)
 [![Static Badge](https://img.shields.io/badge/Golang-1.24%2B-00A7D0)](https://www.python.org/downloads/release/python-3100/)
