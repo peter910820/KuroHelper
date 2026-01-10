@@ -5,6 +5,7 @@ import (
 	"kurohelper/store"
 	"kurohelper/utils"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/joho/godotenv"
@@ -63,9 +64,11 @@ func Init(stopChan <-chan struct{}) {
 	}
 
 	// ymgal init
-	err = ymgalInit()
-	if err != nil {
-		logrus.Fatal(err)
+	if strings.EqualFold(os.Getenv("INIT_YMGAL"), "true") {
+		err = ymgalInit()
+		if err != nil {
+			logrus.Fatal(err)
+		}
 	}
 
 	store.InitUser()
