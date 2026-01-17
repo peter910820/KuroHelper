@@ -5,48 +5,56 @@ import (
 	"time"
 
 	kurohelpercore "github.com/kuro-helper/kurohelper-core/v3"
+	"github.com/kuro-helper/kurohelper-core/v3/vndb"
 )
 
 // cache struct
-type Cache struct {
-	Value    any
+type Cache[T any] struct {
+	Value    T
 	ExpireAt time.Time
 }
 
-type CacheStore struct {
-	data       map[string]*Cache
+// CacheStore 泛型快取儲存
+// T 約束快取中儲存的資料型別
+type CacheStore[T any] struct {
+	data       map[string]*Cache[T]
 	expireTime time.Duration
 	mu         sync.RWMutex
 }
 
 var (
-	// 一般查詢快取
-	SearchCache = NewCacheStore(15 * time.Minute)
+	// 一般查詢快取 (可儲存多種型別，使用 any)
+	SearchCache = NewCacheStore[any](15 * time.Minute)
 	// 個人資料快取
-	UserInfoCache = NewCacheStore(10 * time.Minute)
+	UserInfoCache = NewCacheStore[any](10 * time.Minute)
+	// 提交資料快取
+	// SubmitDataCache = NewCacheStore[any](240 * time.Minute)
+
+	// 新版查詢公司品牌快取
+	SearchBrandCache = NewCacheStore[*vndb.ProducerSearchResponse](180 * time.Minute) // 三小時過期
 )
 
-// make new cache store
-func NewCacheStore(expireTime time.Duration) *CacheStore {
-	return &CacheStore{
-		data:       make(map[string]*Cache),
+// NewCacheStore 建立新的快取儲存
+func NewCacheStore[T any](expireTime time.Duration) *CacheStore[T] {
+	return &CacheStore[T]{
+		data:       make(map[string]*Cache[T]),
 		expireTime: expireTime,
 	}
 }
 
-// set cache
-func (c *CacheStore) Set(key string, value any) {
+// Set 設定快取
+func (c *CacheStore[T]) Set(key string, value T) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	c.data[key] = &Cache{
+	c.data[key] = &Cache[T]{
 		Value:    value,
 		ExpireAt: time.Now().Add(c.expireTime),
 	}
 }
 
-// get cache
-func (c *CacheStore) Get(key string) (any, error) {
+// Get 取得快取
+func (c *CacheStore[T]) Get(key string) (T, error) {
 	c.mu.RLock()
 	item, ok := c.data[key]
 	c.mu.RUnlock()
@@ -56,14 +64,15 @@ func (c *CacheStore) Get(key string) (any, error) {
 		c.mu.Lock()
 		delete(c.data, key)
 		c.mu.Unlock()
-		return nil, kurohelpercore.ErrCacheLost
+		var zero T
+		return zero, kurohelpercore.ErrCacheLost
 	}
 
 	return item.Value, nil
 }
 
-// clean all cache
-func (c *CacheStore) Clean() (count int) {
+// Clean 清除所有快取
+func (c *CacheStore[T]) Clean() (count int) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
