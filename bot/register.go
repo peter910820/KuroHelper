@@ -140,7 +140,7 @@ func galgameCommands() []*discordgo.ApplicationCommand {
 		},
 		{
 			Name:        "查詢公司品牌",
-			Description: "根據關鍵字查詢公司品牌資料(VNDB)",
+			Description: "根據關鍵字查詢公司品牌資料",
 			Options: []*discordgo.ApplicationCommandOption{
 				{
 					Type:        discordgo.ApplicationCommandOptionString,
@@ -304,6 +304,18 @@ func selfDatabaseCommands() []*discordgo.ApplicationCommand {
 		{
 			Name:        "刪除收藏",
 			Description: "刪除個人建檔的收藏資料",
+			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "keyword",
+					Description: "關鍵字",
+					Required:    true,
+				},
+			},
+		},
+		{
+			Name:        "查詢公司品牌v2",
+			Description: "根據關鍵字查詢公司品牌資料(VNDB)",
 			Options: []*discordgo.ApplicationCommandOption{
 				{
 					Type:        discordgo.ApplicationCommandOptionString,
