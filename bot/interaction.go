@@ -28,6 +28,8 @@ func onInteractionApplicationCommand(s *discordgo.Session, i *discordgo.Interact
 		go handlers.VndbStats(s, i)
 	case "查詢遊戲":
 		go handlers.SearchGame(s, i, nil)
+	case "查詢公司品牌v2":
+		go handlers.SearchBrandV2(s, i, nil)
 	case "查詢公司品牌":
 		go handlers.SearchBrand(s, i, nil)
 	case "查詢創作者":
@@ -56,34 +58,44 @@ func onInteractionApplicationCommand(s *discordgo.Session, i *discordgo.Interact
 // 事件是InteractionMessageComponent(點擊按鈕)的處理
 func onInteractionMessageComponent(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	cidStringSlice := strings.Split(i.MessageComponentData().CustomID, "|")
-	// 安全檢查，確保CID建立邏輯有誤的話不會出問題
-	if len(cidStringSlice) > 1 {
-		cid := utils.NewCID(cidStringSlice)
-		switch cid.GetCommandName() {
-		// case CustomIDTypeAddWish:
-		case "查詢遊戲":
-			go handlers.SearchGame(s, i, &cid)
-		case "查詢公司品牌":
-			go handlers.SearchBrand(s, i, &cid)
-		case "查詢創作者":
-			go handlers.SearchCreator(s, i, &cid)
-		case "查詢音樂":
-			go handlers.SearchMusic(s, i, &cid)
-		case "查詢角色":
-			go handlers.SearchCharacter(s, i, &cid)
-		case "加已玩":
-			go handlers.AddHasPlayed(s, i, &cid)
-		case "加收藏":
-			go handlers.AddInWish(s, i, &cid)
-		case "個人資料":
-			go handlers.GetUserinfo(s, i, &cid)
-		case "刪除已玩":
-			go handlers.RemoveHasPlayed(s, i, &cid)
-		case "刪除收藏":
-			go handlers.RemoveInWish(s, i, &cid)
+	// 新版CID 要轉換成CIDV2
+	if strings.HasPrefix(cidStringSlice[0], "B@") {
+		cid, err := utils.ParseCIDV2(i.MessageComponentData().CustomID)
+		if err != nil {
+			utils.HandleError(kurohelpererrors.ErrCIDWrongFormat, s, i)
+			return
 		}
+		go handlers.SearchBrandV2(s, i, cid)
 	} else {
-		utils.HandleError(kurohelpererrors.ErrCIDWrongFormat, s, i)
-		return
+		// 安全檢查，確保CID建立邏輯有誤的話不會出問題
+		if len(cidStringSlice) > 1 {
+			cid := utils.NewCID(cidStringSlice)
+			switch cid.GetCommandName() {
+			// case CustomIDTypeAddWish:
+			case "查詢遊戲":
+				go handlers.SearchGame(s, i, &cid)
+			case "查詢公司品牌":
+				go handlers.SearchBrand(s, i, &cid)
+			case "查詢創作者":
+				go handlers.SearchCreator(s, i, &cid)
+			case "查詢音樂":
+				go handlers.SearchMusic(s, i, &cid)
+			case "查詢角色":
+				go handlers.SearchCharacter(s, i, &cid)
+			case "加已玩":
+				go handlers.AddHasPlayed(s, i, &cid)
+			case "加收藏":
+				go handlers.AddInWish(s, i, &cid)
+			case "個人資料":
+				go handlers.GetUserinfo(s, i, &cid)
+			case "刪除已玩":
+				go handlers.RemoveHasPlayed(s, i, &cid)
+			case "刪除收藏":
+				go handlers.RemoveInWish(s, i, &cid)
+			}
+		} else {
+			utils.HandleError(kurohelpererrors.ErrCIDWrongFormat, s, i)
+			return
+		}
 	}
 }
