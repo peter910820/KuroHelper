@@ -30,6 +30,9 @@ func SearchBrandV2(s *discordgo.Session, i *discordgo.InteractionCreate, cid *ut
 	if cid == nil {
 		vndbSearchBrandV2(s, i)
 	} else {
+		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseDeferredMessageUpdate,
+		})
 		switch cid.GetBehaviorID() {
 		case utils.PageBehavior:
 			vndbSearchBrandWithCIDV2(s, i, cid)
@@ -201,11 +204,6 @@ func vndbSearchBrandWithSelectMenuCIDV2(s *discordgo.Session, i *discordgo.Inter
 		utils.HandleErrorV2(kurohelpercore.ErrCacheLost, s, i)
 		return
 	}
-
-	// 這邊要查批評空間，長時間查詢
-	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseDeferredMessageUpdate,
-	})
 
 	res, err := vndb.GetVNByFuzzy(selectMenuCID.Value)
 	logrus.WithField("guildID", i.GuildID).Infof("vndb搜尋遊戲: %s", selectMenuCID.Value)
