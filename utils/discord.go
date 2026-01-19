@@ -196,10 +196,6 @@ func InteractionRespondV2(s *discordgo.Session, i *discordgo.InteractionCreate, 
 }
 
 func InteractionRespondEditComplex(s *discordgo.Session, i *discordgo.InteractionCreate, components []discordgo.MessageComponent) {
-	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseDeferredMessageUpdate,
-	})
-
 	_, err := s.ChannelMessageEditComplex(&discordgo.MessageEdit{
 		ID:         i.Message.ID,
 		Channel:    i.Message.ChannelID,

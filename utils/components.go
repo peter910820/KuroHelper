@@ -7,9 +7,48 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
+type SelectMenuItem struct {
+	Title  string
+	VndbID string
+}
+
 var (
 	ErrMakeChangePageComponentIndexZero = errors.New("utils: make change page component page index parameters can not be zero")
 )
+
+func MakeSelectMenuComponent(cacheID string, gameData []SelectMenuItem) *discordgo.ActionsRow {
+	menuOptions := []discordgo.SelectMenuOption{}
+
+	for _, gd := range gameData {
+		menuOptions = append(menuOptions, discordgo.SelectMenuOption{
+			Label: gd.Title,
+			Value: gd.VndbID,
+		})
+	}
+
+	return &discordgo.ActionsRow{
+		Components: []discordgo.MessageComponent{
+			discordgo.SelectMenu{
+				CustomID:    MakeSelectMenuCIDV2(cacheID),
+				Placeholder: "選擇遊戲查看詳細",
+				Options:     menuOptions,
+			},
+		},
+	}
+}
+
+// 製作回到主頁的Component
+func MakeBackToHomeComponent(cacheID string) *discordgo.ActionsRow {
+	return &discordgo.ActionsRow{
+		Components: []discordgo.MessageComponent{
+			discordgo.Button{
+				Label:    "🏠回到主頁",
+				Style:    discordgo.PrimaryButton,
+				CustomID: MakeBackToHomeCIDV2(cacheID),
+			},
+		},
+	}
+}
 
 // 製作翻頁Component
 func MakeChangePageComponent(currentPage int, totalPage int, cacheID string) (*discordgo.ActionsRow, error) {
