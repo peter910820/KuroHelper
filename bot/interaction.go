@@ -65,6 +65,11 @@ func onInteractionMessageComponent(s *discordgo.Session, i *discordgo.Interactio
 			utils.HandleError(kurohelpererrors.ErrCIDWrongFormat, s, i)
 			return
 		}
+
+		// 下拉選單選擇遊戲時，修改Value值
+		if cid.GetBehaviorID() == utils.SelectMenuBehavior {
+			cid.ChangeValue(i.MessageComponentData().Values[0])
+		}
 		go handlers.SearchBrandV2(s, i, cid)
 	} else {
 		// 安全檢查，確保CID建立邏輯有誤的話不會出問題

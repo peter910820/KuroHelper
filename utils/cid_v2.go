@@ -12,8 +12,8 @@ type (
 	//
 	// 這個原型型別只是方便後續轉換，直接拿本體使用會有型別不安全問題
 	CIDV2 struct {
-		cacheId    string
 		behaviorID BehaviorID
+		cacheId    string
 		value      string
 	}
 
@@ -21,15 +21,33 @@ type (
 
 	// 翻頁CID
 	PageCIDV2 struct {
-		CacheId    string
 		BehaviorID BehaviorID
+		CacheId    string
 		Value      int
+	}
+
+	// 選單CID
+	SelectMenuCIDV2 struct {
+		BehaviorID BehaviorID
+		CacheId    string
+		Value      string
+	}
+
+	// 回到主頁CID
+	BackToHomeCIDV2 struct {
+		BehaviorID BehaviorID
+		CacheId    string
+		// 回到主頁CID不需要Value
 	}
 )
 
 const (
 	// PageBehavior Value會是int
 	PageBehavior BehaviorID = "P"
+	// SelectMenuBehavior Value會是string(選擇後從Discord API獲得)
+	SelectMenuBehavior BehaviorID = "S"
+	// BackToHomeBehavior 不會有Value
+	BackToHomeBehavior BehaviorID = "H"
 )
 
 var (
@@ -71,14 +89,52 @@ func (c CIDV2) ToPageCIDV2() (*PageCIDV2, error) {
 	}, nil
 }
 
+func (c CIDV2) ToSelectMenuCIDV2() *SelectMenuCIDV2 {
+	return &SelectMenuCIDV2{
+		CacheId:    c.cacheId,
+		BehaviorID: c.behaviorID,
+		Value:      c.value,
+	}
+}
+
+func (c CIDV2) ToBackToHomeCIDV2() *BackToHomeCIDV2 {
+	return &BackToHomeCIDV2{
+		CacheId:    c.cacheId,
+		BehaviorID: c.behaviorID,
+	}
+}
+
+// 修改Value值(SelectMenuBehavior時使用)
+func (c *CIDV2) ChangeValue(value string) {
+	c.value = value
+}
+
 /*
  * CID產生相關
  */
 
 // 產生page的CID
+//
+// CID標示符是P
 func MakePageCIDV2(index int, cacheID string, disable bool) string {
 	if disable {
 		return fmt.Sprintf("%s:P:99", cacheID)
 	}
 	return fmt.Sprintf("%s:P:%d", cacheID, index)
+}
+
+// 產生select menu的CID
+//
+// 產生select menu的CID時不需要先預留Value，Value會在選單選擇時才設定(Discord會自動設定)
+//
+// CID標示符是S
+func MakeSelectMenuCIDV2(cacheID string) string {
+	return fmt.Sprintf("%s:S:", cacheID)
+}
+
+// 產生回到主頁的CID
+//
+// CID標示符是H
+func MakeBackToHomeCIDV2(cacheID string) string {
+	return fmt.Sprintf("%s:H:", cacheID)
 }
