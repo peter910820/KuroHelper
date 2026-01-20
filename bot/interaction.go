@@ -28,6 +28,8 @@ func onInteractionApplicationCommand(s *discordgo.Session, i *discordgo.Interact
 		go handlers.VndbStats(s, i)
 	case "查詢遊戲":
 		go handlers.SearchGame(s, i, nil)
+	case "查詢遊戲v2":
+		go handlers.SearchGameV2(s, i, nil)
 	case "查詢公司品牌v2":
 		go handlers.SearchBrandV2(s, i, nil)
 	case "查詢公司品牌":
@@ -59,7 +61,7 @@ func onInteractionApplicationCommand(s *discordgo.Session, i *discordgo.Interact
 func onInteractionMessageComponent(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	cidStringSlice := strings.Split(i.MessageComponentData().CustomID, "|")
 	// 新版CID 要轉換成CIDV2
-	if strings.HasPrefix(cidStringSlice[0], "B@") {
+	if strings.HasPrefix(cidStringSlice[0], "B@") || strings.HasPrefix(cidStringSlice[0], "G@") {
 		cid, err := utils.ParseCIDV2(i.MessageComponentData().CustomID)
 		if err != nil {
 			utils.HandleError(kurohelpererrors.ErrCIDWrongFormat, s, i)
@@ -70,7 +72,12 @@ func onInteractionMessageComponent(s *discordgo.Session, i *discordgo.Interactio
 		if cid.GetBehaviorID() == utils.SelectMenuBehavior {
 			cid.ChangeValue(i.MessageComponentData().Values[0])
 		}
-		go handlers.SearchBrandV2(s, i, cid)
+
+		if strings.HasPrefix(cidStringSlice[0], "G@") {
+			go handlers.SearchGameV2(s, i, cid)
+		} else {
+			go handlers.SearchBrandV2(s, i, cid)
+		}
 	} else {
 		// 安全檢查，確保CID建立邏輯有誤的話不會出問題
 		if len(cidStringSlice) > 1 {

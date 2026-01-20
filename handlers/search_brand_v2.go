@@ -162,8 +162,8 @@ func buildSearchBrandComponents(res *vndb.ProducerSearchResponse, currentPage in
 		}
 
 		brandMenuItems = append(brandMenuItems, utils.SelectMenuItem{
-			Title:  title,
-			VndbID: item.ID,
+			Title: title,
+			ID:    item.ID,
 		})
 	}
 
@@ -379,13 +379,16 @@ func vndbSearchBrandWithSelectMenuCIDV2(s *discordgo.Session, i *discordgo.Inter
 		},
 	}
 
-	// 如果有圖片，添加到 Section 的 accessory
-	if strings.TrimSpace(imageURL) != "" {
-		section.Accessory = &discordgo.Thumbnail{
-			Media: discordgo.UnfurledMediaItem{
-				URL: imageURL,
-			},
-		}
+	// 如果有圖片，使用真實圖片；沒有圖片則使用占位符
+	thumbnailURL := imageURL
+	if strings.TrimSpace(thumbnailURL) == "" {
+		thumbnailURL = "https://image.kurohelper.com/docs/neneGIF.gif"
+	}
+
+	section.Accessory = &discordgo.Thumbnail{
+		Media: discordgo.UnfurledMediaItem{
+			URL: thumbnailURL,
+		},
 	}
 
 	containerComponents := []discordgo.MessageComponent{

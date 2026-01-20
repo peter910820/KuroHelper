@@ -227,3 +227,14 @@ func MakeErrorComponentV2(errMsg string) []discordgo.MessageComponent {
 		},
 	}
 }
+
+func WebhookEditRespond(s *discordgo.Session, i *discordgo.InteractionCreate, components []discordgo.MessageComponent) {
+	_, err := s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
+		Flags:      discordgo.MessageFlagsIsComponentsV2,
+		Components: &components,
+	})
+	if err != nil {
+		logrus.Error(err)
+		InteractionRespond(s, i, "該功能目前異常，請稍後再嘗試")
+	}
+}

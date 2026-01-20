@@ -8,8 +8,8 @@ import (
 )
 
 type SelectMenuItem struct {
-	Title  string
-	VndbID string
+	Title string
+	ID    string
 }
 
 var (
@@ -22,7 +22,7 @@ func MakeSelectMenuComponent(cacheID string, gameData []SelectMenuItem) *discord
 	for _, gd := range gameData {
 		menuOptions = append(menuOptions, discordgo.SelectMenuOption{
 			Label: gd.Title,
-			Value: gd.VndbID,
+			Value: gd.ID,
 		})
 	}
 
