@@ -7,12 +7,9 @@ import (
 
 // 註冊命令
 func RegisterCommand(s *discordgo.Session) {
-	var guildCmds []*discordgo.ApplicationCommand
 	var globalCmds []*discordgo.ApplicationCommand
 	// guildCmds = append(guildCmds, managementCommands()...)
 	globalCmds = append(globalCmds, galgameCommands()...)
-	globalCmds = append(globalCmds, vndbCommands()...)
-	globalCmds = append(guildCmds, selfDatabaseCommands()...)
 
 	// guild commands
 	// main mangement group ID
@@ -284,6 +281,30 @@ func galgameCommands() []*discordgo.ApplicationCommand {
 			Name:        "個人資料",
 			Description: "取得自己的個人資料(KuroHelper)",
 		},
+		{
+			Name:        "查詢公司品牌v2",
+			Description: "根據關鍵字查詢公司品牌資料(VNDB)",
+			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "keyword",
+					Description: "關鍵字",
+					Required:    true,
+				},
+			},
+		},
+		{
+			Name:        "查詢遊戲v2",
+			Description: "根據關鍵字查詢遊戲資料",
+			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "keyword",
+					Description: "關鍵字",
+					Required:    true,
+				},
+			},
+		},
 	}
 }
 
@@ -304,18 +325,6 @@ func selfDatabaseCommands() []*discordgo.ApplicationCommand {
 		{
 			Name:        "刪除收藏",
 			Description: "刪除個人建檔的收藏資料",
-			Options: []*discordgo.ApplicationCommandOption{
-				{
-					Type:        discordgo.ApplicationCommandOptionString,
-					Name:        "keyword",
-					Description: "關鍵字",
-					Required:    true,
-				},
-			},
-		},
-		{
-			Name:        "查詢公司品牌v2",
-			Description: "根據關鍵字查詢公司品牌資料(VNDB)",
 			Options: []*discordgo.ApplicationCommandOption{
 				{
 					Type:        discordgo.ApplicationCommandOptionString,

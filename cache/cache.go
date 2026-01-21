@@ -31,7 +31,7 @@ var (
 	// SubmitDataCache = NewCacheStore[any](240 * time.Minute)
 
 	// 新版查詢公司品牌快取
-	SearchBrandCache = NewCacheStore[*vndb.ProducerSearchResponse](180 * time.Minute) // 三小時過期
+	SearchBrandCache = NewCacheStore[*vndb.ProducerSearchResponse](2 * time.Hour) // 二小時過期
 )
 
 // NewCacheStore 建立新的快取儲存

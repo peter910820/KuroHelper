@@ -181,6 +181,7 @@ func GetAvatarURL(user *discordgo.User) string {
 //以下為新版API架構Utils
 //
 
+// Interaction第一次觸發使用
 func InteractionRespondV2(s *discordgo.Session, i *discordgo.InteractionCreate, components []discordgo.MessageComponent) {
 	err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
@@ -195,6 +196,19 @@ func InteractionRespondV2(s *discordgo.Session, i *discordgo.InteractionCreate, 
 	}
 }
 
+// Interaction第一次觸發使用(延遲回應狀況)
+func WebhookEditRespond(s *discordgo.Session, i *discordgo.InteractionCreate, components []discordgo.MessageComponent) {
+	_, err := s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
+		Flags:      discordgo.MessageFlagsIsComponentsV2,
+		Components: &components,
+	})
+	if err != nil {
+		logrus.Error(err)
+		InteractionRespond(s, i, "該功能目前異常，請稍後再嘗試")
+	}
+}
+
+// Interaction後續觸發使用(不管有沒有延遲)
 func InteractionRespondEditComplex(s *discordgo.Session, i *discordgo.InteractionCreate, components []discordgo.MessageComponent) {
 	_, err := s.ChannelMessageEditComplex(&discordgo.MessageEdit{
 		ID:         i.Message.ID,
@@ -204,26 +218,5 @@ func InteractionRespondEditComplex(s *discordgo.Session, i *discordgo.Interactio
 	if err != nil {
 		logrus.Error(err)
 		InteractionRespond(s, i, "該功能目前異常，請稍後再嘗試")
-	}
-}
-
-func MakeErrorComponentV2(errMsg string) []discordgo.MessageComponent {
-	color := 0xcc543a
-	divider := true
-	containerComponents := []discordgo.MessageComponent{
-		discordgo.TextDisplay{
-			Content: "# ❌錯誤 \n## " + errMsg,
-		},
-		discordgo.Separator{Divider: &divider},
-		discordgo.TextDisplay{
-			Content: "聯絡我們: https://discord.gg/6rkrm7tsXr",
-		},
-	}
-
-	return []discordgo.MessageComponent{
-		discordgo.Container{
-			AccentColor: &color,
-			Components:  containerComponents,
-		},
 	}
 }

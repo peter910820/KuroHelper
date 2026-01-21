@@ -17,6 +17,10 @@ const (
 	Wish
 )
 
+const (
+	placeholderImageURL = "https://image.kurohelper.com/docs/neneGIF.gif"
+)
+
 // 資料分頁
 func pagination[T any](result *[]T, page int, useCache bool) bool {
 	resultLen := len(*result)

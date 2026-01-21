@@ -49,7 +49,7 @@ func SearchBrandV2(s *discordgo.Session, i *discordgo.InteractionCreate, cid *ut
 func vndbSearchBrandV2(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	keyword, err := utils.GetOptions(i, "keyword")
 	if err != nil {
-		utils.HandleErrorOnInteractionApplicationCommand(err, s, i)
+		utils.HandleErrorV2(err, s, i, utils.InteractionRespondV2)
 		return
 	}
 
@@ -57,7 +57,7 @@ func vndbSearchBrandV2(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	res, err := vndb.GetProducerByFuzzy(keyword, "")
 	if err != nil {
-		utils.HandleErrorOnInteractionApplicationCommand(err, s, i)
+		utils.HandleErrorV2(err, s, i, utils.InteractionRespondV2)
 		return
 	}
 
@@ -67,7 +67,7 @@ func vndbSearchBrandV2(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	components, err := buildSearchBrandComponents(res, 1, cacheID)
 	if err != nil {
-		utils.HandleErrorOnInteractionApplicationCommand(err, s, i)
+		utils.HandleErrorV2(err, s, i, utils.InteractionRespondV2)
 		return
 	}
 	utils.InteractionRespondV2(s, i, components)
@@ -78,25 +78,25 @@ func vndbSearchBrandV2(s *discordgo.Session, i *discordgo.InteractionCreate) {
 // 目前只有翻頁事件
 func vndbSearchBrandWithCIDV2(s *discordgo.Session, i *discordgo.InteractionCreate, cid *utils.CIDV2) {
 	if cid.GetBehaviorID() != utils.PageBehavior {
-		utils.HandleErrorV2(errors.New("handlers: cid behavior id error"), s, i)
+		utils.HandleErrorV2(errors.New("handlers: cid behavior id error"), s, i, utils.InteractionRespondEditComplex)
 		return
 	}
 
 	pageCID, err := cid.ToPageCIDV2()
 	if err != nil {
-		utils.HandleErrorV2(err, s, i)
+		utils.HandleErrorV2(err, s, i, utils.InteractionRespondEditComplex)
 		return
 	}
 
 	cacheValue, err := cache.SearchBrandCache.Get(pageCID.CacheId)
 	if err != nil {
-		utils.HandleErrorV2(err, s, i)
+		utils.HandleErrorV2(err, s, i, utils.InteractionRespondEditComplex)
 		return
 	}
 
 	components, err := buildSearchBrandComponents(cacheValue, pageCID.Value, pageCID.CacheId)
 	if err != nil {
-		utils.HandleErrorV2(err, s, i)
+		utils.HandleErrorV2(err, s, i, utils.InteractionRespondEditComplex)
 		return
 	}
 	utils.InteractionRespondEditComplex(s, i, components)
@@ -142,7 +142,7 @@ func buildSearchBrandComponents(res *vndb.ProducerSearchResponse, currentPage in
 				},
 				Accessory: &discordgo.Thumbnail{
 					Media: discordgo.UnfurledMediaItem{
-						URL: "https://image.kurohelper.com/docs/neneGIF.gif",
+						URL: placeholderImageURL,
 					},
 				},
 			})
@@ -162,8 +162,8 @@ func buildSearchBrandComponents(res *vndb.ProducerSearchResponse, currentPage in
 		}
 
 		brandMenuItems = append(brandMenuItems, utils.SelectMenuItem{
-			Title:  title,
-			VndbID: item.ID,
+			Title: title,
+			ID:    item.ID,
 		})
 	}
 
@@ -193,7 +193,7 @@ func buildSearchBrandComponents(res *vndb.ProducerSearchResponse, currentPage in
 
 func vndbSearchBrandWithSelectMenuCIDV2(s *discordgo.Session, i *discordgo.InteractionCreate, cid *utils.CIDV2) {
 	if cid.GetBehaviorID() != utils.SelectMenuBehavior {
-		utils.HandleErrorV2(errors.New("handlers: cid behavior id error"), s, i)
+		utils.HandleErrorV2(errors.New("handlers: cid behavior id error"), s, i, utils.InteractionRespondEditComplex)
 		return
 	}
 
@@ -201,14 +201,14 @@ func vndbSearchBrandWithSelectMenuCIDV2(s *discordgo.Session, i *discordgo.Inter
 
 	// 過期直接返回錯誤
 	if !cache.SearchBrandCache.Check(selectMenuCID.CacheId) {
-		utils.HandleErrorV2(kurohelpercore.ErrCacheLost, s, i)
+		utils.HandleErrorV2(kurohelpercore.ErrCacheLost, s, i, utils.InteractionRespondEditComplex)
 		return
 	}
 
 	res, err := vndb.GetVNByFuzzy(selectMenuCID.Value)
 	logrus.WithField("guildID", i.GuildID).Infof("vndb搜尋遊戲: %s", selectMenuCID.Value)
 	if err != nil {
-		utils.HandleErrorV2(err, s, i)
+		utils.HandleErrorV2(err, s, i, utils.InteractionRespondEditComplex)
 		return
 	}
 	/* 處理回傳結構 */
@@ -379,13 +379,16 @@ func vndbSearchBrandWithSelectMenuCIDV2(s *discordgo.Session, i *discordgo.Inter
 		},
 	}
 
-	// 如果有圖片，添加到 Section 的 accessory
-	if strings.TrimSpace(imageURL) != "" {
-		section.Accessory = &discordgo.Thumbnail{
-			Media: discordgo.UnfurledMediaItem{
-				URL: imageURL,
-			},
-		}
+	// 如果有圖片，使用真實圖片；沒有圖片則使用占位符
+	thumbnailURL := imageURL
+	if strings.TrimSpace(thumbnailURL) == "" {
+		thumbnailURL = placeholderImageURL
+	}
+
+	section.Accessory = &discordgo.Thumbnail{
+		Media: discordgo.UnfurledMediaItem{
+			URL: thumbnailURL,
+		},
 	}
 
 	containerComponents := []discordgo.MessageComponent{
@@ -410,7 +413,7 @@ func vndbSearchBrandWithSelectMenuCIDV2(s *discordgo.Session, i *discordgo.Inter
 
 func vndbSearchBrandWithBackToHomeCIDV2(s *discordgo.Session, i *discordgo.InteractionCreate, cid *utils.CIDV2) {
 	if cid.GetBehaviorID() != utils.BackToHomeBehavior {
-		utils.HandleErrorV2(errors.New("handlers: cid behavior id error"), s, i)
+		utils.HandleErrorV2(errors.New("handlers: cid behavior id error"), s, i, utils.InteractionRespondEditComplex)
 		return
 	}
 
@@ -422,13 +425,13 @@ func vndbSearchBrandWithBackToHomeCIDV2(s *discordgo.Session, i *discordgo.Inter
 
 	cacheValue, err := cache.SearchBrandCache.Get(backToHomeCID.CacheId)
 	if err != nil {
-		utils.HandleErrorV2(err, s, i)
+		utils.HandleErrorV2(err, s, i, utils.InteractionRespondEditComplex)
 		return
 	}
 
 	components, err := buildSearchBrandComponents(cacheValue, 1, backToHomeCID.CacheId)
 	if err != nil {
-		utils.HandleErrorV2(err, s, i)
+		utils.HandleErrorV2(err, s, i, utils.InteractionRespondEditComplex)
 		return
 	}
 	utils.InteractionRespondEditComplex(s, i, components)

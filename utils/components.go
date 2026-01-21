@@ -8,8 +8,8 @@ import (
 )
 
 type SelectMenuItem struct {
-	Title  string
-	VndbID string
+	Title string
+	ID    string
 }
 
 var (
@@ -22,7 +22,7 @@ func MakeSelectMenuComponent(cacheID string, gameData []SelectMenuItem) *discord
 	for _, gd := range gameData {
 		menuOptions = append(menuOptions, discordgo.SelectMenuOption{
 			Label: gd.Title,
-			Value: gd.VndbID,
+			Value: gd.ID,
 		})
 	}
 
@@ -98,4 +98,25 @@ func MakeChangePageComponent(currentPage int, totalPage int, cacheID string) (*d
 			nextButton,
 		},
 	}, nil
+}
+
+func MakeErrorComponentV2(errMsg string) []discordgo.MessageComponent {
+	color := 0xcc543a
+	divider := true
+	containerComponents := []discordgo.MessageComponent{
+		discordgo.TextDisplay{
+			Content: "# ❌錯誤 \n## " + errMsg,
+		},
+		discordgo.Separator{Divider: &divider},
+		discordgo.TextDisplay{
+			Content: "聯絡我們: https://discord.gg/6rkrm7tsXr",
+		},
+	}
+
+	return []discordgo.MessageComponent{
+		discordgo.Container{
+			AccentColor: &color,
+			Components:  containerComponents,
+		},
+	}
 }
