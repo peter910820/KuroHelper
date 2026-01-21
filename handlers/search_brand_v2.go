@@ -142,7 +142,7 @@ func buildSearchBrandComponents(res *vndb.ProducerSearchResponse, currentPage in
 				},
 				Accessory: &discordgo.Thumbnail{
 					Media: discordgo.UnfurledMediaItem{
-						URL: "https://image.kurohelper.com/docs/neneGIF.gif",
+						URL: placeholderImageURL,
 					},
 				},
 			})
@@ -382,7 +382,7 @@ func vndbSearchBrandWithSelectMenuCIDV2(s *discordgo.Session, i *discordgo.Inter
 	// 如果有圖片，使用真實圖片；沒有圖片則使用占位符
 	thumbnailURL := imageURL
 	if strings.TrimSpace(thumbnailURL) == "" {
-		thumbnailURL = "https://image.kurohelper.com/docs/neneGIF.gif"
+		thumbnailURL = placeholderImageURL
 	}
 
 	section.Accessory = &discordgo.Thumbnail{

@@ -7,10 +7,12 @@ import (
 	"kurohelper/cache"
 	"kurohelper/store"
 	"kurohelper/utils"
+	"os"
 	"strconv"
 	"strings"
 
 	"github.com/bwmarrin/discordgo"
+	kurohelpercore "github.com/kuro-helper/kurohelper-core/v3"
 	"github.com/kuro-helper/kurohelper-core/v3/erogs"
 	"github.com/kuro-helper/kurohelper-core/v3/seiya"
 	"github.com/kuro-helper/kurohelper-core/v3/vndb"
@@ -57,8 +59,6 @@ func erogsSearchGameListV2(s *discordgo.Session, i *discordgo.InteractionCreate)
 		return
 	}
 
-	logrus.WithField("interaction", i).Infof("erogs查詢遊戲列表: %s", keyword)
-
 	// 將 keyword 轉成 base64 作為快取鍵
 	cacheKey := searchGameListCachePrefix + base64.RawURLEncoding.EncodeToString([]byte(keyword))
 
@@ -80,6 +80,21 @@ func erogsSearchGameListV2(s *discordgo.Session, i *discordgo.InteractionCreate)
 	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseDeferredChannelMessageWithSource,
 	})
+
+	// 條件符合就用月幕做跳板
+	if utils.IsAllHanziOrDigit(keyword) && strings.EqualFold(os.Getenv("USE_YMGAL_OPTIMIZATION"), "true") {
+		logrus.WithField("interaction", i).Infof("ymgal查詢遊戲(跳板): %s", keyword)
+		ymgalKeyword, err := ymgalGetGameString(keyword)
+		if err != nil {
+			logrus.WithField("guildID", i.GuildID).Warn(err)
+		}
+
+		if strings.TrimSpace(ymgalKeyword) != "" {
+			keyword = ymgalKeyword
+		}
+	}
+
+	logrus.WithField("interaction", i).Infof("erogs查詢遊戲列表: %s", keyword)
 
 	res, err := erogs.GetGameListByFuzzy(keyword)
 	if err != nil {
@@ -135,7 +150,7 @@ func buildSearchGameComponents(res *[]erogs.FuzzySearchListResponse, currentPage
 	divider := true
 	containerComponents := []discordgo.MessageComponent{
 		discordgo.TextDisplay{
-			Content: fmt.Sprintf("# 遊戲搜尋\n遊戲筆數: **%d**", totalItems),
+			Content: fmt.Sprintf("# 遊戲搜尋\n遊戲筆數: **%d**\n⭐: 批評空間分數 📊: 投票人數 ⏱️: 遊玩時數 🥰: 開始理解遊戲樂趣時數", totalItems),
 		},
 		discordgo.Separator{Divider: &divider},
 	}
@@ -148,20 +163,41 @@ func buildSearchGameComponents(res *[]erogs.FuzzySearchListResponse, currentPage
 	gameMenuItems := []utils.SelectMenuItem{}
 
 	// 產生遊戲列表組件
-	listData := make([]string, 0, len(pagedResults))
-	for _, r := range pagedResults {
-		listData = append(listData, fmt.Sprintf("**e%-5s**　%s (%s)", strconv.Itoa(r.ID), r.Name, r.Category))
+	for idx, r := range pagedResults {
+		itemNum := start + idx + 1
+		itemContent := fmt.Sprintf("**%d. %s (%s)**\n⭐ **%s** / 📊 **%s**", itemNum, r.Name, r.Category, r.Median, r.TokutenCount)
+		if strings.TrimSpace(r.TotalPlayTimeMedian) != "" {
+			itemContent += fmt.Sprintf(" / ⏱️ **%s**", r.TotalPlayTimeMedian)
+		}
+		if strings.TrimSpace(r.TimeBeforeUnderstandingFunMedian) != "" {
+			itemContent += fmt.Sprintf(" / 🥰 **%s**", r.TimeBeforeUnderstandingFunMedian)
+		}
+
+		// 處理圖片 URL
+		thumbnailURL := ""
+		if strings.TrimSpace(r.DMM) != "" {
+			thumbnailURL = erogs.MakeDMMImageURL(r.DMM)
+		}
+		if strings.TrimSpace(thumbnailURL) == "" {
+			thumbnailURL = placeholderImageURL
+		}
+
+		containerComponents = append(containerComponents, discordgo.Section{
+			Components: []discordgo.MessageComponent{
+				discordgo.TextDisplay{
+					Content: itemContent,
+				},
+			},
+			Accessory: &discordgo.Thumbnail{
+				Media: discordgo.UnfurledMediaItem{
+					URL: thumbnailURL,
+				},
+			},
+		})
 
 		gameMenuItems = append(gameMenuItems, utils.SelectMenuItem{
-			Title: r.Name,
-			ID:    strconv.Itoa(r.ID),
-		})
-	}
-
-	// 將列表內容直接使用 TextDisplay 顯示（不使用 Section 避免 accessory 問題）
-	if len(listData) > 0 {
-		containerComponents = append(containerComponents, discordgo.TextDisplay{
-			Content: strings.Join(listData, "\n"),
+			Title: r.Name + " (" + r.Category + ")",
+			ID:    "e" + strconv.Itoa(r.ID),
 		})
 	}
 
@@ -208,15 +244,23 @@ func erogsSearchGameWithSelectMenuCIDV2(s *discordgo.Session, i *discordgo.Inter
 		},
 	})
 
-	gameID := "e" + selectMenuCID.Value
-
-	res, err := erogs.GetGameByFuzzy(gameID, true)
+	res, err := cache.ErogsGameStore.Get(selectMenuCID.Value)
 	if err != nil {
-		utils.HandleErrorV2(err, s, i, utils.InteractionRespondEditComplex)
-		return
-	}
+		if errors.Is(err, kurohelpercore.ErrCacheLost) {
+			logrus.WithField("guildID", i.GuildID).Infof("erogs查詢遊戲: %s", selectMenuCID.Value)
+			res, err = erogs.GetGameByFuzzy(selectMenuCID.Value, true)
+			if err != nil {
+				utils.HandleErrorV2(err, s, i, utils.InteractionRespondEditComplex)
+				return
+			}
 
-	logrus.WithField("guildID", i.GuildID).Infof("erogs查詢遊戲: %s", gameID)
+			cache.ErogsGameStore.Set(selectMenuCID.Value, res)
+
+		} else {
+			utils.HandleErrorV2(err, s, i, utils.InteractionRespondEditComplex)
+			return
+		}
+	}
 
 	// 處理使用者資訊
 	userID := utils.GetUserID(i)
@@ -344,17 +388,21 @@ func erogsSearchGameWithSelectMenuCIDV2(s *discordgo.Session, i *discordgo.Inter
 		vndbData = fmt.Sprintf("%.1f/%d", vndbRating, vndbVotecount)
 	}
 
-	// 過濾圖片
-	imageURL := res.BannerUrl
-	if i.GuildID != "" {
-		// guild
-		if _, ok := store.GuildDiscordAllowList[i.GuildID]; !ok {
-			imageURL = ""
-		}
-	} else {
-		// DM
-		if _, ok := store.GuildDiscordAllowList[userID]; !ok {
-			imageURL = ""
+	// 過濾圖片 - 使用 DMM 字段
+	imageURL := ""
+	if strings.TrimSpace(res.DMM) != "" {
+		imageURL = erogs.MakeDMMImageURL(res.DMM)
+		// 檢查是否允許顯示圖片
+		if i.GuildID != "" {
+			// guild
+			if _, ok := store.GuildDiscordAllowList[i.GuildID]; !ok {
+				imageURL = ""
+			}
+		} else {
+			// DM
+			if _, ok := store.GuildDiscordAllowList[userID]; !ok {
+				imageURL = ""
+			}
 		}
 	}
 
@@ -433,28 +481,34 @@ func erogsSearchGameWithSelectMenuCIDV2(s *discordgo.Session, i *discordgo.Inter
 	// 合併所有內容
 	fullContent := strings.Join(contentParts, "\n\n")
 
+	// 構建單一 Section，包含所有內容
+	section := discordgo.Section{
+		Components: []discordgo.MessageComponent{
+			discordgo.TextDisplay{
+				Content: fullContent,
+			},
+		},
+	}
+
+	// 如果有圖片，使用真實圖片；沒有圖片則使用占位符
+	thumbnailURL := imageURL
+	if strings.TrimSpace(thumbnailURL) == "" {
+		thumbnailURL = placeholderImageURL
+	}
+
+	section.Accessory = &discordgo.Thumbnail{
+		Media: discordgo.UnfurledMediaItem{
+			URL: thumbnailURL,
+		},
+	}
+
 	containerComponents := []discordgo.MessageComponent{
 		discordgo.TextDisplay{
 			Content: fmt.Sprintf("# %s**%s(%s)**", userData, res.Gamename, res.SellDay),
 		},
 		discordgo.Separator{Divider: &divider},
-		discordgo.TextDisplay{
-			Content: fullContent,
-		},
+		section,
 		discordgo.Separator{Divider: &divider},
-	}
-
-	// 如果有圖片，放在最下面（使用 MediaGallery）
-	if strings.TrimSpace(imageURL) != "" {
-		containerComponents = append(containerComponents, discordgo.MediaGallery{
-			Items: []discordgo.MediaGalleryItem{
-				{
-					Media: discordgo.UnfurledMediaItem{
-						URL: imageURL,
-					},
-				},
-			},
-		})
 	}
 
 	containerComponents = append(containerComponents, utils.MakeBackToHomeComponent(selectMenuCID.CacheId))

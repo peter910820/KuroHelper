@@ -99,3 +99,24 @@ func MakeChangePageComponent(currentPage int, totalPage int, cacheID string) (*d
 		},
 	}, nil
 }
+
+func MakeErrorComponentV2(errMsg string) []discordgo.MessageComponent {
+	color := 0xcc543a
+	divider := true
+	containerComponents := []discordgo.MessageComponent{
+		discordgo.TextDisplay{
+			Content: "# ❌錯誤 \n## " + errMsg,
+		},
+		discordgo.Separator{Divider: &divider},
+		discordgo.TextDisplay{
+			Content: "聯絡我們: https://discord.gg/6rkrm7tsXr",
+		},
+	}
+
+	return []discordgo.MessageComponent{
+		discordgo.Container{
+			AccentColor: &color,
+			Components:  containerComponents,
+		},
+	}
+}
