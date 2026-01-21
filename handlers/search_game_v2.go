@@ -53,7 +53,7 @@ func SearchGameV2(s *discordgo.Session, i *discordgo.InteractionCreate, cid *uti
 func erogsSearchGameListV2(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	keyword, err := utils.GetOptions(i, "keyword")
 	if err != nil {
-		utils.HandleErrorOnInteractionApplicationCommand(err, s, i)
+		utils.HandleErrorV2(err, s, i, utils.InteractionRespondV2)
 		return
 	}
 
@@ -68,7 +68,7 @@ func erogsSearchGameListV2(s *discordgo.Session, i *discordgo.InteractionCreate)
 		// 快取存在，直接使用，不需要延遲傳送
 		components, err := buildSearchGameComponents(&cacheValue, 1, cacheKey)
 		if err != nil {
-			utils.HandleErrorOnInteractionApplicationCommand(err, s, i)
+			utils.HandleErrorV2(err, s, i, utils.InteractionRespondV2)
 			return
 		}
 		utils.InteractionRespondV2(s, i, components)
@@ -83,7 +83,7 @@ func erogsSearchGameListV2(s *discordgo.Session, i *discordgo.InteractionCreate)
 
 	res, err := erogs.GetGameListByFuzzy(keyword)
 	if err != nil {
-		utils.HandleErrorV2(err, s, i)
+		utils.HandleErrorV2(err, s, i, utils.WebhookEditRespond)
 		return
 	}
 
@@ -92,7 +92,7 @@ func erogsSearchGameListV2(s *discordgo.Session, i *discordgo.InteractionCreate)
 
 	components, err := buildSearchGameComponents(res, 1, cacheKey)
 	if err != nil {
-		utils.HandleErrorV2(err, s, i)
+		utils.HandleErrorV2(err, s, i, utils.WebhookEditRespond)
 		return
 	}
 
@@ -102,25 +102,25 @@ func erogsSearchGameListV2(s *discordgo.Session, i *discordgo.InteractionCreate)
 // 查詢遊戲列表(有CID版本)
 func erogsSearchGameListWithCIDV2(s *discordgo.Session, i *discordgo.InteractionCreate, cid *utils.CIDV2) {
 	if cid.GetBehaviorID() != utils.PageBehavior {
-		utils.HandleErrorV2(errors.New("handlers: cid behavior id error"), s, i)
+		utils.HandleErrorV2(errors.New("handlers: cid behavior id error"), s, i, utils.InteractionRespondEditComplex)
 		return
 	}
 
 	pageCID, err := cid.ToPageCIDV2()
 	if err != nil {
-		utils.HandleErrorV2(err, s, i)
+		utils.HandleErrorV2(err, s, i, utils.InteractionRespondEditComplex)
 		return
 	}
 
 	cacheValue, err := cache.ErogsGameListStore.Get(pageCID.CacheId)
 	if err != nil {
-		utils.HandleErrorV2(err, s, i)
+		utils.HandleErrorV2(err, s, i, utils.InteractionRespondEditComplex)
 		return
 	}
 
 	components, err := buildSearchGameComponents(&cacheValue, pageCID.Value, pageCID.CacheId)
 	if err != nil {
-		utils.HandleErrorV2(err, s, i)
+		utils.HandleErrorV2(err, s, i, utils.InteractionRespondEditComplex)
 		return
 	}
 
@@ -192,7 +192,7 @@ func buildSearchGameComponents(res *[]erogs.FuzzySearchListResponse, currentPage
 // 查詢單一遊戲資料(有CID版本，從選單選擇)
 func erogsSearchGameWithSelectMenuCIDV2(s *discordgo.Session, i *discordgo.InteractionCreate, cid *utils.CIDV2) {
 	if cid.GetBehaviorID() != utils.SelectMenuBehavior {
-		utils.HandleErrorV2(errors.New("handlers: cid behavior id error"), s, i)
+		utils.HandleErrorV2(errors.New("handlers: cid behavior id error"), s, i, utils.InteractionRespondEditComplex)
 		return
 	}
 
@@ -212,7 +212,7 @@ func erogsSearchGameWithSelectMenuCIDV2(s *discordgo.Session, i *discordgo.Inter
 
 	res, err := erogs.GetGameByFuzzy(gameID, true)
 	if err != nil {
-		utils.HandleErrorV2(err, s, i)
+		utils.HandleErrorV2(err, s, i, utils.InteractionRespondEditComplex)
 		return
 	}
 
@@ -224,7 +224,7 @@ func erogsSearchGameWithSelectMenuCIDV2(s *discordgo.Session, i *discordgo.Inter
 	_, err = kurohelperdb.GetUserHasPlayed(userID, res.ID)
 	if err != nil {
 		if !errors.Is(err, gorm.ErrRecordNotFound) {
-			utils.HandleErrorV2(err, s, i)
+			utils.HandleErrorV2(err, s, i, utils.InteractionRespondEditComplex)
 			return
 		}
 	} else {
@@ -233,7 +233,7 @@ func erogsSearchGameWithSelectMenuCIDV2(s *discordgo.Session, i *discordgo.Inter
 	_, err = kurohelperdb.GetUserInWish(userID, res.ID)
 	if err != nil {
 		if !errors.Is(err, gorm.ErrRecordNotFound) {
-			utils.HandleErrorV2(err, s, i)
+			utils.HandleErrorV2(err, s, i, utils.InteractionRespondEditComplex)
 			return
 		}
 	} else {
@@ -247,7 +247,7 @@ func erogsSearchGameWithSelectMenuCIDV2(s *discordgo.Session, i *discordgo.Inter
 	if strings.TrimSpace(res.VndbId) != "" {
 		resVndb, err = vndb.GetVNByID(res.VndbId)
 		if err != nil {
-			utils.HandleErrorV2(err, s, i)
+			utils.HandleErrorV2(err, s, i, utils.InteractionRespondEditComplex)
 			return
 		}
 		vndbRating = resVndb.Results[0].Rating
@@ -472,7 +472,7 @@ func erogsSearchGameWithSelectMenuCIDV2(s *discordgo.Session, i *discordgo.Inter
 // 返回遊戲列表主頁(有CID版本)
 func erogsSearchGameWithBackToHomeCIDV2(s *discordgo.Session, i *discordgo.InteractionCreate, cid *utils.CIDV2) {
 	if cid.GetBehaviorID() != utils.BackToHomeBehavior {
-		utils.HandleErrorV2(errors.New("handlers: cid behavior id error"), s, i)
+		utils.HandleErrorV2(errors.New("handlers: cid behavior id error"), s, i, utils.InteractionRespondEditComplex)
 		return
 	}
 
@@ -480,13 +480,13 @@ func erogsSearchGameWithBackToHomeCIDV2(s *discordgo.Session, i *discordgo.Inter
 
 	cacheValue, err := cache.ErogsGameListStore.Get(backToHomeCID.CacheId)
 	if err != nil {
-		utils.HandleErrorV2(err, s, i)
+		utils.HandleErrorV2(err, s, i, utils.InteractionRespondEditComplex)
 		return
 	}
 
 	components, err := buildSearchGameComponents(&cacheValue, 1, backToHomeCID.CacheId)
 	if err != nil {
-		utils.HandleErrorV2(err, s, i)
+		utils.HandleErrorV2(err, s, i, utils.InteractionRespondEditComplex)
 		return
 	}
 	utils.InteractionRespondEditComplex(s, i, components)
