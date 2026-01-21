@@ -1,10 +1,17 @@
 package cache
 
-import "sync"
-
 /*
  * 保留未來擴充用的二階快取
  */
+
+import (
+	"sync"
+	"time"
+)
+
+var (
+	SearchGameCacheStore = NewCacheStoreV2[*InteractionCacheEntity](20 * time.Minute)
+)
 
 type InteractionCacheEntity struct {
 	mu            sync.Mutex

@@ -7,14 +7,24 @@ import (
 	kurohelpercore "github.com/kuro-helper/kurohelper-core/v3"
 	"github.com/kuro-helper/kurohelper-core/v3/erogs"
 	"github.com/kuro-helper/kurohelper-core/v3/vndb"
+	"github.com/kuro-helper/kurohelper-core/v3/ymgal"
 )
 
+// 批評空間快取
 var (
-	SearchGameCacheStore = NewCacheStoreV2[*InteractionCacheEntity](20 * time.Minute)
-
-	VndbGameStore = NewCacheStoreV2[*vndb.ProducerSearchResponse](time.Hour)
-
 	ErogsGameListStore = NewCacheStoreV2[[]erogs.FuzzySearchListResponse](time.Hour)
+	ErogsGameStore     = NewCacheStoreV2[*erogs.FuzzySearchGameResponse](time.Hour)
+)
+
+// VNDB快取
+var (
+	VndbGameListStore = NewCacheStoreV2[*vndb.ProducerSearchResponse](time.Hour)
+	VndbGameStore     = NewCacheStoreV2[*vndb.BasicResponse[vndb.GetVnUseIDResponse]](time.Hour)
+)
+
+// 月幕快取
+var (
+	YmgalGame = NewCacheStoreV2[*ymgal.SearchGameResp](time.Hour)
 )
 
 // cache struct
