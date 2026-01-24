@@ -37,7 +37,7 @@ func onInteractionApplicationCommand(s *discordgo.Session, i *discordgo.Interact
 	case "查詢創作者":
 		go handlers.SearchCreator(s, i, nil)
 	case "查詢音樂":
-		go handlers.SearchMusic(s, i, nil)
+		go handlers.SearchMusicV2(s, i, nil)
 	case "查詢角色":
 		go handlers.SearchCharacter(s, i, nil)
 	case "加已玩":
@@ -61,7 +61,7 @@ func onInteractionApplicationCommand(s *discordgo.Session, i *discordgo.Interact
 func onInteractionMessageComponent(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	cidStringSlice := strings.Split(i.MessageComponentData().CustomID, "|")
 	// 新版CID 要轉換成CIDV2
-	if strings.HasPrefix(cidStringSlice[0], "B@") || strings.HasPrefix(cidStringSlice[0], "G@") {
+	if strings.HasPrefix(cidStringSlice[0], "B@") || strings.HasPrefix(cidStringSlice[0], "G@") || strings.HasPrefix(cidStringSlice[0], "S@") {
 		cid, err := utils.ParseCIDV2(i.MessageComponentData().CustomID)
 		if err != nil {
 			utils.HandleError(kurohelpererrors.ErrCIDWrongFormat, s, i)
@@ -75,8 +75,11 @@ func onInteractionMessageComponent(s *discordgo.Session, i *discordgo.Interactio
 
 		if strings.HasPrefix(cidStringSlice[0], "G@") {
 			go handlers.SearchGameV2(s, i, cid)
-		} else {
+		} else if strings.HasPrefix(cidStringSlice[0], "B@") {
 			go handlers.SearchBrandV2(s, i, cid)
+		} else {
+			go handlers.SearchMusicV2(s, i, cid)
+			return
 		}
 	} else {
 		// 安全檢查，確保CID建立邏輯有誤的話不會出問題
@@ -90,8 +93,6 @@ func onInteractionMessageComponent(s *discordgo.Session, i *discordgo.Interactio
 				go handlers.SearchBrand(s, i, &cid)
 			case "查詢創作者":
 				go handlers.SearchCreator(s, i, &cid)
-			case "查詢音樂":
-				go handlers.SearchMusic(s, i, &cid)
 			case "查詢角色":
 				go handlers.SearchCharacter(s, i, &cid)
 			case "加已玩":

@@ -1,84 +1,159 @@
 package handlers
 
 import (
+	"encoding/base64"
 	"errors"
 	"fmt"
-	"regexp"
 	"strconv"
 	"strings"
 
 	"github.com/bwmarrin/discordgo"
-	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 
 	"kurohelper/cache"
-	kurohelpererrors "kurohelper/errors"
 	"kurohelper/utils"
 
+	kurohelpercore "github.com/kuro-helper/kurohelper-core/v3"
 	"github.com/kuro-helper/kurohelper-core/v3/erogs"
 )
 
-// 查詢音樂Handler
-func SearchMusic(s *discordgo.Session, i *discordgo.InteractionCreate, cid *utils.NewCID) {
-	// 長時間查詢
+var searchMusicColor = 0xF8F8DF
+
+// 查詢音樂指令入口
+func SearchMusicV2(s *discordgo.Session, i *discordgo.InteractionCreate, cid *utils.CIDV2) {
 	if cid == nil {
-		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-			Type: discordgo.InteractionResponseDeferredChannelMessageWithSource,
-		})
-	}
-
-	if i.Type == discordgo.InteractionApplicationCommand {
-		opt, err := utils.GetOptions(i, "列表搜尋")
-		if err != nil && errors.Is(err, kurohelpererrors.ErrOptionTranslateFail) {
-			utils.HandleError(err, s, i)
-			return
-		}
-		if opt == "" {
-			erogsSearchMusic(s, i)
-		} else {
-			erogsSearchMusicList(s, i, cid)
-		}
+		erogsSearchMusicListV2(s, i)
 	} else {
-		if !cid.GetCommandNameIsList() {
-			erogsSearchMusic(s, i)
-		} else {
-			erogsSearchMusicList(s, i, cid)
+		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseDeferredMessageUpdate,
+		})
+		switch cid.GetBehaviorID() {
+		case utils.PageBehavior:
+			erogsSearchMusicListWithCIDV2(s, i, cid)
+		case utils.SelectMenuBehavior:
+			erogsSearchMusicWithSelectMenuCIDV2(s, i, cid)
+		case utils.BackToHomeBehavior:
+			erogsSearchMusicWithBackToHomeCIDV2(s, i, cid)
 		}
-
 	}
 }
 
-// erogs查詢音樂處理
-func erogsSearchMusic(s *discordgo.Session, i *discordgo.InteractionCreate) {
+// 查詢音樂列表
+func erogsSearchMusicListV2(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	keyword, err := utils.GetOptions(i, "keyword")
+	if err != nil {
+		utils.HandleErrorV2(err, s, i, utils.InteractionRespondV2)
+		return
+	}
+
+	// 將 keyword 轉成 base64 作為快取鍵
+	cacheKey := "S@" + base64.RawURLEncoding.EncodeToString([]byte(keyword))
+
+	// 檢查快取是否存在
+	cacheValue, err := cache.ErogsSongListStore.Get(cacheKey)
+	if err == nil {
+		// 快取存在，直接使用，不需要延遲傳送
+		components, err := buildSearchMusicComponents(cacheValue, 1, cacheKey)
+		if err != nil {
+			utils.HandleErrorV2(err, s, i, utils.InteractionRespondV2)
+			return
+		}
+		utils.InteractionRespondV2(s, i, components)
+		return
+	}
+
+	// 快取不存在，需要查詢資料
+	// 先發送延遲回應
 	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseDeferredChannelMessageWithSource,
 	})
 
-	var res *erogs.FuzzySearchMusicResponse
-	keyword, err := utils.GetOptions(i, "keyword")
+	logrus.WithField("interaction", i).Infof("erogs查詢音樂列表: %s", keyword)
+
+	res, err := erogs.GetMusicListByFuzzy(keyword)
 	if err != nil {
-		utils.HandleError(err, s, i)
-		return
-	}
-	idSearch, _ := regexp.MatchString(`^e\d+$`, keyword)
-	res, err = erogs.GetMusicByFuzzy(keyword, idSearch)
-	if err != nil {
-		utils.HandleError(err, s, i)
+		utils.HandleErrorV2(err, s, i, utils.WebhookEditRespond)
 		return
 	}
 
-	logrus.WithField("guildID", i.GuildID).Infof("erogs查詢音樂: %s", keyword)
+	// 將查詢結果存入快取
+	cache.ErogsSongListStore.Set(cacheKey, res)
 
-	musicData := make([]string, 0, len(res.GameCategories))
-	for _, m := range res.GameCategories {
-		musicData = append(musicData, m.GameName+" ("+m.GameModel+")"+" ("+m.Category+")")
+	components, err := buildSearchMusicComponents(res, 1, cacheKey)
+	if err != nil {
+		utils.HandleErrorV2(err, s, i, utils.WebhookEditRespond)
+		return
 	}
 
-	singerList := strings.Split(res.Singers, ",")
-	arrangementList := strings.Split(res.Arrangments, ",")
-	lyricList := strings.Split(res.Lyrics, ",")
-	compositionList := strings.Split(res.Compositions, ",")
-	albumList := strings.Split(res.Album, ",")
+	utils.WebhookEditRespond(s, i, components)
+}
+
+// 查詢遊戲列表(有CID版本)
+func erogsSearchMusicListWithCIDV2(s *discordgo.Session, i *discordgo.InteractionCreate, cid *utils.CIDV2) {
+	if cid.GetBehaviorID() != utils.PageBehavior {
+		utils.HandleErrorV2(errors.New("handlers: cid behavior id error"), s, i, utils.InteractionRespondEditComplex)
+		return
+	}
+
+	pageCID, err := cid.ToPageCIDV2()
+	if err != nil {
+		utils.HandleErrorV2(err, s, i, utils.InteractionRespondEditComplex)
+		return
+	}
+
+	cacheValue, err := cache.ErogsSongListStore.Get(pageCID.CacheId)
+	if err != nil {
+		utils.HandleErrorV2(err, s, i, utils.InteractionRespondEditComplex)
+		return
+	}
+
+	components, err := buildSearchMusicComponents(cacheValue, pageCID.Value, pageCID.CacheId)
+	if err != nil {
+		utils.HandleErrorV2(err, s, i, utils.InteractionRespondEditComplex)
+		return
+	}
+
+	utils.WebhookEditRespond(s, i, components)
+}
+
+// 查詢指定音樂(有CID版本)
+func erogsSearchMusicWithSelectMenuCIDV2(s *discordgo.Session, i *discordgo.InteractionCreate, cid *utils.CIDV2) {
+	if cid.GetBehaviorID() != utils.SelectMenuBehavior {
+		utils.HandleErrorV2(errors.New("handlers: cid behavior id error"), s, i, utils.InteractionRespondEditComplex)
+		return
+	}
+
+	selectMenuCID := cid.ToSelectMenuCIDV2()
+
+	utils.WebhookEditRespond(s, i, []discordgo.MessageComponent{
+		discordgo.Container{
+			Components: []discordgo.MessageComponent{
+				discordgo.TextDisplay{
+					Content: "# ⌛ 正在跳轉，請稍候...",
+				},
+			},
+		},
+	})
+
+	res, err := cache.ErogsSongStore.Get(selectMenuCID.Value)
+	if err != nil {
+		if errors.Is(err, kurohelpercore.ErrCacheLost) {
+			logrus.WithField("interaction", i).Infof("erogs查詢音樂: %s", selectMenuCID.Value)
+			res, err = erogs.GetMusicByFuzzy(selectMenuCID.Value, true)
+			if err != nil {
+				utils.HandleErrorV2(err, s, i, utils.InteractionRespondEditComplex)
+				return
+			}
+
+			cache.ErogsSongStore.Set(selectMenuCID.Value, res)
+
+		} else {
+			utils.HandleErrorV2(err, s, i, utils.InteractionRespondEditComplex)
+			return
+		}
+	}
+
+	// 處理資料
 	if res.PlayTime == "00:00:00" {
 		res.PlayTime = "未收錄"
 	}
@@ -86,150 +161,195 @@ func erogsSearchMusic(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		res.ReleaseDate = "未收錄"
 	}
 
-	embed := &discordgo.MessageEmbed{
-		Title: res.MusicName,
-		Color: 0xF8F8DF,
-		Fields: []*discordgo.MessageEmbedField{
-			{
-				Name:   "音樂時長",
-				Value:  res.PlayTime,
-				Inline: true,
+	singerList := strings.Split(res.Singers, ",")
+	arrangementList := strings.Split(res.Arrangments, ",")
+	lyricList := strings.Split(res.Lyrics, ",")
+	compositionList := strings.Split(res.Compositions, ",")
+	albumList := strings.Split(res.Album, ",")
+
+	musicData := []string{}
+	thumbnailURL := ""
+	for _, m := range res.GameCategories {
+		musicData = append(musicData, fmt.Sprintf("%s (%s) (%s)", m.GameName, m.GameModel, m.Category))
+		if thumbnailURL == "" && strings.TrimSpace(m.GameDMM) != "" {
+			thumbnailURL = erogs.MakeDMMImageURL(m.GameDMM)
+		}
+	}
+
+	if thumbnailURL == "" {
+		thumbnailURL = placeholderImageURL
+	}
+
+	// 構建 Components
+	divider := true
+	contentParts := []string{}
+
+	// 基本資訊
+	contentParts = append(contentParts,
+		fmt.Sprintf("**音樂時長**\n%s", res.PlayTime),
+		fmt.Sprintf("**發行日期**\n%s", res.ReleaseDate),
+		fmt.Sprintf("**平均分數/樣本數**\n%.2f / %d", res.AvgTokuten, res.TokutenCount),
+	)
+
+	// 歌手
+	if len(singerList) > 0 && singerList[0] != "" {
+		contentParts = append(contentParts, fmt.Sprintf("**歌手**\n%s", strings.Join(singerList, " / ")))
+	}
+	// 作詞
+	if len(lyricList) > 0 && lyricList[0] != "" {
+		contentParts = append(contentParts, fmt.Sprintf("**作詞**\n%s", strings.Join(lyricList, " / ")))
+	}
+	// 作曲
+	if len(compositionList) > 0 && compositionList[0] != "" {
+		contentParts = append(contentParts, fmt.Sprintf("**作曲**\n%s", strings.Join(compositionList, " / ")))
+	}
+	// 編曲
+	if len(arrangementList) > 0 && arrangementList[0] != "" {
+		contentParts = append(contentParts, fmt.Sprintf("**編曲**\n%s", strings.Join(arrangementList, " / ")))
+	}
+
+	// 遊戲收錄
+	if len(musicData) > 0 {
+		contentParts = append(contentParts, fmt.Sprintf("**遊戲收錄**\n%s", strings.Join(musicData, "\n")))
+	}
+
+	// 專輯
+	if len(albumList) > 0 && albumList[0] != "" {
+		contentParts = append(contentParts, fmt.Sprintf("**收錄專輯**\n%s", strings.Join(albumList, "\n")))
+	}
+
+	fullContent := strings.Join(contentParts, "\n\n")
+
+	containerComponents := []discordgo.MessageComponent{
+		discordgo.TextDisplay{
+			Content: fmt.Sprintf("# %s", res.MusicName),
+		},
+		discordgo.Separator{Divider: &divider},
+		discordgo.Section{
+			Components: []discordgo.MessageComponent{
+				discordgo.TextDisplay{
+					Content: fullContent,
+				},
 			},
-			{
-				Name:   "發行日期",
-				Value:  res.ReleaseDate,
-				Inline: true,
-			},
-			{
-				Name:   "平均分數/樣本數",
-				Value:  fmt.Sprintf("%.2f / %d", res.AvgTokuten, res.TokutenCount),
-				Inline: true,
-			},
-			{
-				Name:   "歌手",
-				Value:  strings.Join(singerList, "\n"),
-				Inline: false,
-			},
-			{
-				Name:   "作詞",
-				Value:  strings.Join(lyricList, "\n"),
-				Inline: true,
-			},
-			{
-				Name:   "作曲",
-				Value:  strings.Join(compositionList, "\n"),
-				Inline: true,
-			},
-			{
-				Name:   "編曲",
-				Value:  strings.Join(arrangementList, "\n"),
-				Inline: true,
-			},
-			{
-				Name:   "遊戲收錄",
-				Value:  strings.Join(musicData, "\n"),
-				Inline: false,
-			},
-			{
-				Name:   "專輯",
-				Value:  strings.Join(albumList, "\n"),
-				Inline: false,
+			Accessory: &discordgo.Thumbnail{
+				Media: discordgo.UnfurledMediaItem{
+					URL: thumbnailURL,
+				},
 			},
 		},
+		discordgo.Separator{Divider: &divider},
 	}
-	utils.InteractionEmbedRespond(s, i, embed, nil, true)
+
+	containerComponents = append(containerComponents, utils.MakeBackToHomeComponent(selectMenuCID.CacheId))
+
+	utils.InteractionRespondEditComplex(s, i, []discordgo.MessageComponent{
+		discordgo.Container{
+			AccentColor: &searchMusicColor,
+			Components:  containerComponents,
+		},
+	})
 }
 
-// erogs查詢音樂列表搜尋處理
-func erogsSearchMusicList(s *discordgo.Session, i *discordgo.InteractionCreate, cid *utils.NewCID) {
-	var res *[]erogs.FuzzySearchListResponse
-	var messageComponent []discordgo.MessageComponent
-	var hasMore bool
-	var count int
-	var pageIndex int
-	if cid == nil {
-		keyword, err := utils.GetOptions(i, "keyword")
-		if err != nil {
-			utils.HandleError(err, s, i)
-			return
-		}
-
-		res, err = erogs.GetMusicListByFuzzy(keyword)
-		if err != nil {
-			utils.HandleError(err, s, i)
-			return
-		}
-
-		idStr := uuid.New().String()
-		cache.SearchCache.Set(idStr, *res)
-
-		// 計算筆數
-		count = len(*res)
-
-		hasMore = pagination(res, 0, false)
-
-		if hasMore {
-			cidCommandName := utils.MakeCIDCommandName(i.ApplicationCommandData().Name, true, "")
-			messageComponent = []discordgo.MessageComponent{utils.MakeCIDPageComponent("▶️", idStr, 1, cidCommandName)}
-		}
-	} else {
-		// 處理CID
-		pageCID := utils.PageCID{
-			NewCID: *cid,
-		}
-		cacheValue, err := cache.SearchCache.Get(pageCID.GetCacheID())
-		if err != nil {
-			utils.HandleError(err, s, i)
-			return
-		}
-		resValue := cacheValue.([]erogs.FuzzySearchListResponse)
-		res = &resValue
-
-		// 計算筆數
-		count = len(*res)
-
-		// 資料分頁
-		pageIndex, err = pageCID.GetPageIndex()
-		if err != nil {
-			utils.HandleError(err, s, i)
-			return
-		}
-		hasMore = pagination(res, pageIndex, true)
-		cidCommandName := utils.MakeCIDCommandName(cid.GetCommandName(), true, "")
-		if hasMore {
-			if pageIndex == 0 {
-				messageComponent = []discordgo.MessageComponent{utils.MakeCIDPageComponent("▶️", pageCID.GetCacheID(), 1, cidCommandName)}
-			} else {
-				messageComponent = []discordgo.MessageComponent{utils.MakeCIDPageComponent("◀️", pageCID.GetCacheID(), pageIndex-1, cidCommandName)}
-				messageComponent = append(messageComponent, utils.MakeCIDPageComponent("▶️", pageCID.GetCacheID(), pageIndex+1, cidCommandName))
-			}
-		} else {
-			messageComponent = []discordgo.MessageComponent{utils.MakeCIDPageComponent("◀️", pageCID.GetCacheID(), pageIndex-1, cidCommandName)}
-		}
+// 返回音樂列表主頁(有CID版本)
+func erogsSearchMusicWithBackToHomeCIDV2(s *discordgo.Session, i *discordgo.InteractionCreate, cid *utils.CIDV2) {
+	if cid.GetBehaviorID() != utils.BackToHomeBehavior {
+		utils.HandleErrorV2(errors.New("handlers: cid behavior id error"), s, i, utils.InteractionRespondEditComplex)
+		return
 	}
-	actionsRow := utils.MakeActionsRow(messageComponent)
 
-	listData := make([]string, 0, len(*res))
-	for _, r := range *res {
-		categoryData := strings.Split(r.Category, ",")
-		listData = append(listData, fmt.Sprintf("e%-5s　%s (%s)", strconv.Itoa(r.ID), r.Name, strings.Join(categoryData, "/")))
+	backToHomeCID := cid.ToBackToHomeCIDV2()
+
+	cacheValue, err := cache.ErogsSongListStore.Get(backToHomeCID.CacheId)
+	if err != nil {
+		utils.HandleErrorV2(err, s, i, utils.InteractionRespondEditComplex)
+		return
 	}
-	embed := &discordgo.MessageEmbed{
-		Title: fmt.Sprintf("音樂列表搜尋 (%d筆)", count),
-		Color: 0xF8F8DF,
-		Fields: []*discordgo.MessageEmbedField{
-			{
-				Name:   "ID/名稱",
-				Value:  strings.Join(listData, "\n"),
-				Inline: false,
-			},
+
+	components, err := buildSearchMusicComponents(cacheValue, 1, backToHomeCID.CacheId)
+	if err != nil {
+		utils.HandleErrorV2(err, s, i, utils.InteractionRespondEditComplex)
+		return
+	}
+	utils.InteractionRespondEditComplex(s, i, components)
+}
+
+// 產生查詢音樂列表的Components
+func buildSearchMusicComponents(res []erogs.MusicList, currentPage int, cacheID string) ([]discordgo.MessageComponent, error) {
+	totalItems := len(res)
+	totalPages := (totalItems + searchGameListItemsPerPage - 1) / searchGameListItemsPerPage
+
+	divider := true
+	containerComponents := []discordgo.MessageComponent{
+		discordgo.TextDisplay{
+			Content: fmt.Sprintf("# 音樂搜尋\n搜尋筆數: **%d**", totalItems),
 		},
+		discordgo.Separator{Divider: &divider},
 	}
 
-	if cid == nil {
-		utils.InteractionEmbedRespond(s, i, embed, actionsRow, true)
-	} else {
-		utils.EditEmbedRespond(s, i, embed, actionsRow)
+	// 計算當前頁的範圍
+	start := (currentPage - 1) * searchGameListItemsPerPage
+	end := min(start+searchGameListItemsPerPage, totalItems)
+	pagedResults := (res)[start:end]
+
+	gameMenuItems := []utils.SelectMenuItem{}
+
+	// 產生遊戲列表組件
+	for idx, r := range pagedResults {
+		itemNum := start + idx + 1
+		itemContent := fmt.Sprintf("**%d. %s(%s)**", itemNum, r.Name, r.Category)
+
+		if strings.TrimSpace(r.GameName) != "" {
+			itemContent += "\n收錄作品: " + r.GameName
+		}
+
+		// 處理圖片 URL
+		thumbnailURL := ""
+		if strings.TrimSpace(r.GameDMM) != "" {
+			thumbnailURL = erogs.MakeDMMImageURL(r.GameDMM)
+		}
+		if strings.TrimSpace(thumbnailURL) == "" {
+			thumbnailURL = placeholderImageURL
+		}
+
+		containerComponents = append(containerComponents, discordgo.Section{
+			Components: []discordgo.MessageComponent{
+				discordgo.TextDisplay{
+					Content: itemContent,
+				},
+			},
+			Accessory: &discordgo.Thumbnail{
+				Media: discordgo.UnfurledMediaItem{
+					URL: thumbnailURL,
+				},
+			},
+		})
+
+		gameMenuItems = append(gameMenuItems, utils.SelectMenuItem{
+			Title: r.Name + " (" + r.Category + ")",
+			ID:    "e" + strconv.Itoa(r.ID),
+		})
 	}
 
+	// 產生選單組件
+	selectMenuComponents := utils.MakeSelectMenuComponent(cacheID, gameMenuItems)
+
+	// 產生翻頁組件
+	pageComponents, err := utils.MakeChangePageComponent(currentPage, totalPages, cacheID)
+	if err != nil {
+		return nil, err
+	}
+
+	containerComponents = append(containerComponents,
+		discordgo.Separator{Divider: &divider},
+		selectMenuComponents,
+		pageComponents,
+	)
+
+	// 組成完整組件回傳
+	return []discordgo.MessageComponent{
+		discordgo.Container{
+			AccentColor: &searchMusicColor,
+			Components:  containerComponents,
+		},
+	}, nil
 }

@@ -150,7 +150,7 @@ func buildSearchGameComponents(res *[]erogs.FuzzySearchListResponse, currentPage
 	divider := true
 	containerComponents := []discordgo.MessageComponent{
 		discordgo.TextDisplay{
-			Content: fmt.Sprintf("# 遊戲搜尋\n遊戲筆數: **%d**\n⭐: 批評空間分數 📊: 投票人數 ⏱️: 遊玩時數 🥰: 開始理解遊戲樂趣時數", totalItems),
+			Content: fmt.Sprintf("# 遊戲搜尋\n搜尋筆數: **%d**\n⭐: 批評空間分數 📊: 投票人數 ⏱️: 遊玩時數 🥰: 開始理解遊戲樂趣時數", totalItems),
 		},
 		discordgo.Separator{Divider: &divider},
 	}
