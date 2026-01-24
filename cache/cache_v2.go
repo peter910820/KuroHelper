@@ -12,6 +12,8 @@ import (
 var (
 	ErogsGameListStore = NewCacheStoreV2[[]erogs.FuzzySearchListResponse](2 * time.Hour)
 	ErogsGameStore     = NewCacheStoreV2[*erogs.FuzzySearchGameResponse](2 * time.Hour)
+	ErogsSongListStore = NewCacheStoreV2[[]erogs.MusicList](2 * time.Hour)
+	ErogsSongStore     = NewCacheStoreV2[*erogs.Music](2 * time.Hour)
 )
 
 // VNDB快取
