@@ -8,12 +8,24 @@ import (
 	"github.com/kuro-helper/kurohelper-core/v3/erogs"
 )
 
+// CID快取
+//
+// 對每一次查詢建立CID以及關鍵字的關聯
+// 因為CID不允許過長字元，所以遇到很長的關鍵字時會直接丟錯，所以才需要這層快取
+var (
+	CIDStore = NewCacheStoreV2[string](time.Hour)
+)
+
 // 批評空間快取
 var (
+	// 使用關鍵字Base64作為鍵
 	ErogsGameListStore = NewCacheStoreV2[[]erogs.FuzzySearchListResponse](2 * time.Hour)
-	ErogsGameStore     = NewCacheStoreV2[*erogs.FuzzySearchGameResponse](2 * time.Hour)
-	ErogsSongListStore = NewCacheStoreV2[[]erogs.MusicList](2 * time.Hour)
-	ErogsSongStore     = NewCacheStoreV2[*erogs.Music](2 * time.Hour)
+	// 使用批評空間ID作為鍵
+	ErogsGameStore = NewCacheStoreV2[*erogs.FuzzySearchGameResponse](2 * time.Hour)
+	// 使用關鍵字Base64作為鍵
+	ErogsMusicListStore = NewCacheStoreV2[[]erogs.MusicList](2 * time.Hour)
+	// 使用批評空間ID作為鍵
+	ErogsMusicStore = NewCacheStoreV2[*erogs.Music](2 * time.Hour)
 )
 
 // VNDB快取
@@ -76,6 +88,22 @@ func (c *CacheStoreV2[T]) Get(key string) (T, error) {
 	}
 
 	return item.Value, nil
+}
+
+// Clean 清除過期快取
+func (c *CacheStoreV2[T]) Clean() (deleteCount int, total int) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	total = len(c.data)
+	for k, d := range c.data {
+		if time.Now().After(d.ExpireAt) {
+			delete(c.data, k)
+			deleteCount++
+		}
+	}
+
+	return
 }
 
 // CleanAll 清除所有快取

@@ -23,8 +23,16 @@ func CleanCacheJob(minute time.Duration, stopChan <-chan struct{}) {
 			logrus.Printf("%d筆SearchBrandCache快取已被清除", SearchBrandCache.Clean())
 
 			// 新快取(V2)
-			logrus.Printf("%d筆ErogsGameStore快取已被清除", ErogsGameStore.CleanAll())
-			logrus.Printf("%d筆ErogsGameListStore快取已被清除", ErogsGameListStore.CleanAll())
+			egsDC, egsC := CIDStore.Clean()
+			logrus.Printf("CIDStore            快取資料: %d筆/%d筆 (清理/總數)", egsC, egsDC)
+			egsDC, egsC = ErogsGameListStore.Clean()
+			logrus.Printf("ErogsGameListStore  快取資料: %d筆/%d筆 (清理/總數)", egsC, egsDC)
+			egsDC, egsC = ErogsGameStore.Clean()
+			logrus.Printf("ErogsGameStore      快取資料: %d筆/%d筆 (清理/總數)", egsC, egsDC)
+			egsDC, egsC = ErogsMusicListStore.Clean()
+			logrus.Printf("ErogsMusicListStore 快取資料: %d筆/%d筆 (清理/總數)", egsC, egsDC)
+			egsDC, egsC = ErogsMusicStore.Clean()
+			logrus.Printf("ErogsMusicStore     快取資料: %d筆/%d筆 (清理/總數)", egsC, egsDC)
 		case <-stopChan:
 			logrus.Println("CleanCacheJob 正在關閉...")
 			return
