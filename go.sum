@@ -39,6 +39,8 @@ github.com/klauspost/compress v1.18.2 h1:iiPHWW0YrcFgpBYhsA6D1+fqHssJscY/Tm/y2Uq
 github.com/klauspost/compress v1.18.2/go.mod h1:R0h/fSBs8DE4ENlcrlib3PsXS61voFxhIs2DeRhCvJ4=
 github.com/kuro-helper/kurohelper-core/v3 v3.1.0 h1:N2qEZj+Pk437ZR8TzuWkwqsb7E/4bCtlkMmMmYo7Gyw=
 github.com/kuro-helper/kurohelper-core/v3 v3.1.0/go.mod h1:f/DRa/aj9AJWjvKyftRtKaGtToCG+y8rRDTg1BYS+XQ=
+github.com/kuro-helper/kurohelper-core/v3 v3.2.0 h1:VQ3uJKR/KxDJwFkCipbI+mo/oEUJMx+f3U0SJ1nHTAU=
+github.com/kuro-helper/kurohelper-core/v3 v3.2.0/go.mod h1:f/DRa/aj9AJWjvKyftRtKaGtToCG+y8rRDTg1BYS+XQ=
 github.com/kuro-helper/kurohelper-db/v3 v3.1.0 h1:+rZBz+2jQb19h3+MwPXol/T+K7thxmloKniQVf+ACRI=
 github.com/kuro-helper/kurohelper-db/v3 v3.1.0/go.mod h1:oabF2kyu50JJbQVi/nOq/OQDLPgb7SzpngMxgFTCneo=
 github.com/kuro-helper/kurohelper-proxy v1.0.0 h1:qPvE1seIrxWWIgZqBD7J21sfayHsXw/QEaOJRaoBwYo=

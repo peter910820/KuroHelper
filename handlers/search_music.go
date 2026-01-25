@@ -18,6 +18,8 @@ import (
 	"github.com/kuro-helper/kurohelper-core/v3/erogs"
 )
 
+const searchMusicListCachePrefix = "S@"
+
 var searchMusicColor = 0xF8F8DF
 
 // 查詢音樂指令入口
@@ -47,7 +49,7 @@ func erogsSearchMusicListV2(s *discordgo.Session, i *discordgo.InteractionCreate
 		return
 	}
 
-	idStr := searchGameListCachePrefix + uuid.New().String()
+	idStr := searchMusicListCachePrefix + uuid.New().String()
 
 	// 將 keyword 轉成 base64 作為快取鍵
 	cacheKey := base64.RawURLEncoding.EncodeToString([]byte(keyword))
@@ -88,7 +90,7 @@ func erogsSearchMusicListV2(s *discordgo.Session, i *discordgo.InteractionCreate
 	// 存入CID與關鍵字的對應快取
 	cache.CIDStore.Set(idStr, cacheKey)
 
-	components, err := buildSearchMusicComponents(res, 1, cacheKey)
+	components, err := buildSearchMusicComponents(res, 1, idStr)
 	if err != nil {
 		utils.HandleErrorV2(err, s, i, utils.WebhookEditRespond)
 		return
@@ -317,16 +319,30 @@ func buildSearchMusicComponents(res []erogs.MusicList, currentPage int, cacheID 
 	// 產生遊戲列表組件
 	for idx, r := range pagedResults {
 		itemNum := start + idx + 1
-		itemContent := fmt.Sprintf("**%d. %s(%s)**", itemNum, r.Name, r.Category)
-
-		if strings.TrimSpace(r.GameName) != "" {
-			itemContent += "\n收錄作品: " + r.GameName
+		category := ""
+		if strings.TrimSpace(r.Category) != "" {
+			category = fmt.Sprintf("(%s)", r.Category)
 		}
+		itemContent := fmt.Sprintf("**%d. %s%s**", itemNum, r.Name, category)
 
-		// 處理圖片 URL
-		thumbnailURL := ""
-		if strings.TrimSpace(r.GameDMM) != "" {
-			thumbnailURL = erogs.MakeDMMImageURL(r.GameDMM)
+		// 處理Games資訊
+		thumbnailURL := "" // 圖片 URL(取第一個)
+		if len(r.Games) > 0 {
+			var names []string
+			for _, g := range r.Games {
+				if strings.TrimSpace(g.Name) != "" {
+					names = append(names, g.Name)
+				}
+			}
+
+			cleanDMM := strings.TrimSpace(r.Games[0].DMM)
+			if cleanDMM != "" {
+				thumbnailURL = erogs.MakeDMMImageURL(cleanDMM)
+			}
+
+			if len(names) > 0 {
+				itemContent += "\n收錄作品: " + strings.Join(names, ", ")
+			}
 		}
 		if strings.TrimSpace(thumbnailURL) == "" {
 			thumbnailURL = placeholderImageURL
@@ -346,7 +362,7 @@ func buildSearchMusicComponents(res []erogs.MusicList, currentPage int, cacheID 
 		})
 
 		gameMenuItems = append(gameMenuItems, utils.SelectMenuItem{
-			Title: r.Name + " (" + r.Category + ")",
+			Title: r.Name + category,
 			ID:    "e" + strconv.Itoa(r.ID),
 		})
 	}

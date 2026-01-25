@@ -68,7 +68,6 @@ func erogsSearchGameListV2(s *discordgo.Session, i *discordgo.InteractionCreate)
 	// 檢查快取是否存在
 	cacheValue, err := cache.ErogsGameListStore.Get(cacheKey)
 	if err == nil {
-		logrus.Debug("Use Cache")
 		// 存入CID與關鍵字的對應快取
 		cache.CIDStore.Set(idStr, cacheKey)
 
