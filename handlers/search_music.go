@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 
 	"kurohelper/cache"
@@ -16,6 +17,8 @@ import (
 	kurohelpercore "github.com/kuro-helper/kurohelper-core/v3"
 	"github.com/kuro-helper/kurohelper-core/v3/erogs"
 )
+
+const searchMusicListCachePrefix = "S@"
 
 var searchMusicColor = 0xF8F8DF
 
@@ -46,14 +49,19 @@ func erogsSearchMusicListV2(s *discordgo.Session, i *discordgo.InteractionCreate
 		return
 	}
 
+	idStr := searchMusicListCachePrefix + uuid.New().String()
+
 	// 將 keyword 轉成 base64 作為快取鍵
-	cacheKey := "S@" + base64.RawURLEncoding.EncodeToString([]byte(keyword))
+	cacheKey := base64.RawURLEncoding.EncodeToString([]byte(keyword))
 
 	// 檢查快取是否存在
-	cacheValue, err := cache.ErogsSongListStore.Get(cacheKey)
+	cacheValue, err := cache.ErogsMusicListStore.Get(cacheKey)
 	if err == nil {
+		// 存入CID與關鍵字的對應快取
+		cache.CIDStore.Set(idStr, cacheKey)
+
 		// 快取存在，直接使用，不需要延遲傳送
-		components, err := buildSearchMusicComponents(cacheValue, 1, cacheKey)
+		components, err := buildSearchMusicComponents(cacheValue, 1, idStr)
 		if err != nil {
 			utils.HandleErrorV2(err, s, i, utils.InteractionRespondV2)
 			return
@@ -77,9 +85,12 @@ func erogsSearchMusicListV2(s *discordgo.Session, i *discordgo.InteractionCreate
 	}
 
 	// 將查詢結果存入快取
-	cache.ErogsSongListStore.Set(cacheKey, res)
+	cache.ErogsMusicListStore.Set(cacheKey, res)
 
-	components, err := buildSearchMusicComponents(res, 1, cacheKey)
+	// 存入CID與關鍵字的對應快取
+	cache.CIDStore.Set(idStr, cacheKey)
+
+	components, err := buildSearchMusicComponents(res, 1, idStr)
 	if err != nil {
 		utils.HandleErrorV2(err, s, i, utils.WebhookEditRespond)
 		return
@@ -101,7 +112,13 @@ func erogsSearchMusicListWithCIDV2(s *discordgo.Session, i *discordgo.Interactio
 		return
 	}
 
-	cacheValue, err := cache.ErogsSongListStore.Get(pageCID.CacheId)
+	cidCacheValue, err := cache.CIDStore.Get(pageCID.CacheId)
+	if err != nil {
+		utils.HandleErrorV2(err, s, i, utils.InteractionRespondEditComplex)
+		return
+	}
+
+	cacheValue, err := cache.ErogsMusicListStore.Get(cidCacheValue)
 	if err != nil {
 		utils.HandleErrorV2(err, s, i, utils.InteractionRespondEditComplex)
 		return
@@ -135,7 +152,7 @@ func erogsSearchMusicWithSelectMenuCIDV2(s *discordgo.Session, i *discordgo.Inte
 		},
 	})
 
-	res, err := cache.ErogsSongStore.Get(selectMenuCID.Value)
+	res, err := cache.ErogsMusicStore.Get(selectMenuCID.Value)
 	if err != nil {
 		if errors.Is(err, kurohelpercore.ErrCacheLost) {
 			logrus.WithField("interaction", i).Infof("erogs查詢音樂: %s", selectMenuCID.Value)
@@ -145,7 +162,7 @@ func erogsSearchMusicWithSelectMenuCIDV2(s *discordgo.Session, i *discordgo.Inte
 				return
 			}
 
-			cache.ErogsSongStore.Set(selectMenuCID.Value, res)
+			cache.ErogsMusicStore.Set(selectMenuCID.Value, res)
 
 		} else {
 			utils.HandleErrorV2(err, s, i, utils.InteractionRespondEditComplex)
@@ -259,7 +276,13 @@ func erogsSearchMusicWithBackToHomeCIDV2(s *discordgo.Session, i *discordgo.Inte
 
 	backToHomeCID := cid.ToBackToHomeCIDV2()
 
-	cacheValue, err := cache.ErogsSongListStore.Get(backToHomeCID.CacheId)
+	cidCacheValue, err := cache.CIDStore.Get(backToHomeCID.CacheId)
+	if err != nil {
+		utils.HandleErrorV2(err, s, i, utils.InteractionRespondEditComplex)
+		return
+	}
+
+	cacheValue, err := cache.ErogsMusicListStore.Get(cidCacheValue)
 	if err != nil {
 		utils.HandleErrorV2(err, s, i, utils.InteractionRespondEditComplex)
 		return
@@ -296,16 +319,30 @@ func buildSearchMusicComponents(res []erogs.MusicList, currentPage int, cacheID 
 	// 產生遊戲列表組件
 	for idx, r := range pagedResults {
 		itemNum := start + idx + 1
-		itemContent := fmt.Sprintf("**%d. %s(%s)**", itemNum, r.Name, r.Category)
-
-		if strings.TrimSpace(r.GameName) != "" {
-			itemContent += "\n收錄作品: " + r.GameName
+		category := ""
+		if strings.TrimSpace(r.Category) != "" {
+			category = fmt.Sprintf("(%s)", r.Category)
 		}
+		itemContent := fmt.Sprintf("**%d. %s%s**", itemNum, r.Name, category)
 
-		// 處理圖片 URL
-		thumbnailURL := ""
-		if strings.TrimSpace(r.GameDMM) != "" {
-			thumbnailURL = erogs.MakeDMMImageURL(r.GameDMM)
+		// 處理Games資訊
+		thumbnailURL := "" // 圖片 URL(取第一個)
+		if len(r.Games) > 0 {
+			var names []string
+			for _, g := range r.Games {
+				if strings.TrimSpace(g.Name) != "" {
+					names = append(names, g.Name)
+				}
+			}
+
+			cleanDMM := strings.TrimSpace(r.Games[0].DMM)
+			if cleanDMM != "" {
+				thumbnailURL = erogs.MakeDMMImageURL(cleanDMM)
+			}
+
+			if len(names) > 0 {
+				itemContent += "\n收錄作品: " + strings.Join(names, ", ")
+			}
 		}
 		if strings.TrimSpace(thumbnailURL) == "" {
 			thumbnailURL = placeholderImageURL
@@ -325,7 +362,7 @@ func buildSearchMusicComponents(res []erogs.MusicList, currentPage int, cacheID 
 		})
 
 		gameMenuItems = append(gameMenuItems, utils.SelectMenuItem{
-			Title: r.Name + " (" + r.Category + ")",
+			Title: r.Name + category,
 			ID:    "e" + strconv.Itoa(r.ID),
 		})
 	}

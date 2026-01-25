@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/google/uuid"
 	kurohelpercore "github.com/kuro-helper/kurohelper-core/v3"
 	"github.com/kuro-helper/kurohelper-core/v3/erogs"
 	"github.com/kuro-helper/kurohelper-core/v3/seiya"
@@ -59,14 +60,19 @@ func erogsSearchGameListV2(s *discordgo.Session, i *discordgo.InteractionCreate)
 		return
 	}
 
+	idStr := searchGameListCachePrefix + uuid.New().String()
+
 	// 將 keyword 轉成 base64 作為快取鍵
-	cacheKey := searchGameListCachePrefix + base64.RawURLEncoding.EncodeToString([]byte(keyword))
+	cacheKey := base64.RawURLEncoding.EncodeToString([]byte(keyword))
 
 	// 檢查快取是否存在
 	cacheValue, err := cache.ErogsGameListStore.Get(cacheKey)
 	if err == nil {
+		// 存入CID與關鍵字的對應快取
+		cache.CIDStore.Set(idStr, cacheKey)
+
 		// 快取存在，直接使用，不需要延遲傳送
-		components, err := buildSearchGameComponents(&cacheValue, 1, cacheKey)
+		components, err := buildSearchGameComponents(&cacheValue, 1, idStr)
 		if err != nil {
 			utils.HandleErrorV2(err, s, i, utils.InteractionRespondV2)
 			return
@@ -105,7 +111,10 @@ func erogsSearchGameListV2(s *discordgo.Session, i *discordgo.InteractionCreate)
 	// 將查詢結果存入快取
 	cache.ErogsGameListStore.Set(cacheKey, *res)
 
-	components, err := buildSearchGameComponents(res, 1, cacheKey)
+	// 存入CID與關鍵字的對應快取
+	cache.CIDStore.Set(idStr, cacheKey)
+
+	components, err := buildSearchGameComponents(res, 1, idStr)
 	if err != nil {
 		utils.HandleErrorV2(err, s, i, utils.WebhookEditRespond)
 		return
@@ -127,7 +136,13 @@ func erogsSearchGameListWithCIDV2(s *discordgo.Session, i *discordgo.Interaction
 		return
 	}
 
-	cacheValue, err := cache.ErogsGameListStore.Get(pageCID.CacheId)
+	cidCacheValue, err := cache.CIDStore.Get(pageCID.CacheId)
+	if err != nil {
+		utils.HandleErrorV2(err, s, i, utils.InteractionRespondEditComplex)
+		return
+	}
+
+	cacheValue, err := cache.ErogsGameListStore.Get(cidCacheValue)
 	if err != nil {
 		utils.HandleErrorV2(err, s, i, utils.InteractionRespondEditComplex)
 		return
@@ -140,89 +155,6 @@ func erogsSearchGameListWithCIDV2(s *discordgo.Session, i *discordgo.Interaction
 	}
 
 	utils.WebhookEditRespond(s, i, components)
-}
-
-// 產生查詢遊戲列表的Components
-func buildSearchGameComponents(res *[]erogs.FuzzySearchListResponse, currentPage int, cacheID string) ([]discordgo.MessageComponent, error) {
-	totalItems := len(*res)
-	totalPages := (totalItems + searchGameListItemsPerPage - 1) / searchGameListItemsPerPage
-
-	divider := true
-	containerComponents := []discordgo.MessageComponent{
-		discordgo.TextDisplay{
-			Content: fmt.Sprintf("# 遊戲搜尋\n搜尋筆數: **%d**\n⭐: 批評空間分數 📊: 投票人數 ⏱️: 遊玩時數 🥰: 開始理解遊戲樂趣時數", totalItems),
-		},
-		discordgo.Separator{Divider: &divider},
-	}
-
-	// 計算當前頁的範圍
-	start := (currentPage - 1) * searchGameListItemsPerPage
-	end := min(start+searchGameListItemsPerPage, totalItems)
-	pagedResults := (*res)[start:end]
-
-	gameMenuItems := []utils.SelectMenuItem{}
-
-	// 產生遊戲列表組件
-	for idx, r := range pagedResults {
-		itemNum := start + idx + 1
-		itemContent := fmt.Sprintf("**%d. %s (%s)**\n⭐ **%s** / 📊 **%s**", itemNum, r.Name, r.Category, r.Median, r.TokutenCount)
-		if strings.TrimSpace(r.TotalPlayTimeMedian) != "" {
-			itemContent += fmt.Sprintf(" / ⏱️ **%s**", r.TotalPlayTimeMedian)
-		}
-		if strings.TrimSpace(r.TimeBeforeUnderstandingFunMedian) != "" {
-			itemContent += fmt.Sprintf(" / 🥰 **%s**", r.TimeBeforeUnderstandingFunMedian)
-		}
-
-		// 處理圖片 URL
-		thumbnailURL := ""
-		if strings.TrimSpace(r.DMM) != "" {
-			thumbnailURL = erogs.MakeDMMImageURL(r.DMM)
-		}
-		if strings.TrimSpace(thumbnailURL) == "" {
-			thumbnailURL = placeholderImageURL
-		}
-
-		containerComponents = append(containerComponents, discordgo.Section{
-			Components: []discordgo.MessageComponent{
-				discordgo.TextDisplay{
-					Content: itemContent,
-				},
-			},
-			Accessory: &discordgo.Thumbnail{
-				Media: discordgo.UnfurledMediaItem{
-					URL: thumbnailURL,
-				},
-			},
-		})
-
-		gameMenuItems = append(gameMenuItems, utils.SelectMenuItem{
-			Title: r.Name + " (" + r.Category + ")",
-			ID:    "e" + strconv.Itoa(r.ID),
-		})
-	}
-
-	// 產生選單組件
-	selectMenuComponents := utils.MakeSelectMenuComponent(cacheID, gameMenuItems)
-
-	// 產生翻頁組件
-	pageComponents, err := utils.MakeChangePageComponent(currentPage, totalPages, cacheID)
-	if err != nil {
-		return nil, err
-	}
-
-	containerComponents = append(containerComponents,
-		discordgo.Separator{Divider: &divider},
-		selectMenuComponents,
-		pageComponents,
-	)
-
-	// 組成完整組件回傳
-	return []discordgo.MessageComponent{
-		discordgo.Container{
-			AccentColor: &searchGameListColor,
-			Components:  containerComponents,
-		},
-	}, nil
 }
 
 // 查詢單一遊戲資料(有CID版本，從選單選擇)
@@ -532,7 +464,13 @@ func erogsSearchGameWithBackToHomeCIDV2(s *discordgo.Session, i *discordgo.Inter
 
 	backToHomeCID := cid.ToBackToHomeCIDV2()
 
-	cacheValue, err := cache.ErogsGameListStore.Get(backToHomeCID.CacheId)
+	cidCacheValue, err := cache.CIDStore.Get(backToHomeCID.CacheId)
+	if err != nil {
+		utils.HandleErrorV2(err, s, i, utils.InteractionRespondEditComplex)
+		return
+	}
+
+	cacheValue, err := cache.ErogsGameListStore.Get(cidCacheValue)
 	if err != nil {
 		utils.HandleErrorV2(err, s, i, utils.InteractionRespondEditComplex)
 		return
@@ -544,4 +482,87 @@ func erogsSearchGameWithBackToHomeCIDV2(s *discordgo.Session, i *discordgo.Inter
 		return
 	}
 	utils.InteractionRespondEditComplex(s, i, components)
+}
+
+// 產生查詢遊戲列表的Components
+func buildSearchGameComponents(res *[]erogs.FuzzySearchListResponse, currentPage int, cacheID string) ([]discordgo.MessageComponent, error) {
+	totalItems := len(*res)
+	totalPages := (totalItems + searchGameListItemsPerPage - 1) / searchGameListItemsPerPage
+
+	divider := true
+	containerComponents := []discordgo.MessageComponent{
+		discordgo.TextDisplay{
+			Content: fmt.Sprintf("# 遊戲搜尋\n搜尋筆數: **%d**\n⭐: 批評空間分數 📊: 投票人數 ⏱️: 遊玩時數 🥰: 開始理解遊戲樂趣時數", totalItems),
+		},
+		discordgo.Separator{Divider: &divider},
+	}
+
+	// 計算當前頁的範圍
+	start := (currentPage - 1) * searchGameListItemsPerPage
+	end := min(start+searchGameListItemsPerPage, totalItems)
+	pagedResults := (*res)[start:end]
+
+	gameMenuItems := []utils.SelectMenuItem{}
+
+	// 產生遊戲列表組件
+	for idx, r := range pagedResults {
+		itemNum := start + idx + 1
+		itemContent := fmt.Sprintf("**%d. %s (%s)**\n⭐ **%s** / 📊 **%s**", itemNum, r.Name, r.Category, r.Median, r.TokutenCount)
+		if strings.TrimSpace(r.TotalPlayTimeMedian) != "" {
+			itemContent += fmt.Sprintf(" / ⏱️ **%s**", r.TotalPlayTimeMedian)
+		}
+		if strings.TrimSpace(r.TimeBeforeUnderstandingFunMedian) != "" {
+			itemContent += fmt.Sprintf(" / 🥰 **%s**", r.TimeBeforeUnderstandingFunMedian)
+		}
+
+		// 處理圖片 URL
+		thumbnailURL := ""
+		if strings.TrimSpace(r.DMM) != "" {
+			thumbnailURL = erogs.MakeDMMImageURL(r.DMM)
+		}
+		if strings.TrimSpace(thumbnailURL) == "" {
+			thumbnailURL = placeholderImageURL
+		}
+
+		containerComponents = append(containerComponents, discordgo.Section{
+			Components: []discordgo.MessageComponent{
+				discordgo.TextDisplay{
+					Content: itemContent,
+				},
+			},
+			Accessory: &discordgo.Thumbnail{
+				Media: discordgo.UnfurledMediaItem{
+					URL: thumbnailURL,
+				},
+			},
+		})
+
+		gameMenuItems = append(gameMenuItems, utils.SelectMenuItem{
+			Title: r.Name + " (" + r.Category + ")",
+			ID:    "e" + strconv.Itoa(r.ID),
+		})
+	}
+
+	// 產生選單組件
+	selectMenuComponents := utils.MakeSelectMenuComponent(cacheID, gameMenuItems)
+
+	// 產生翻頁組件
+	pageComponents, err := utils.MakeChangePageComponent(currentPage, totalPages, cacheID)
+	if err != nil {
+		return nil, err
+	}
+
+	containerComponents = append(containerComponents,
+		discordgo.Separator{Divider: &divider},
+		selectMenuComponents,
+		pageComponents,
+	)
+
+	// 組成完整組件回傳
+	return []discordgo.MessageComponent{
+		discordgo.Container{
+			AccentColor: &searchGameListColor,
+			Components:  containerComponents,
+		},
+	}, nil
 }
