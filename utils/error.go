@@ -9,8 +9,9 @@ import (
 
 	kurohelpererrors "kurohelper/errors"
 
-	kurohelpercore "github.com/kuro-helper/kurohelper-core/v3"
-	kurohelperdb "github.com/kuro-helper/kurohelper-db/v3"
+	kurohelperdb "kurohelper-db"
+
+	kurohelpercore "kurohelper-core"
 )
 
 // 錯誤統一處理方法

@@ -8,7 +8,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"github.com/google/uuid"
 
-	kurohelperdb "github.com/kuro-helper/kurohelper-db/v3"
+	kurohelperdb "kurohelper-db"
 )
 
 type userRecordDataCache struct {

@@ -16,8 +16,9 @@ import (
 	kurohelperrerrors "kurohelper/errors"
 	"kurohelper/utils"
 
+	"kurohelper-core/erogs"
+
 	"github.com/kuro-helper/kurohelper-core/v3/bangumi"
-	"github.com/kuro-helper/kurohelper-core/v3/erogs"
 	"github.com/kuro-helper/kurohelper-core/v3/vndb"
 )
 

@@ -16,7 +16,7 @@ import (
 	kurohelperrerrors "kurohelper/errors"
 	"kurohelper/utils"
 
-	"github.com/kuro-helper/kurohelper-core/v3/erogs"
+	"kurohelper-core/erogs"
 )
 
 // 查詢創作者Handler

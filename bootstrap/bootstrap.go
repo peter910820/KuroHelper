@@ -11,12 +11,15 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/sirupsen/logrus"
 
-	"github.com/kuro-helper/kurohelper-core/v3/erogs"
-	"github.com/kuro-helper/kurohelper-core/v3/seiya"
-	corestore "github.com/kuro-helper/kurohelper-core/v3/store"
-	"github.com/kuro-helper/kurohelper-core/v3/ymgal"
+	"kurohelper-core/erogs"
 
-	kurohelperdb "github.com/kuro-helper/kurohelper-db/v3"
+	"kurohelper-core/seiya"
+
+	corestore "kurohelper-core/store"
+
+	"kurohelper-core/ymgal"
+
+	kurohelperdb "kurohelper-db"
 )
 
 // 啟動函式

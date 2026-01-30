@@ -11,16 +11,18 @@ import (
 	"strconv"
 	"strings"
 
+	"kurohelper-core/erogs"
+
+	"kurohelper-core/seiya"
+
 	"github.com/bwmarrin/discordgo"
 	"github.com/google/uuid"
 	kurohelpercore "github.com/kuro-helper/kurohelper-core/v3"
-	"github.com/kuro-helper/kurohelper-core/v3/erogs"
-	"github.com/kuro-helper/kurohelper-core/v3/seiya"
 	"github.com/kuro-helper/kurohelper-core/v3/vndb"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 
-	kurohelperdb "github.com/kuro-helper/kurohelper-db/v3"
+	kurohelperdb "kurohelper-db"
 )
 
 const (

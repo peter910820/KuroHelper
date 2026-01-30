@@ -4,8 +4,8 @@ import (
 	"sync"
 	"time"
 
-	kurohelpercore "github.com/kuro-helper/kurohelper-core/v3"
-	"github.com/kuro-helper/kurohelper-core/v3/vndb"
+	kurohelpercore "kurohelper-core"
+	"kurohelper-core/vndb"
 )
 
 // cache struct

@@ -6,9 +6,10 @@ import (
 	"kurohelper/cache"
 	"kurohelper/utils"
 
+	kurohelperdb "kurohelper-db"
+
 	"github.com/bwmarrin/discordgo"
 	"github.com/google/uuid"
-	kurohelperdb "github.com/kuro-helper/kurohelper-db/v3"
 )
 
 func RemoveInWish(s *discordgo.Session, i *discordgo.InteractionCreate, cid *utils.NewCID) {

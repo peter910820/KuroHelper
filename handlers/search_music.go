@@ -14,8 +14,9 @@ import (
 	"kurohelper/cache"
 	"kurohelper/utils"
 
+	"kurohelper-core/erogs"
+
 	kurohelpercore "github.com/kuro-helper/kurohelper-core/v3"
-	"github.com/kuro-helper/kurohelper-core/v3/erogs"
 )
 
 const searchMusicListCachePrefix = "S@"

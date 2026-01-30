@@ -4,8 +4,9 @@ import (
 	"sync"
 	"time"
 
-	kurohelpercore "github.com/kuro-helper/kurohelper-core/v3"
-	"github.com/kuro-helper/kurohelper-core/v3/erogs"
+	"kurohelper-core/erogs"
+
+	kurohelpercore "kurohelper-core"
 )
 
 // CID快取

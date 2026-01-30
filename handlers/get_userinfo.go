@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"strings"
 
+	kurohelperdb "kurohelper-db"
+
 	"github.com/bwmarrin/discordgo"
 	"github.com/google/uuid"
-	kurohelperdb "github.com/kuro-helper/kurohelper-db/v3"
 
 	"kurohelper/cache"
 	"kurohelper/utils"

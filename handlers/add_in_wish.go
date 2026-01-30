@@ -5,9 +5,10 @@ import (
 	"regexp"
 	"strings"
 
+	kurohelperdb "kurohelper-db"
+
 	"github.com/bwmarrin/discordgo"
 	"github.com/google/uuid"
-	kurohelperdb "github.com/kuro-helper/kurohelper-db/v3"
 
 	"gorm.io/gorm"
 
@@ -15,7 +16,7 @@ import (
 	"kurohelper/store"
 	"kurohelper/utils"
 
-	"github.com/kuro-helper/kurohelper-core/v3/erogs"
+	"kurohelper-core/erogs"
 )
 
 // 加收藏Handler

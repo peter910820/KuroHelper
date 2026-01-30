@@ -9,9 +9,10 @@ import (
 	"strconv"
 	"strings"
 
+	kurohelperdb "kurohelper-db"
+
 	"github.com/bwmarrin/discordgo"
 	"github.com/google/uuid"
-	kurohelperdb "github.com/kuro-helper/kurohelper-db/v3"
 	"github.com/siongui/gojianfan"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
@@ -20,11 +21,14 @@ import (
 	kurohelpererrors "kurohelper/errors"
 	"kurohelper/utils"
 
+	"kurohelper-core/erogs"
+
+	"kurohelper-core/seiya"
+
+	"kurohelper-core/ymgal"
+
 	kurohelpercore "github.com/kuro-helper/kurohelper-core/v3"
-	"github.com/kuro-helper/kurohelper-core/v3/erogs"
-	"github.com/kuro-helper/kurohelper-core/v3/seiya"
 	"github.com/kuro-helper/kurohelper-core/v3/vndb"
-	"github.com/kuro-helper/kurohelper-core/v3/ymgal"
 )
 
 // 查詢遊戲Handler
