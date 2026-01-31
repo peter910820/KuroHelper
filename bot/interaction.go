@@ -26,14 +26,10 @@ func onInteractionApplicationCommand(s *discordgo.Session, i *discordgo.Interact
 		go handlers.Helper(s, i)
 	case "vndb統計資料":
 		go handlers.VndbStats(s, i)
-	case "查詢遊戲":
-		go handlers.SearchGame(s, i, nil)
 	case "查詢遊戲v2":
 		go handlers.SearchGameV2(s, i, nil)
 	case "查詢公司品牌v2":
 		go handlers.SearchBrandV2(s, i, nil)
-	case "查詢公司品牌":
-		go handlers.SearchBrand(s, i, nil)
 	case "查詢創作者":
 		go handlers.SearchCreator(s, i, nil)
 	case "查詢音樂":
@@ -60,8 +56,27 @@ func onInteractionApplicationCommand(s *discordgo.Session, i *discordgo.Interact
 // 事件是InteractionMessageComponent(點擊按鈕)的處理
 func onInteractionMessageComponent(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	cidStringSlice := strings.Split(i.MessageComponentData().CustomID, "|")
-	// 新版CID 要轉換成CIDV2
-	if strings.HasPrefix(cidStringSlice[0], "B@") || strings.HasPrefix(cidStringSlice[0], "G@") || strings.HasPrefix(cidStringSlice[0], "S@") {
+	// 舊版CID，其餘當成新版CID(V2)去嘗試解析
+	if len(cidStringSlice) > 1 {
+		cid := utils.NewCID(cidStringSlice)
+		switch cid.GetCommandName() {
+		// case CustomIDTypeAddWish:
+		case "查詢創作者":
+			go handlers.SearchCreator(s, i, &cid)
+		case "查詢角色":
+			go handlers.SearchCharacter(s, i, &cid)
+		case "加已玩":
+			go handlers.AddHasPlayed(s, i, &cid)
+		case "加收藏":
+			go handlers.AddInWish(s, i, &cid)
+		case "個人資料":
+			go handlers.GetUserinfo(s, i, &cid)
+		case "刪除已玩":
+			go handlers.RemoveHasPlayed(s, i, &cid)
+		case "刪除收藏":
+			go handlers.RemoveInWish(s, i, &cid)
+		}
+	} else { // 新版CID(V2)
 		cid, err := utils.ParseCIDV2(i.MessageComponentData().CustomID)
 		if err != nil {
 			utils.HandleError(kurohelpererrors.ErrCIDWrongFormat, s, i)
@@ -73,40 +88,20 @@ func onInteractionMessageComponent(s *discordgo.Session, i *discordgo.Interactio
 			cid.ChangeValue(i.MessageComponentData().Values[0])
 		}
 
-		if strings.HasPrefix(cidStringSlice[0], "G@") {
-			go handlers.SearchGameV2(s, i, cid)
-		} else if strings.HasPrefix(cidStringSlice[0], "B@") {
-			go handlers.SearchBrandV2(s, i, cid)
-		} else {
-			go handlers.SearchMusicV2(s, i, cid)
+		commandID := cid.GetCommandID()
+		// CID不合法(commandID的部分)
+		if len(commandID) != 2 {
+			utils.HandleError(kurohelpererrors.ErrCIDWrongFormat, s, i)
 			return
 		}
-	} else {
-		// 安全檢查，確保CID建立邏輯有誤的話不會出問題
-		if len(cidStringSlice) > 1 {
-			cid := utils.NewCID(cidStringSlice)
-			switch cid.GetCommandName() {
-			// case CustomIDTypeAddWish:
-			case "查詢遊戲":
-				go handlers.SearchGame(s, i, &cid)
-			case "查詢公司品牌":
-				go handlers.SearchBrand(s, i, &cid)
-			case "查詢創作者":
-				go handlers.SearchCreator(s, i, &cid)
-			case "查詢角色":
-				go handlers.SearchCharacter(s, i, &cid)
-			case "加已玩":
-				go handlers.AddHasPlayed(s, i, &cid)
-			case "加收藏":
-				go handlers.AddInWish(s, i, &cid)
-			case "個人資料":
-				go handlers.GetUserinfo(s, i, &cid)
-			case "刪除已玩":
-				go handlers.RemoveHasPlayed(s, i, &cid)
-			case "刪除收藏":
-				go handlers.RemoveInWish(s, i, &cid)
-			}
-		} else {
+		switch commandID[0] {
+		case 'G':
+			go handlers.SearchGameV2(s, i, cid)
+		case 'B':
+			go handlers.SearchBrandV2(s, i, cid)
+		case 'M':
+			go handlers.SearchMusicV2(s, i, cid)
+		default:
 			utils.HandleError(kurohelpererrors.ErrCIDWrongFormat, s, i)
 			return
 		}
