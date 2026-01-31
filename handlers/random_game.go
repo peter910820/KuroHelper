@@ -9,9 +9,8 @@ import (
 	kurohelpererrors "kurohelper/errors"
 	"kurohelper/utils"
 
+	"kurohelper-core/vndb"
 	"kurohelper-core/ymgal"
-
-	"github.com/kuro-helper/kurohelper-core/v3/vndb"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/sirupsen/logrus"

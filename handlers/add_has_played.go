@@ -3,7 +3,9 @@ package handlers
 import (
 	"errors"
 	"fmt"
+	kurohelpercore "kurohelper-core"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -48,7 +50,7 @@ func AddHasPlayed(s *discordgo.Session, i *discordgo.InteractionCreate, cid *uti
 			utils.HandleError(err, s, i)
 			return
 		}
-		resValue := cacheValue.(erogs.FuzzySearchGameResponse)
+		resValue := cacheValue.(erogs.Game)
 		res := &resValue
 
 		userID := utils.GetUserID(i)
@@ -100,7 +102,7 @@ func AddHasPlayed(s *discordgo.Session, i *discordgo.InteractionCreate, cid *uti
 			utils.InteractionEmbedRespondForSelf(s, i, embed, nil, true)
 		}
 	} else {
-		var res *erogs.FuzzySearchGameResponse
+		var res *erogs.Game
 
 		keyword, err := utils.GetOptions(i, "keyword")
 		if err != nil {
@@ -129,7 +131,12 @@ func AddHasPlayed(s *discordgo.Session, i *discordgo.InteractionCreate, cid *uti
 		}
 
 		idSearch, _ := regexp.MatchString(`^e\d+$`, keyword)
-		res, err = erogs.GetGameByFuzzy(keyword, idSearch)
+		if idSearch {
+			num, _ := strconv.Atoi(keyword[1:])
+			res, err = erogs.SearchGameByID(num)
+		} else {
+			res, err = erogs.SearchGameByKeyword([]string{keyword, kurohelpercore.ZhTwToJp(keyword)})
+		}
 		if err != nil {
 			utils.HandleError(err, s, i)
 			return

@@ -16,10 +16,10 @@ import (
 
 	"kurohelper-core/erogs"
 
-	kurohelpercore "github.com/kuro-helper/kurohelper-core/v3"
+	kurohelpercore "kurohelper-core"
 )
 
-const searchMusicListCachePrefix = "S@"
+const searchMusicCommandID = "M2"
 
 var searchMusicColor = 0xF8F8DF
 
@@ -50,7 +50,7 @@ func erogsSearchMusicListV2(s *discordgo.Session, i *discordgo.InteractionCreate
 		return
 	}
 
-	idStr := searchMusicListCachePrefix + uuid.New().String()
+	idStr := uuid.New().String()
 
 	// 將 keyword 轉成 base64 作為快取鍵
 	cacheKey := base64.RawURLEncoding.EncodeToString([]byte(keyword))
@@ -79,7 +79,7 @@ func erogsSearchMusicListV2(s *discordgo.Session, i *discordgo.InteractionCreate
 
 	logrus.WithField("interaction", i).Infof("erogs查詢音樂列表: %s", keyword)
 
-	res, err := erogs.GetMusicListByFuzzy(keyword)
+	res, err := erogs.SearchMusicListByKeyword([]string{keyword, kurohelpercore.ZhTwToJp(keyword)})
 	if err != nil {
 		utils.HandleErrorV2(err, s, i, utils.WebhookEditRespond)
 		return
@@ -113,7 +113,7 @@ func erogsSearchMusicListWithCIDV2(s *discordgo.Session, i *discordgo.Interactio
 		return
 	}
 
-	cidCacheValue, err := cache.CIDStore.Get(pageCID.CacheId)
+	cidCacheValue, err := cache.CIDStore.Get(pageCID.CacheID)
 	if err != nil {
 		utils.HandleErrorV2(err, s, i, utils.InteractionRespondEditComplex)
 		return
@@ -125,7 +125,7 @@ func erogsSearchMusicListWithCIDV2(s *discordgo.Session, i *discordgo.Interactio
 		return
 	}
 
-	components, err := buildSearchMusicComponents(cacheValue, pageCID.Value, pageCID.CacheId)
+	components, err := buildSearchMusicComponents(cacheValue, pageCID.Value, pageCID.CacheID)
 	if err != nil {
 		utils.HandleErrorV2(err, s, i, utils.InteractionRespondEditComplex)
 		return
@@ -157,7 +157,16 @@ func erogsSearchMusicWithSelectMenuCIDV2(s *discordgo.Session, i *discordgo.Inte
 	if err != nil {
 		if errors.Is(err, kurohelpercore.ErrCacheLost) {
 			logrus.WithField("interaction", i).Infof("erogs查詢音樂: %s", selectMenuCID.Value)
-			res, err = erogs.GetMusicByFuzzy(selectMenuCID.Value, true)
+
+			cleanStr := strings.TrimPrefix(selectMenuCID.Value, "E")
+			cleanStr = strings.TrimPrefix(cleanStr, "e")
+			erogsID, err := strconv.Atoi(cleanStr)
+			if err != nil {
+				utils.HandleErrorV2(err, s, i, utils.InteractionRespondEditComplex)
+				return
+			}
+
+			res, err = erogs.SearchMusicByID(erogsID)
 			if err != nil {
 				utils.HandleErrorV2(err, s, i, utils.InteractionRespondEditComplex)
 				return
@@ -258,7 +267,7 @@ func erogsSearchMusicWithSelectMenuCIDV2(s *discordgo.Session, i *discordgo.Inte
 		discordgo.Separator{Divider: &divider},
 	}
 
-	containerComponents = append(containerComponents, utils.MakeBackToHomeComponent(selectMenuCID.CacheId))
+	containerComponents = append(containerComponents, utils.MakeBackToHomeComponent(searchMusicCommandID, selectMenuCID.CacheID))
 
 	utils.InteractionRespondEditComplex(s, i, []discordgo.MessageComponent{
 		discordgo.Container{
@@ -277,7 +286,7 @@ func erogsSearchMusicWithBackToHomeCIDV2(s *discordgo.Session, i *discordgo.Inte
 
 	backToHomeCID := cid.ToBackToHomeCIDV2()
 
-	cidCacheValue, err := cache.CIDStore.Get(backToHomeCID.CacheId)
+	cidCacheValue, err := cache.CIDStore.Get(backToHomeCID.CacheID)
 	if err != nil {
 		utils.HandleErrorV2(err, s, i, utils.InteractionRespondEditComplex)
 		return
@@ -289,7 +298,7 @@ func erogsSearchMusicWithBackToHomeCIDV2(s *discordgo.Session, i *discordgo.Inte
 		return
 	}
 
-	components, err := buildSearchMusicComponents(cacheValue, 1, backToHomeCID.CacheId)
+	components, err := buildSearchMusicComponents(cacheValue, 1, backToHomeCID.CacheID)
 	if err != nil {
 		utils.HandleErrorV2(err, s, i, utils.InteractionRespondEditComplex)
 		return
@@ -369,10 +378,10 @@ func buildSearchMusicComponents(res []erogs.MusicList, currentPage int, cacheID 
 	}
 
 	// 產生選單組件
-	selectMenuComponents := utils.MakeSelectMenuComponent(cacheID, gameMenuItems)
+	selectMenuComponents := utils.MakeSelectMenuComponent(searchMusicCommandID, cacheID, gameMenuItems)
 
 	// 產生翻頁組件
-	pageComponents, err := utils.MakeChangePageComponent(currentPage, totalPages, cacheID)
+	pageComponents, err := utils.MakeChangePageComponent(searchMusicCommandID, currentPage, totalPages, cacheID)
 	if err != nil {
 		return nil, err
 	}

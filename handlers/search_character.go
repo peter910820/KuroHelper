@@ -3,6 +3,7 @@ package handlers
 import (
 	"errors"
 	"fmt"
+	kurohelpercore "kurohelper-core"
 	"regexp"
 	"sort"
 	"strconv"
@@ -18,8 +19,9 @@ import (
 
 	"kurohelper-core/erogs"
 
-	"github.com/kuro-helper/kurohelper-core/v3/bangumi"
-	"github.com/kuro-helper/kurohelper-core/v3/vndb"
+	"kurohelper-core/vndb"
+
+	"kurohelper-core/bangumi"
 )
 
 // 查詢角色Handler
@@ -90,14 +92,19 @@ func erogsSearchCharacter(s *discordgo.Session, i *discordgo.InteractionCreate) 
 		Type: discordgo.InteractionResponseDeferredChannelMessageWithSource,
 	})
 
-	var res *erogs.FuzzySearchCharacterResponse
+	var res *erogs.Character
 	keyword, err := utils.GetOptions(i, "keyword")
 	if err != nil {
 		utils.HandleError(err, s, i)
 		return
 	}
 	idSearch, _ := regexp.MatchString(`^e\d+$`, keyword)
-	res, err = erogs.GetCharacterByFuzzy(keyword, idSearch)
+	if idSearch {
+		num, _ := strconv.Atoi(keyword[1:])
+		res, err = erogs.SearchCharacterByID(num)
+	} else {
+		res, err = erogs.SearchCharacterByKeyword([]string{keyword, kurohelpercore.ZhTwToJp(keyword)})
+	}
 	if err != nil {
 		utils.HandleError(err, s, i)
 		return
@@ -171,7 +178,7 @@ func erogsSearchCharacter(s *discordgo.Session, i *discordgo.InteractionCreate) 
 
 // erogs查詢角色列表搜尋處理
 func erogsSearchCharacterList(s *discordgo.Session, i *discordgo.InteractionCreate, cid *utils.NewCID) {
-	var res *[]erogs.FuzzySearchListResponse
+	var res *[]erogs.CharacterList
 	var messageComponent []discordgo.MessageComponent
 	var hasMore bool
 	var count int
@@ -183,19 +190,19 @@ func erogsSearchCharacterList(s *discordgo.Session, i *discordgo.InteractionCrea
 			return
 		}
 
-		res, err = erogs.GetCharacterListByFuzzy(keyword)
+		res, err := erogs.SearchCharacterListByKeyword([]string{keyword, kurohelpercore.ZhTwToJp(keyword)})
 		if err != nil {
 			utils.HandleError(err, s, i)
 			return
 		}
 
 		idStr := uuid.New().String()
-		cache.SearchCache.Set(idStr, *res)
+		cache.SearchCache.Set(idStr, res)
 
 		// 計算筆數
-		count = len(*res)
+		count = len(res)
 
-		hasMore = pagination(res, 0, false)
+		hasMore = pagination(&res, 0, false)
 
 		if hasMore {
 			cidCommandName := utils.MakeCIDCommandName(i.ApplicationCommandData().Name, true, "erogs")
@@ -211,7 +218,7 @@ func erogsSearchCharacterList(s *discordgo.Session, i *discordgo.InteractionCrea
 			utils.HandleError(err, s, i)
 			return
 		}
-		resValue := cacheValue.([]erogs.FuzzySearchListResponse)
+		resValue := cacheValue.([]erogs.CharacterList)
 		res = &resValue
 
 		// 計算筆數
@@ -239,7 +246,7 @@ func erogsSearchCharacterList(s *discordgo.Session, i *discordgo.InteractionCrea
 	actionsRow := utils.MakeActionsRow(messageComponent)
 	listData := make([]string, 0, len(*res))
 	for _, r := range *res {
-		listData = append(listData, fmt.Sprintf("e%-5s　%s (%s)(%s)", strconv.Itoa(r.ID), r.Name, r.Category, r.Model))
+		listData = append(listData, fmt.Sprintf("e%-5s　%s (%s)(%s)", strconv.Itoa(r.ID), r.GameName, r.Category, r.Model))
 	}
 	embed := &discordgo.MessageEmbed{
 		Title: fmt.Sprintf("角色列表搜尋 (%d筆)", count),

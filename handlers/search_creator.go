@@ -3,6 +3,7 @@ package handlers
 import (
 	"errors"
 	"fmt"
+	kurohelpercore "kurohelper-core"
 	"regexp"
 	"sort"
 	"strconv"
@@ -50,7 +51,7 @@ func SearchCreator(s *discordgo.Session, i *discordgo.InteractionCreate, cid *ut
 
 // erogs查詢創作者處理
 func erogsSearchCreator(s *discordgo.Session, i *discordgo.InteractionCreate, cid *utils.NewCID) {
-	var res *erogs.FuzzySearchCreatorResponse
+	var res *erogs.Creator
 	var messageComponent []discordgo.MessageComponent
 	var hasMore bool
 	var count int
@@ -64,12 +65,16 @@ func erogsSearchCreator(s *discordgo.Session, i *discordgo.InteractionCreate, ci
 			return
 		}
 		idSearch, _ := regexp.MatchString(`^e\d+$`, keyword)
-		res, err = erogs.GetCreatorByFuzzy(keyword, idSearch)
+		if idSearch {
+			num, _ := strconv.Atoi(keyword[1:])
+			res, err = erogs.SearchCreatorByID(num)
+		} else {
+			res, err = erogs.SearchCreatorByKeyword([]string{keyword, kurohelpercore.ZhTwToJp(keyword)})
+		}
 		if err != nil {
 			utils.HandleError(err, s, i)
 			return
 		}
-
 		logrus.WithField("guildID", i.GuildID).Infof("erogs查詢創作者: %s", keyword)
 
 		idStr := uuid.New().String()
@@ -101,7 +106,7 @@ func erogsSearchCreator(s *discordgo.Session, i *discordgo.InteractionCreate, ci
 			utils.HandleError(err, s, i)
 			return
 		}
-		resValue := cacheValue.(erogs.FuzzySearchCreatorResponse)
+		resValue := cacheValue.(erogs.Creator)
 		res = &resValue
 
 		// 根據遊戲評價排序
@@ -188,7 +193,7 @@ func erogsSearchCreator(s *discordgo.Session, i *discordgo.InteractionCreate, ci
 
 // erogs查詢創作者列表搜尋處理
 func erogsSearchCreatorList(s *discordgo.Session, i *discordgo.InteractionCreate, cid *utils.NewCID) {
-	var res *[]erogs.FuzzySearchListResponse
+	var res *[]erogs.CreatorList
 	var messageComponent []discordgo.MessageComponent
 	var hasMore bool
 	var count int
@@ -200,19 +205,19 @@ func erogsSearchCreatorList(s *discordgo.Session, i *discordgo.InteractionCreate
 			return
 		}
 
-		res, err = erogs.GetCreatorListByFuzzy(keyword)
+		res, err := erogs.SearchCreatorListByKeyword([]string{keyword, kurohelpercore.ZhTwToJp(keyword)})
 		if err != nil {
 			utils.HandleError(err, s, i)
 			return
 		}
 
 		idStr := uuid.New().String()
-		cache.SearchCache.Set(idStr, *res)
+		cache.SearchCache.Set(idStr, &res)
 
 		// 計算筆數
-		count = len(*res)
+		count = len(res)
 
-		hasMore = pagination(res, 0, false)
+		hasMore = pagination(&res, 0, false)
 
 		if hasMore {
 			cidCommandName := utils.MakeCIDCommandName(i.ApplicationCommandData().Name, true, "")
@@ -228,8 +233,8 @@ func erogsSearchCreatorList(s *discordgo.Session, i *discordgo.InteractionCreate
 			utils.HandleError(err, s, i)
 			return
 		}
-		resValue := cacheValue.([]erogs.FuzzySearchListResponse)
-		res = &resValue
+		resValue := cacheValue.(*[]erogs.CreatorList)
+		res = resValue
 
 		// 計算筆數
 		count = len(*res)

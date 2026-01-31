@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/kuro-helper/kurohelper-core/v3/vndb"
+	"kurohelper-core/vndb"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/sirupsen/logrus"
