@@ -5,20 +5,23 @@ import (
 	"errors"
 	"fmt"
 	"kurohelper/cache"
+	kurohelperrerrors "kurohelper/errors"
 	"kurohelper/store"
 	"kurohelper/utils"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
 
+	kurohelpercore "kurohelper-core"
 	"kurohelper-core/erogs"
-
 	"kurohelper-core/seiya"
+	"kurohelper-core/vndb"
+	"kurohelper-core/ymgal"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/google/uuid"
-	kurohelpercore "github.com/kuro-helper/kurohelper-core/v3"
-	"github.com/kuro-helper/kurohelper-core/v3/vndb"
+	"github.com/siongui/gojianfan"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 
@@ -27,7 +30,8 @@ import (
 
 const (
 	searchGameListItemsPerPage = 10
-	searchGameListCachePrefix  = "G@"
+	searchGameErogsCommandID   = "G2"
+	searchGameVndbCommandID    = "G1"
 )
 
 var (
@@ -35,20 +39,45 @@ var (
 	searchGameColor     = 0x04108e
 )
 
-// 查詢遊戲列表Handler(新版API)
+type switchMode struct {
+	OptDB      byte
+	BehaviorID utils.BehaviorID
+}
+
+// 查詢遊戲Handler進入點
 func SearchGameV2(s *discordgo.Session, i *discordgo.InteractionCreate, cid *utils.CIDV2) {
 	if cid == nil {
-		erogsSearchGameListV2(s, i)
+		optDB, err := utils.GetOptions(i, "查詢資料庫選項")
+		if err != nil && errors.Is(err, kurohelperrerrors.ErrOptionTranslateFail) {
+			utils.HandleError(err, s, i)
+			return
+		}
+		switch optDB {
+		case "1":
+			vndbSearchGameListV2(s, i)
+		case "2":
+			erogsSearchGameListV2(s, i)
+		default:
+			// 預設走批評空間
+			erogsSearchGameListV2(s, i)
+		}
 	} else {
 		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseDeferredMessageUpdate,
 		})
-		switch cid.GetBehaviorID() {
-		case utils.PageBehavior:
+		// 選擇不同行為的進入點
+		switch (switchMode{cid.GetCommandID()[1], cid.GetBehaviorID()}) {
+		case switchMode{'1', utils.PageBehavior}:
+			vndbSearchGameListWithCIDV2(s, i, cid)
+		case switchMode{'2', utils.PageBehavior}:
 			erogsSearchGameListWithCIDV2(s, i, cid)
-		case utils.SelectMenuBehavior:
+		case switchMode{'1', utils.SelectMenuBehavior}:
+			vndbSearchGameWithSelectMenuCIDV2(s, i, cid)
+		case switchMode{'2', utils.SelectMenuBehavior}:
 			erogsSearchGameWithSelectMenuCIDV2(s, i, cid)
-		case utils.BackToHomeBehavior:
+		case switchMode{'1', utils.BackToHomeBehavior}:
+			vndbSearchGameWithBackToHomeCIDV2(s, i, cid)
+		case switchMode{'2', utils.BackToHomeBehavior}:
 			erogsSearchGameWithBackToHomeCIDV2(s, i, cid)
 		}
 	}
@@ -62,7 +91,7 @@ func erogsSearchGameListV2(s *discordgo.Session, i *discordgo.InteractionCreate)
 		return
 	}
 
-	idStr := searchGameListCachePrefix + uuid.New().String()
+	idStr := uuid.New().String()
 
 	// 將 keyword 轉成 base64 作為快取鍵
 	cacheKey := base64.RawURLEncoding.EncodeToString([]byte(keyword))
@@ -74,7 +103,7 @@ func erogsSearchGameListV2(s *discordgo.Session, i *discordgo.InteractionCreate)
 		cache.CIDStore.Set(idStr, cacheKey)
 
 		// 快取存在，直接使用，不需要延遲傳送
-		components, err := buildSearchGameComponents(&cacheValue, 1, idStr)
+		components, err := buildSearchGameComponents(cacheValue, 1, idStr)
 		if err != nil {
 			utils.HandleErrorV2(err, s, i, utils.InteractionRespondV2)
 			return
@@ -104,14 +133,14 @@ func erogsSearchGameListV2(s *discordgo.Session, i *discordgo.InteractionCreate)
 
 	logrus.WithField("interaction", i).Infof("erogs查詢遊戲列表: %s", keyword)
 
-	res, err := erogs.GetGameListByFuzzy(keyword)
+	res, err := erogs.SearchGameListByKeyword([]string{keyword, kurohelpercore.ZhTwToJp(keyword)})
 	if err != nil {
 		utils.HandleErrorV2(err, s, i, utils.WebhookEditRespond)
 		return
 	}
 
 	// 將查詢結果存入快取
-	cache.ErogsGameListStore.Set(cacheKey, *res)
+	cache.ErogsGameListStore.Set(cacheKey, res)
 
 	// 存入CID與關鍵字的對應快取
 	cache.CIDStore.Set(idStr, cacheKey)
@@ -138,7 +167,7 @@ func erogsSearchGameListWithCIDV2(s *discordgo.Session, i *discordgo.Interaction
 		return
 	}
 
-	cidCacheValue, err := cache.CIDStore.Get(pageCID.CacheId)
+	cidCacheValue, err := cache.CIDStore.Get(pageCID.CacheID)
 	if err != nil {
 		utils.HandleErrorV2(err, s, i, utils.InteractionRespondEditComplex)
 		return
@@ -150,7 +179,7 @@ func erogsSearchGameListWithCIDV2(s *discordgo.Session, i *discordgo.Interaction
 		return
 	}
 
-	components, err := buildSearchGameComponents(&cacheValue, pageCID.Value, pageCID.CacheId)
+	components, err := buildSearchGameComponents(cacheValue, pageCID.Value, pageCID.CacheID)
 	if err != nil {
 		utils.HandleErrorV2(err, s, i, utils.InteractionRespondEditComplex)
 		return
@@ -182,7 +211,16 @@ func erogsSearchGameWithSelectMenuCIDV2(s *discordgo.Session, i *discordgo.Inter
 	if err != nil {
 		if errors.Is(err, kurohelpercore.ErrCacheLost) {
 			logrus.WithField("guildID", i.GuildID).Infof("erogs查詢遊戲: %s", selectMenuCID.Value)
-			res, err = erogs.GetGameByFuzzy(selectMenuCID.Value, true)
+
+			cleanStr := strings.TrimPrefix(selectMenuCID.Value, "E")
+			cleanStr = strings.TrimPrefix(cleanStr, "e")
+			erogsID, err := strconv.Atoi(cleanStr)
+			if err != nil {
+				utils.HandleErrorV2(err, s, i, utils.InteractionRespondEditComplex)
+				return
+			}
+
+			res, err = erogs.SearchGameByID(erogsID)
 			if err != nil {
 				utils.HandleErrorV2(err, s, i, utils.InteractionRespondEditComplex)
 				return
@@ -445,7 +483,7 @@ func erogsSearchGameWithSelectMenuCIDV2(s *discordgo.Session, i *discordgo.Inter
 		discordgo.Separator{Divider: &divider},
 	}
 
-	containerComponents = append(containerComponents, utils.MakeBackToHomeComponent(selectMenuCID.CacheId))
+	containerComponents = append(containerComponents, utils.MakeBackToHomeComponent(searchGameErogsCommandID, selectMenuCID.CacheID))
 
 	components := []discordgo.MessageComponent{
 		discordgo.Container{
@@ -466,7 +504,7 @@ func erogsSearchGameWithBackToHomeCIDV2(s *discordgo.Session, i *discordgo.Inter
 
 	backToHomeCID := cid.ToBackToHomeCIDV2()
 
-	cidCacheValue, err := cache.CIDStore.Get(backToHomeCID.CacheId)
+	cidCacheValue, err := cache.CIDStore.Get(backToHomeCID.CacheID)
 	if err != nil {
 		utils.HandleErrorV2(err, s, i, utils.InteractionRespondEditComplex)
 		return
@@ -478,7 +516,7 @@ func erogsSearchGameWithBackToHomeCIDV2(s *discordgo.Session, i *discordgo.Inter
 		return
 	}
 
-	components, err := buildSearchGameComponents(&cacheValue, 1, backToHomeCID.CacheId)
+	components, err := buildSearchGameComponents(cacheValue, 1, backToHomeCID.CacheID)
 	if err != nil {
 		utils.HandleErrorV2(err, s, i, utils.InteractionRespondEditComplex)
 		return
@@ -487,8 +525,8 @@ func erogsSearchGameWithBackToHomeCIDV2(s *discordgo.Session, i *discordgo.Inter
 }
 
 // 產生查詢遊戲列表的Components
-func buildSearchGameComponents(res *[]erogs.FuzzySearchListResponse, currentPage int, cacheID string) ([]discordgo.MessageComponent, error) {
-	totalItems := len(*res)
+func buildSearchGameComponents(res []erogs.GameList, currentPage int, cacheID string) ([]discordgo.MessageComponent, error) {
+	totalItems := len(res)
 	totalPages := (totalItems + searchGameListItemsPerPage - 1) / searchGameListItemsPerPage
 
 	divider := true
@@ -502,7 +540,7 @@ func buildSearchGameComponents(res *[]erogs.FuzzySearchListResponse, currentPage
 	// 計算當前頁的範圍
 	start := (currentPage - 1) * searchGameListItemsPerPage
 	end := min(start+searchGameListItemsPerPage, totalItems)
-	pagedResults := (*res)[start:end]
+	pagedResults := res[start:end]
 
 	gameMenuItems := []utils.SelectMenuItem{}
 
@@ -546,10 +584,484 @@ func buildSearchGameComponents(res *[]erogs.FuzzySearchListResponse, currentPage
 	}
 
 	// 產生選單組件
-	selectMenuComponents := utils.MakeSelectMenuComponent(cacheID, gameMenuItems)
+	selectMenuComponents := utils.MakeSelectMenuComponent(searchGameErogsCommandID, cacheID, gameMenuItems)
 
 	// 產生翻頁組件
-	pageComponents, err := utils.MakeChangePageComponent(currentPage, totalPages, cacheID)
+	pageComponents, err := utils.MakeChangePageComponent(searchGameErogsCommandID, currentPage, totalPages, cacheID)
+	if err != nil {
+		return nil, err
+	}
+
+	containerComponents = append(containerComponents,
+		discordgo.Separator{Divider: &divider},
+		selectMenuComponents,
+		pageComponents,
+	)
+
+	// 組成完整組件回傳
+	return []discordgo.MessageComponent{
+		discordgo.Container{
+			AccentColor: &searchGameListColor,
+			Components:  containerComponents,
+		},
+	}, nil
+}
+
+// 月幕查詢遊戲名稱處理
+func ymgalGetGameString(keyword string) (string, error) {
+	logrus.Debugf("ymgal查詢遊戲: %s", keyword)
+
+	searchGameRes, err := ymgal.SearchGame(gojianfan.T2S(keyword))
+	if err != nil {
+		return "", err
+	}
+
+	if len(searchGameRes.Result) == 0 {
+		return "", kurohelpercore.ErrSearchNoContent
+	}
+
+	sort.Slice(searchGameRes.Result, func(i, j int) bool {
+		return searchGameRes.Result[i].Weights > searchGameRes.Result[j].Weights
+	})
+
+	return searchGameRes.Result[0].Name, nil
+}
+
+// VNDB V2 架構方法
+
+// 查詢 VNDB 遊戲列表
+func vndbSearchGameListV2(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	keyword, err := utils.GetOptions(i, "keyword")
+	if err != nil {
+		utils.HandleErrorV2(err, s, i, utils.InteractionRespondV2)
+		return
+	}
+
+	idStr := uuid.New().String()
+
+	// 將 keyword 轉成 base64 作為快取鍵
+	cacheKey := base64.RawURLEncoding.EncodeToString([]byte(keyword))
+
+	// 檢查快取是否存在
+	cacheValue, err := cache.VndbGameListStore.Get(cacheKey)
+	if err == nil {
+		// 存入CID與關鍵字的對應快取
+		cache.CIDStore.Set(idStr, cacheKey)
+
+		// 快取存在，直接使用，不需要延遲傳送
+		components, err := buildVndbSearchGameComponents(cacheValue, 1, idStr)
+		if err != nil {
+			utils.HandleErrorV2(err, s, i, utils.InteractionRespondV2)
+			return
+		}
+		utils.InteractionRespondV2(s, i, components)
+		return
+	}
+
+	// 快取不存在，需要查詢資料
+	// 先發送延遲回應
+	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseDeferredChannelMessageWithSource,
+	})
+
+	logrus.WithField("interaction", i).Infof("vndb查詢遊戲列表: %s", keyword)
+
+	res, err := vndb.GetVnID(keyword)
+	if err != nil {
+		utils.HandleErrorV2(err, s, i, utils.WebhookEditRespond)
+		return
+	}
+
+	// 將查詢結果存入快取
+	cache.VndbGameListStore.Set(cacheKey, *res)
+
+	// 存入CID與關鍵字的對應快取
+	cache.CIDStore.Set(idStr, cacheKey)
+
+	components, err := buildVndbSearchGameComponents(*res, 1, idStr)
+	if err != nil {
+		utils.HandleErrorV2(err, s, i, utils.WebhookEditRespond)
+		return
+	}
+
+	utils.WebhookEditRespond(s, i, components)
+}
+
+// 查詢 VNDB 遊戲列表(有CID版本)
+func vndbSearchGameListWithCIDV2(s *discordgo.Session, i *discordgo.InteractionCreate, cid *utils.CIDV2) {
+	if cid.GetBehaviorID() != utils.PageBehavior {
+		utils.HandleErrorV2(errors.New("handlers: cid behavior id error"), s, i, utils.InteractionRespondEditComplex)
+		return
+	}
+
+	pageCID, err := cid.ToPageCIDV2()
+	if err != nil {
+		utils.HandleErrorV2(err, s, i, utils.InteractionRespondEditComplex)
+		return
+	}
+
+	cidCacheValue, err := cache.CIDStore.Get(pageCID.CacheID)
+	if err != nil {
+		utils.HandleErrorV2(err, s, i, utils.InteractionRespondEditComplex)
+		return
+	}
+
+	cacheValue, err := cache.VndbGameListStore.Get(cidCacheValue)
+	if err != nil {
+		utils.HandleErrorV2(err, s, i, utils.InteractionRespondEditComplex)
+		return
+	}
+
+	components, err := buildVndbSearchGameComponents(cacheValue, pageCID.Value, pageCID.CacheID)
+	if err != nil {
+		utils.HandleErrorV2(err, s, i, utils.InteractionRespondEditComplex)
+		return
+	}
+
+	utils.WebhookEditRespond(s, i, components)
+}
+
+// 查詢單一 VNDB 遊戲資料(有CID版本，從選單選擇)
+func vndbSearchGameWithSelectMenuCIDV2(s *discordgo.Session, i *discordgo.InteractionCreate, cid *utils.CIDV2) {
+	if cid.GetBehaviorID() != utils.SelectMenuBehavior {
+		utils.HandleErrorV2(errors.New("handlers: cid behavior id error"), s, i, utils.InteractionRespondEditComplex)
+		return
+	}
+
+	selectMenuCID := cid.ToSelectMenuCIDV2()
+
+	utils.WebhookEditRespond(s, i, []discordgo.MessageComponent{
+		discordgo.Container{
+			Components: []discordgo.MessageComponent{
+				discordgo.TextDisplay{
+					Content: "# ⌛ 正在跳轉，請稍候...",
+				},
+			},
+		},
+	})
+
+	res, err := cache.VndbGameStore.Get(selectMenuCID.Value)
+	if err != nil {
+		if errors.Is(err, kurohelpercore.ErrCacheLost) {
+			logrus.WithField("guildID", i.GuildID).Infof("vndb查詢遊戲: %s", selectMenuCID.Value)
+
+			res, err = vndb.GetVNByID(selectMenuCID.Value)
+			if err != nil {
+				utils.HandleErrorV2(err, s, i, utils.InteractionRespondEditComplex)
+				return
+			}
+
+			cache.VndbGameStore.Set(selectMenuCID.Value, res)
+
+		} else {
+			utils.HandleErrorV2(err, s, i, utils.InteractionRespondEditComplex)
+			return
+		}
+	}
+
+	// 處理回傳結構
+	gameTitle := res.Results[0].Alttitle
+	if strings.TrimSpace(gameTitle) == "" {
+		gameTitle = res.Results[0].Title
+	}
+
+	brandTitle := ""
+	if len(res.Results[0].Developers) > 0 {
+		brandTitle = res.Results[0].Developers[0].Original
+		if strings.TrimSpace(brandTitle) != "" {
+			brandTitle += fmt.Sprintf("(%s)", res.Results[0].Developers[0].Name)
+		} else {
+			brandTitle = res.Results[0].Developers[0].Name
+		}
+	}
+
+	// staff block
+	var scenario []string
+	var art []string
+	var songs []string
+
+	for _, staff := range res.Results[0].Staff {
+		staffName := staff.Original
+		if staffName == "" {
+			staffName = staff.Name
+		}
+		tmpAlias := ""
+		if len(staff.Aliases) > 0 {
+			aliases := make([]string, 0, len(staff.Aliases))
+			for _, alias := range staff.Aliases {
+				if alias.IsMain {
+					staffName = alias.Name
+				} else {
+					aliases = append(aliases, alias.Name)
+				}
+			}
+			if len(aliases) > 0 {
+				tmpAlias = "(" + strings.Join(aliases, ", ") + ")"
+			}
+		}
+
+		staffDisplay := staffName
+		if tmpAlias != "" {
+			staffDisplay += " " + tmpAlias
+		}
+
+		switch staff.Role {
+		case "scenario":
+			scenario = append(scenario, staffDisplay)
+		case "art":
+			art = append(art, staffDisplay)
+		case "songs":
+			songs = append(songs, staffDisplay)
+		}
+	}
+
+	// character block
+	characterMap := make(map[string]CharacterData)
+	for _, va := range res.Results[0].Va {
+		characterName := va.Character.Original
+		if characterName == "" {
+			characterName = va.Character.Name
+		}
+		for _, vn := range va.Character.Vns {
+			if vn.ID == res.Results[0].ID {
+				characterMap[va.Character.ID] = CharacterData{
+					Name: characterName,
+					Role: vn.Role,
+				}
+				break
+			}
+		}
+	}
+
+	// 將 map 轉為 slice 並排序
+	characterList := make([]CharacterData, 0, len(characterMap))
+	for _, character := range characterMap {
+		characterList = append(characterList, character)
+	}
+	sort.Slice(characterList, func(i, j int) bool {
+		return characterList[i].Role < characterList[j].Role
+	})
+
+	// 格式化輸出
+	characters := make([]string, 0, len(characterList))
+	for _, character := range characterList {
+		characters = append(characters, fmt.Sprintf("**%s** (%s)", character.Name, vndb.Role[character.Role]))
+	}
+
+	// relations block
+	relationsGame := make([]string, 0, len(res.Results[0].Relations))
+	for _, rg := range res.Results[0].Relations {
+		titleName := ""
+		for _, title := range rg.Titles {
+			if title.Main {
+				titleName = title.Title
+			}
+		}
+		relationsGame = append(relationsGame, fmt.Sprintf("%s(%s)", titleName, rg.ID))
+	}
+
+	// 構建 Components V2 格式
+	divider := true
+	contentParts := []string{}
+
+	// 品牌名稱
+	if strings.TrimSpace(brandTitle) != "" {
+		contentParts = append(contentParts, fmt.Sprintf("**品牌(公司)名稱**\n%s", brandTitle))
+	}
+
+	// 劇本
+	if len(scenario) > 0 {
+		contentParts = append(contentParts, fmt.Sprintf("**劇本**\n%s", strings.Join(scenario, "\n")))
+	}
+
+	// 美術
+	if len(art) > 0 {
+		contentParts = append(contentParts, fmt.Sprintf("**美術**\n%s", strings.Join(art, "\n")))
+	}
+
+	// 音樂
+	if len(songs) > 0 {
+		contentParts = append(contentParts, fmt.Sprintf("**音樂**\n%s", strings.Join(songs, "\n")))
+	}
+
+	// 評價資訊
+	evaluationText := fmt.Sprintf("**評價(平均/貝式平均/樣本數)**\n%.1f / %.1f / %d",
+		res.Results[0].Average, res.Results[0].Rating, res.Results[0].Votecount)
+	contentParts = append(contentParts, evaluationText)
+
+	// 遊玩時數
+	if res.Results[0].LengthMinutes > 0 {
+		lengthText := fmt.Sprintf("**平均遊玩時數/樣本數**\n%d(H) / %d",
+			res.Results[0].LengthMinutes/60, res.Results[0].LengthVotes)
+		contentParts = append(contentParts, lengthText)
+	}
+
+	// 角色列表
+	if len(characters) > 0 {
+		contentParts = append(contentParts, fmt.Sprintf("**角色列表**\n%s", strings.Join(characters, " / ")))
+	}
+
+	// 相關遊戲
+	relationsGameDisplay := strings.Join(relationsGame, ", ")
+	if strings.TrimSpace(relationsGameDisplay) == "" {
+		relationsGameDisplay = "無"
+	}
+	contentParts = append(contentParts, fmt.Sprintf("**相關遊戲**\n%s", relationsGameDisplay))
+
+	// 合併所有內容
+	fullContent := strings.Join(contentParts, "\n\n")
+
+	// 構建單一 Section，包含所有內容
+	section := discordgo.Section{
+		Components: []discordgo.MessageComponent{
+			discordgo.TextDisplay{
+				Content: fullContent,
+			},
+		},
+	}
+
+	// 處理圖片
+	thumbnailURL := res.Results[0].Image.Url
+	// 過濾色情/暴力圖片
+	if res.Results[0].Image.Sexual >= 1 || res.Results[0].Image.Violence >= 1 {
+		thumbnailURL = ""
+		logrus.WithField("guildID", i.GuildID).Infof("%s 封面已過濾圖片顯示", gameTitle)
+	}
+
+	// 檢查是否允許顯示圖片
+	userID := utils.GetUserID(i)
+	if strings.TrimSpace(thumbnailURL) != "" {
+		if i.GuildID != "" {
+			// guild
+			if _, ok := store.GuildDiscordAllowList[i.GuildID]; !ok {
+				thumbnailURL = ""
+			}
+		} else {
+			// DM
+			if _, ok := store.GuildDiscordAllowList[userID]; !ok {
+				thumbnailURL = ""
+			}
+		}
+	}
+
+	if strings.TrimSpace(thumbnailURL) == "" {
+		thumbnailURL = placeholderImageURL
+	}
+
+	section.Accessory = &discordgo.Thumbnail{
+		Media: discordgo.UnfurledMediaItem{
+			URL: thumbnailURL,
+		},
+	}
+
+	containerComponents := []discordgo.MessageComponent{
+		discordgo.TextDisplay{
+			Content: fmt.Sprintf("# %s", gameTitle),
+		},
+		discordgo.Separator{Divider: &divider},
+		section,
+		discordgo.Separator{Divider: &divider},
+	}
+
+	containerComponents = append(containerComponents, utils.MakeBackToHomeComponent(searchGameVndbCommandID, selectMenuCID.CacheID))
+
+	components := []discordgo.MessageComponent{
+		discordgo.Container{
+			AccentColor: &searchGameColor,
+			Components:  containerComponents,
+		},
+	}
+
+	utils.InteractionRespondEditComplex(s, i, components)
+}
+
+// 返回 VNDB 遊戲列表主頁(有CID版本)
+func vndbSearchGameWithBackToHomeCIDV2(s *discordgo.Session, i *discordgo.InteractionCreate, cid *utils.CIDV2) {
+	if cid.GetBehaviorID() != utils.BackToHomeBehavior {
+		utils.HandleErrorV2(errors.New("handlers: cid behavior id error"), s, i, utils.InteractionRespondEditComplex)
+		return
+	}
+
+	backToHomeCID := cid.ToBackToHomeCIDV2()
+
+	cidCacheValue, err := cache.CIDStore.Get(backToHomeCID.CacheID)
+	if err != nil {
+		utils.HandleErrorV2(err, s, i, utils.InteractionRespondEditComplex)
+		return
+	}
+
+	cacheValue, err := cache.VndbGameListStore.Get(cidCacheValue)
+	if err != nil {
+		utils.HandleErrorV2(err, s, i, utils.InteractionRespondEditComplex)
+		return
+	}
+
+	components, err := buildVndbSearchGameComponents(cacheValue, 1, backToHomeCID.CacheID)
+	if err != nil {
+		utils.HandleErrorV2(err, s, i, utils.InteractionRespondEditComplex)
+		return
+	}
+	utils.InteractionRespondEditComplex(s, i, components)
+}
+
+// 產生查詢 VNDB 遊戲列表的Components
+func buildVndbSearchGameComponents(res []vndb.GetVnIDUseListResponse, currentPage int, cacheID string) ([]discordgo.MessageComponent, error) {
+	totalItems := len(res)
+	totalPages := (totalItems + searchGameListItemsPerPage - 1) / searchGameListItemsPerPage
+
+	divider := true
+	containerComponents := []discordgo.MessageComponent{
+		discordgo.TextDisplay{
+			Content: fmt.Sprintf("# VNDB 遊戲搜尋\n搜尋筆數: **%d**", totalItems),
+		},
+		discordgo.Separator{Divider: &divider},
+	}
+
+	// 計算當前頁的範圍
+	start := (currentPage - 1) * searchGameListItemsPerPage
+	end := min(start+searchGameListItemsPerPage, totalItems)
+	pagedResults := res[start:end]
+
+	gameMenuItems := []utils.SelectMenuItem{}
+
+	// 產生遊戲列表組件
+	for idx, r := range pagedResults {
+		itemNum := start + idx + 1
+		itemContent := fmt.Sprintf("**%d. %s**\n%s", itemNum, r.Title, r.Alttitle)
+
+		// // 處理圖片 URL
+		// thumbnailURL := ""
+		// if strings.TrimSpace(r.DMM) != "" {
+		// 	thumbnailURL = erogs.MakeDMMImageURL(r.DMM)
+		// }
+		// if strings.TrimSpace(thumbnailURL) == "" {
+		// 	thumbnailURL = placeholderImageURL
+		// }
+
+		containerComponents = append(containerComponents, discordgo.Section{
+			Components: []discordgo.MessageComponent{
+				discordgo.TextDisplay{
+					Content: itemContent,
+				},
+			},
+			Accessory: &discordgo.Thumbnail{
+				Media: discordgo.UnfurledMediaItem{
+					URL: placeholderImageURL, // 目前沒接圖回來
+				},
+			},
+		})
+
+		gameMenuItems = append(gameMenuItems, utils.SelectMenuItem{
+			Title: r.Title,
+			ID:    r.ID,
+		})
+	}
+
+	// 產生選單組件
+	selectMenuComponents := utils.MakeSelectMenuComponent(searchGameVndbCommandID, cacheID, gameMenuItems)
+
+	// 產生翻頁組件
+	pageComponents, err := utils.MakeChangePageComponent(searchGameVndbCommandID, currentPage, totalPages, cacheID)
 	if err != nil {
 		return nil, err
 	}
