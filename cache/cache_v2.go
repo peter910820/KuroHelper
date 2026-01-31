@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"kurohelper-core/erogs"
+	"kurohelper-core/vndb"
 
 	kurohelpercore "kurohelper-core"
 )
@@ -20,9 +21,9 @@ var (
 // 批評空間快取
 var (
 	// 使用關鍵字Base64作為鍵
-	ErogsGameListStore = NewCacheStoreV2[[]erogs.FuzzySearchListResponse](2 * time.Hour)
+	ErogsGameListStore = NewCacheStoreV2[[]erogs.GameList](2 * time.Hour)
 	// 使用批評空間ID作為鍵
-	ErogsGameStore = NewCacheStoreV2[*erogs.FuzzySearchGameResponse](2 * time.Hour)
+	ErogsGameStore = NewCacheStoreV2[*erogs.Game](2 * time.Hour)
 	// 使用關鍵字Base64作為鍵
 	ErogsMusicListStore = NewCacheStoreV2[[]erogs.MusicList](2 * time.Hour)
 	// 使用批評空間ID作為鍵
@@ -30,10 +31,14 @@ var (
 )
 
 // VNDB快取
-// var (
-// 	VndbGameListStore = NewCacheStoreV2[*vndb.ProducerSearchResponse](time.Hour)
-// 	VndbGameStore     = NewCacheStoreV2[*vndb.BasicResponse[vndb.GetVnUseIDResponse]](time.Hour)
-// )
+var (
+	// 使用關鍵字Base64作為鍵
+	VndbGameListStore = NewCacheStoreV2[[]vndb.GetVnIDUseListResponse](2 * time.Hour)
+	// 使用VNDB ID作為鍵 (遊戲詳細資料,可被遊戲搜尋和品牌搜尋共用)
+	VndbGameStore = NewCacheStoreV2[*vndb.BasicResponse[vndb.GetVnUseIDResponse]](2 * time.Hour)
+	// 使用關鍵字Base64作為鍵
+	VndbBrandStore = NewCacheStoreV2[*vndb.ProducerSearchResponse](2 * time.Hour)
+)
 
 // 月幕快取
 // var (
